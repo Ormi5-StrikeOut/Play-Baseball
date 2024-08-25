@@ -3,9 +3,9 @@ spring:
     name: Play_Baseball
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${RDS_HOST}:${RDS_PORT}/${RDS_NAME}
+    username: ${RDS_USER}
+    password: ${RDS_PASSWORD}
   servlet:
     multipart:
       enabled: true
