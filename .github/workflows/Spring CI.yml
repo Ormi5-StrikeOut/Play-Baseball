@@ -28,11 +28,13 @@ jobs:
 
       - name: Run tests
         env:
-          DB_HOST: ${{ secrets.RDS_HOST }}
-          DB_PORT: ${{ secrets.RDS_PORT }}
-          DB_NAME: ${{ secrets.RDS_NAME }}
-          DB_USER: ${{ secrets.RDS_USER }}
-          DB_PASSWORD: ${{ secrets.RDS_PASSWORD }}
+          RDS_HOST: ${{ secrets.RDS_HOST }}
+          RDS_PORT: ${{ secrets.RDS_PORT }}
+          RDS_NAME: ${{ secrets.RDS_NAME }}
+          RDS_USER: ${{ secrets.RDS_USER }}
+          RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
+          SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
+          SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
         run: ./gradlew test
 
   dependency-submission:
