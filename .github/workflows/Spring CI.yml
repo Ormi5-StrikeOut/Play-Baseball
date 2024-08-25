@@ -9,6 +9,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      RDS_HOST: ${{ secrets.RDS_HOST }}
+      RDS_PORT: ${{ secrets.RDS_PORT }}
+      RDS_NAME: ${{ secrets.RDS_NAME }}
+      RDS_USER: ${{ secrets.RDS_USER }}
+      RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
+      SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
+      SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
 
     steps:
       - name: Check out code
@@ -27,14 +35,6 @@ jobs:
         run: ./gradlew build
 
       - name: Run tests
-        env:
-          RDS_HOST: ${{ secrets.RDS_HOST }}
-          RDS_PORT: ${{ secrets.RDS_PORT }}
-          RDS_NAME: ${{ secrets.RDS_NAME }}
-          RDS_USER: ${{ secrets.RDS_USER }}
-          RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
-          SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
-          SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
         run: ./gradlew test
 
   dependency-submission:
