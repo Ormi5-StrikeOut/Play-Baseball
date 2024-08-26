@@ -49,3 +49,11 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+bootJar {
+    archiveBaseName.set('playBaseballServer')
+}
+
+jar {
+    archiveBaseName.set('playBaseballServer')
+}
