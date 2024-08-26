@@ -1,7 +1,7 @@
 ---
-name: Bug
-about: 버그 리포트 이슈 템플릿
-title: "[Bug]"
+name: Fix
+about: 버그 수정 이슈 템플릿
+title: "[Fix]"
 labels: ''
 assignees: ''
 
