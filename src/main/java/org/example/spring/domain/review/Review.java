@@ -16,8 +16,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.example.spring.domain.Member;
 import org.example.spring.domain.exchange.Exchange;
+import org.example.spring.domain.member.Member;
 
 @Entity
 @Table(name = "review")
