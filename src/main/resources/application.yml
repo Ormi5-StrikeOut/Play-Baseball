@@ -3,9 +3,9 @@ spring:
     name: Play_Baseball
 
   datasource:
-    url: jdbc:mysql://${RDS_HOST}:${RDS_PORT}/${RDS_NAME}
-    username: ${RDS_USER}
-    password: ${RDS_PASSWORD}
+    url: jdbc:mysql://database-1.c1ck2eio8ok7.ap-northeast-2.rds.amazonaws.com:3306/test_db
+    username: admin
+    password: KPNLKH0IQK1mD9SrrJtc
   servlet:
     multipart:
       enabled: true
@@ -23,11 +23,10 @@ spring:
 
   security:
     user:
-      name: ${SECURITY_USER_NAME}
-      password: ${SECURITY_USER_PASSWORD}
+      name: admin
+      password: admin
 
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-
