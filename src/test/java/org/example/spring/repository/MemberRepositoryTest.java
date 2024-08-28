@@ -58,7 +58,10 @@ class MemberRepositoryTest {
     @Test
     @DisplayName("id로 멤버 찾기")
     void findById() {
-        Optional<Member> memberById = memberRepository.findById(testMember.getId());
+
+        Member savedMember = memberRepository.save(testMember);
+
+        Optional<Member> memberById = memberRepository.findById(savedMember.getId());
 
         assertThat(memberById).isPresent(); // 값이 존재 하는지 확인
         assertThat(memberById.get().getEmail()).isEqualTo(testMember.getEmail());
