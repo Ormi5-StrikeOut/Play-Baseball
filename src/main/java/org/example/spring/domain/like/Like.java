@@ -1,4 +1,4 @@
-package org.example.spring.domain.review;
+package org.example.spring.domain.like;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,8 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import java.sql.Timestamp;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,36 +21,17 @@ import org.example.spring.domain.exchange.Exchange;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Review {
-
+public class Like {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "review_id")
+    @Column(name = "like_id")
     private Long id;
 
     @JoinColumn(name = "exchange_id", nullable = false)
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Exchange exchange;
 
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Member writer;
-
-    @Column(name = "content", length = 300, nullable = false)
-    private String content;
-
-    @Column(name = "rate", nullable = false)
-    private int rate;
-
-    @Column(name = "is_secret", nullable = false)
-    private boolean isSecret;
-
-    @Column(name = "created_at", nullable = false)
-    private Timestamp createdAt;
-
-    @Column(name = "updated_at")
-    private Timestamp updatedAt;
-
-    @Column(name = "deleted_at")
-    private Timestamp deletedAt;
 }
