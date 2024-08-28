@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.example.spring.domain.Member;
 
 @Entity
+@Table(name = "exchange")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
