@@ -23,5 +23,5 @@ public class MessageMember extends Auditable {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "message_room_id", nullable = false)
-    private MessageRoom messageRoomId;
+    private MessageRoom messageRoom;
 }
