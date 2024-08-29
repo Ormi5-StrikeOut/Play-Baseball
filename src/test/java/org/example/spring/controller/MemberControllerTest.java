@@ -23,11 +23,17 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
 class MemberControllerTest {
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,6 +51,13 @@ class MemberControllerTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .addFilter((request, response, chain) -> {
+                response.setCharacterEncoding("UTF-8");
+                chain.doFilter(request, response);
+            }, "/*")
+            .build();
+
         memberJoinRequestDto = MemberJoinRequestDto.builder()
             .email("test@example.com")
             .password("Password1!")
@@ -71,12 +84,16 @@ class MemberControllerTest {
 
         when(memberService.registerMember(any(MemberJoinRequestDto.class))).thenReturn(savedMember);
 
-        mockMvc.perform(post("/api/members/join")
+        MvcResult result = mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.message").value("회원가입에 성공했습니다."))
-            .andExpect(jsonPath("$.data").value(savedMember.getNickname()));
+            .andExpect(jsonPath("$.data").value(savedMember.getNickname()))
+            .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        System.out.println("Actual response: " + responseContent);
     }
 
     @Test
@@ -85,12 +102,16 @@ class MemberControllerTest {
         when(memberService.registerMember(any(MemberJoinRequestDto.class)))
             .thenThrow(new RuntimeException("서버 오류 발생"));
 
-        mockMvc.perform(post("/api/members/join")
+        MvcResult result = mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.message").value("서버 오류가 발생했습니다. 나중에 다시 시도해주세요."))
-            .andExpect(jsonPath("$.data").doesNotExist());
+            .andExpect(jsonPath("$.data").doesNotExist())
+            .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        System.out.println("Actual response: " + responseContent);
     }
 
     @Test
@@ -100,12 +121,16 @@ class MemberControllerTest {
         when(memberService.registerMember(any(MemberJoinRequestDto.class)))
             .thenThrow(new IllegalArgumentException(errorMessage));
 
-        mockMvc.perform(post("/api/members/join")
+        MvcResult result = mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message").value("회원가입에 실패했습니다: " + errorMessage))
-            .andExpect(jsonPath("$.data").doesNotExist());
+            .andExpect(jsonPath("$.data").doesNotExist())
+            .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        System.out.println("Actual response: " + responseContent);
     }
 
 }
