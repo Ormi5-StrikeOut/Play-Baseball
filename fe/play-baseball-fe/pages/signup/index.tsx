@@ -1,43 +1,49 @@
-import React, { useState } from 'react';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import FormControl from '@mui/material/FormControl';
-import FormHelperText from '@mui/material/FormHelperText';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import { SelectChangeEvent } from '@mui/material/Select';
-import Alert from '@mui/material/Alert';
-import Grid from '@mui/material/Grid';
+import React, { useState } from "react";
+import Container from "@mui/material/Container";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import { SelectChangeEvent } from "@mui/material/Select";
+import Alert from "@mui/material/Alert";
+import Grid from "@mui/material/Grid";
 
 const SignupPage: React.FC = () => {
   const [formValues, setFormValues] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    nickname: '',
-    phoneFirst: '',
-    phoneMiddle: '',
-    phoneLast: '',
-    gender: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    nickname: "",
+    phoneFirst: "",
+    phoneMiddle: "",
+    phoneLast: "",
+    gender: "",
   });
 
   const [passwordMatchError, setPasswordMatchError] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const [submitError, setSubmitError] = useState("");
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = event.target;
     setFormValues({ ...formValues, [name]: value });
 
     // 비밀번호와 비밀번호 확인 값이 일치하는지 확인
-    if (name === 'confirmPassword' || name === 'password') {
-      if (name === 'confirmPassword' && value !== formValues.password) {
+    if (name === "confirmPassword" || name === "password") {
+      if (name === "confirmPassword" && value !== formValues.password) {
         setPasswordMatchError(true);
-      } else if (name === 'password' && formValues.confirmPassword !== '' && value !== formValues.confirmPassword) {
+      } else if (
+        name === "password" &&
+        formValues.confirmPassword !== "" &&
+        value !== formValues.confirmPassword
+      ) {
         setPasswordMatchError(true);
       } else {
         setPasswordMatchError(false);
@@ -50,14 +56,17 @@ const SignupPage: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    if (passwordMatchError || formValues.password !== formValues.confirmPassword) {
-      setSubmitError('Passwords do not match.');
+    if (
+      passwordMatchError ||
+      formValues.password !== formValues.confirmPassword
+    ) {
+      setSubmitError("Passwords do not match.");
       return;
     }
 
     // TODO: 회원가입 처리 로직 추가 (예: 백엔드 API 호출)
-    console.log('Form submitted', formValues);
-    setSubmitError(''); // 에러 메시지 초기화
+    console.log("Form submitted", formValues);
+    setSubmitError(""); // 에러 메시지 초기화
   };
 
   return (
@@ -122,7 +131,9 @@ const SignupPage: React.FC = () => {
             value={formValues.confirmPassword}
             onChange={handleInputChange}
           />
-          {passwordMatchError && <FormHelperText error>비밀번호가 일치하지 않습니다.</FormHelperText>}
+          {passwordMatchError && (
+            <FormHelperText error>비밀번호가 일치하지 않습니다.</FormHelperText>
+          )}
         </FormControl>
 
         <FormControl fullWidth margin="normal">
@@ -147,7 +158,6 @@ const SignupPage: React.FC = () => {
                 name="phoneFirst"
                 value={formValues.phoneFirst}
                 onChange={handleInputChange}
-                
               />
             </Grid>
             <Grid item xs={4}>
@@ -158,7 +168,6 @@ const SignupPage: React.FC = () => {
                 name="phoneMiddle"
                 value={formValues.phoneMiddle}
                 onChange={handleInputChange}
-                
               />
             </Grid>
             <Grid item xs={4}>
@@ -169,13 +178,11 @@ const SignupPage: React.FC = () => {
                 name="phoneLast"
                 value={formValues.phoneLast}
                 onChange={handleInputChange}
-                
               />
             </Grid>
           </Grid>
         </FormControl>
 
-        
         <FormControl fullWidth margin="normal" sx={{ mt: 3 }}>
           <InputLabel id="gender-label">성별</InputLabel>
           <Select
@@ -185,18 +192,23 @@ const SignupPage: React.FC = () => {
             onChange={handleSelectChange}
             label="성별"
             sx={{
-            border: 'none',
-            '&:before': { borderBottom: 'none' },
-            '&:after': { borderBottom: 'none' }
+              border: "none",
+              "&:before": { borderBottom: "none" },
+              "&:after": { borderBottom: "none" },
             }}
-        >
+          >
             <MenuItem value="MALE">남</MenuItem>
             <MenuItem value="FEMALE">여</MenuItem>
             <MenuItem value="NON_BINARY">알 수 없음</MenuItem>
           </Select>
         </FormControl>
 
-        <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={handleSubmit}
+        >
           회원가입
         </Button>
       </Box>
