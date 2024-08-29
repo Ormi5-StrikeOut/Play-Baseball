@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.spring.audit.Auditable;
 
+import java.sql.Timestamp;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -19,11 +20,25 @@ public class MessageRoom extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long messageRoomId;
 
+    @Column(name = "last_message_at")
+    private Timestamp lastMessageAt;
+
     @OneToMany(mappedBy = "messageRoom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy("messageId DESC")
+    @OrderBy("createAt DESC")
     private Set<Message> messages = new LinkedHashSet<>();
 
     public Message getLastMessage() {
         return messages.stream().findFirst().orElse(null);
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void updateLastMessageAt() {
+        if (!messages.isEmpty()) {
+            this.lastMessageAt = messages.stream()
+                    .map(Message::getCreateAt)
+                    .max(Timestamp::compareTo)
+                    .orElse(null);
+        }
     }
 }
