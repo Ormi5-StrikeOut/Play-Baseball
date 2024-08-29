@@ -17,8 +17,6 @@ jobs:
       RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
       SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
       SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
-      LANG: ko_KR.UTF-8
-      LC_ALL: ko_KR.UTF-8
 
     steps:
       - name: Check out code
@@ -29,6 +27,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+
       - name: Setup MySQL
         uses: samin/mysql-action@v1
         with:
@@ -37,22 +36,19 @@ jobs:
           database: ${{ secrets.RDS_NAME }}
           user: ${{ secrets.RDS_USER }}
           password: ${{ secrets.RDS_PASSWORD }}
-          character set server: 'utf8'
+          character set server: 'utf8mb4'
+          collation server: 'utf8mb4_unicode_ci'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Run tests
-        run: ./gradlew test --info --stacktrace
+      - name: Build and test with Gradle
+        run: ./gradlew build test --debug
 
   dependency-submission:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -60,6 +56,5 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
