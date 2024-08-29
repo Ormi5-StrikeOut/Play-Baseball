@@ -31,11 +31,10 @@ jobs:
       - name: Setup MySQL
         uses: samin/mysql-action@v1
         with:
-          host: ${{ secrets.RDS_HOST }}
-          port: ${{ secrets.RDS_PORT }}
-          database: ${{ secrets.RDS_NAME }}
-          user: ${{ secrets.RDS_USER }}
-          password: ${{ secrets.RDS_PASSWORD }}
+          host port: ${{ secrets.RDS_PORT }}
+          mysql database: ${{ secrets.RDS_NAME }}
+          mysql user: ${{ secrets.RDS_USER }}
+          mysql password: ${{ secrets.RDS_PASSWORD }}
           character set server: 'utf8mb4'
           collation server: 'utf8mb4_unicode_ci'
 
@@ -43,7 +42,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and test with Gradle
-        run: ./gradlew build test --debug
+        run: ./gradlew build test --info
 
   dependency-submission:
     runs-on: ubuntu-latest
