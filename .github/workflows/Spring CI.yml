@@ -17,6 +17,8 @@ jobs:
       RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
       SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
       SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
+      LANG: ko_KR.UTF-8
+      LC_ALL: ko_KR.UTF-8
 
     steps:
       - name: Check out code
