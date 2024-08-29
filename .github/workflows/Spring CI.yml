@@ -42,8 +42,11 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and test with Gradle
-        run: ./gradlew build test --info
-
+        run: |
+          ./gradlew build test --info || (
+            echo "Tests failed. Rerunning failed tests with debug logging:"
+            ./gradlew test --info -Dtest.single=* -Dtest.debug --tests `grep -h -r "FAILED" build/test-results/test/TEST-*.xml | sed -E "s/.*classname='(.*)'.*/\1/"`
+          )
   dependency-submission:
     runs-on: ubuntu-latest
     permissions:
