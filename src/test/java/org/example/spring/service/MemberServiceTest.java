@@ -37,13 +37,14 @@ class MemberServiceTest {
     @BeforeEach
     void setUp() {
 
-        validMemberDto = new MemberJoinRequestDto();
-        validMemberDto.setEmail("test@example.com");
-        validMemberDto.setPassword("Password1!");
-        validMemberDto.setNickname("testuser");
-        validMemberDto.setName("Test User");
-        validMemberDto.setPhoneNumber("010-1234-5678");
-        validMemberDto.setGender(Gender.MALE);
+        validMemberDto = MemberJoinRequestDto.builder()
+            .email("test@example.com")
+            .password("Password1!")
+            .nickname("testuser")
+            .name("Test User")
+            .phoneNumber("010-1234-5678")
+            .gender(Gender.MALE)
+            .build();
 
     }
 
