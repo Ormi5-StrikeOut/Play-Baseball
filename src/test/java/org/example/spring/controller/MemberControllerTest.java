@@ -3,11 +3,10 @@ package org.example.spring.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.spring.common.ApiResponseDto;
 import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
@@ -76,7 +75,8 @@ class MemberControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isCreated())
-            .andExpect(content().json(objectMapper.writeValueAsString(ApiResponseDto.success("회원가입에 성공했습니다.", savedMember.getNickname()))));
+            .andExpect(jsonPath("$.message").value("회원가입에 성공했습니다."))
+            .andExpect(jsonPath("$.data").value(savedMember.getNickname()));
     }
 
     @Test
@@ -89,8 +89,8 @@ class MemberControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isInternalServerError())
-            .andExpect(
-                content().json(objectMapper.writeValueAsString(ApiResponseDto.error("서버 오류가 발생했습니다. 나중에 다시 시도해주세요."))));
+            .andExpect(jsonPath("$.message").value("서버 오류가 발생했습니다. 나중에 다시 시도해주세요."))
+            .andExpect(jsonPath("$.data").isEmpty());
     }
 
     @Test
@@ -104,7 +104,8 @@ class MemberControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isBadRequest())
-            .andExpect(content().json(objectMapper.writeValueAsString(ApiResponseDto.error("회원가입에 실패했습니다: " + errorMessage))));
+            .andExpect(jsonPath("$.message").value("회원가입에 실패했습니다: 잘못된 요청입니다."))
+            .andExpect(jsonPath("$.data").isEmpty());
     }
 
 }
