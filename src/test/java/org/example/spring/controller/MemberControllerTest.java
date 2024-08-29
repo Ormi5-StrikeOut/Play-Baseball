@@ -17,16 +17,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+@SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
-@WebMvcTest(controllers = MemberController.class)
 class MemberControllerTest {
 
     @Autowired
@@ -90,7 +90,7 @@ class MemberControllerTest {
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.message").value("서버 오류가 발생했습니다. 나중에 다시 시도해주세요."))
-            .andExpect(jsonPath("$.data").isEmpty());
+            .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @Test
@@ -104,8 +104,8 @@ class MemberControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("회원가입에 실패했습니다: 잘못된 요청입니다."))
-            .andExpect(jsonPath("$.data").isEmpty());
+            .andExpect(jsonPath("$.message").value("회원가입에 실패했습니다: " + errorMessage))
+            .andExpect(jsonPath("$.data").doesNotExist());
     }
 
 }
