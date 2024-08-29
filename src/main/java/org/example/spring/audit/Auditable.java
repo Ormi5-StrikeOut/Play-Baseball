@@ -17,5 +17,4 @@ public abstract class Auditable {
     @Column(nullable = false, insertable = false, updatable = false)
     @CreatedDate
     private Timestamp createAt;
-
 }
