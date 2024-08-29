@@ -20,7 +20,11 @@ public class MemberController {
 
     @PostMapping("/join")
     public ResponseEntity<String> registerMember(@RequestBody MemberJoinRequestDto memberJoinRequestDto) {
-        memberService.registerMember(memberJoinRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body("회원가입에 성공했습니다.");
+        try {
+            memberService.registerMember(memberJoinRequestDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body("회원가입에 성공했습니다.");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원가입에 실패했습니다.");
+        }
     }
 }
