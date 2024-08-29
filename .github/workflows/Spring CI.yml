@@ -27,6 +27,15 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+      - name: Setup MySQL
+        uses: samin/mysql-action@v1
+        with:
+          host: ${{ secrets.RDS_HOST }}
+          port: ${{ secrets.RDS_PORT }}
+          database: ${{ secrets.RDS_NAME }}
+          user: ${{ secrets.RDS_USER }}
+          password: ${{ secrets.RDS_PASSWORD }}
+          character set server: 'utf8'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
