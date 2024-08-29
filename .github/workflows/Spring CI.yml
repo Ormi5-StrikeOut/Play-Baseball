@@ -44,7 +44,7 @@ jobs:
         run: ./gradlew build
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test --info --stacktrace
 
   dependency-submission:
     runs-on: ubuntu-latest
