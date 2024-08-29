@@ -1,6 +1,7 @@
 package org.example.spring.service;
 
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
@@ -15,6 +16,22 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Getter
+    private enum MemberField {
+        EMAIL("이메일"),
+        PASSWORD("비밀번호"),
+        NICKNAME("닉네임"),
+        NAME("이름"),
+        PHONE_NUMBER("전화번호"),
+        GENDER("성별");
+
+        private final String description;
+
+        MemberField(String description) {
+            this.description = description;
+        }
+    }
+
     @Transactional
     public Member registerMember(MemberJoinRequestDto memberJoinRequestDto) {
         validateMemberDto(memberJoinRequestDto);
@@ -22,7 +39,14 @@ public class MemberService {
 
         String hashedPassword = passwordEncoder.encode(memberJoinRequestDto.getPassword());
 
-        Member member = Member.builder()
+        Member member = toEntity(memberJoinRequestDto, hashedPassword);
+
+        return memberRepository.save(member);
+    }
+
+    private Member toEntity(MemberJoinRequestDto memberJoinRequestDto,
+        String hashedPassword) {
+        return Member.builder()
             .email(memberJoinRequestDto.getEmail())
             .password(hashedPassword)
             .nickname(memberJoinRequestDto.getNickname())
@@ -30,38 +54,36 @@ public class MemberService {
             .phoneNumber(memberJoinRequestDto.getPhoneNumber())
             .gender(memberJoinRequestDto.getGender())
             .build();
-
-        return memberRepository.save(member);
     }
 
     private void validateMemberDto(MemberJoinRequestDto memberJoinRequestDto) {
         if (memberJoinRequestDto == null) {
             throw new IllegalArgumentException("회원 정보가 null입니다.");
         }
-        validateField(memberJoinRequestDto.getEmail(), "이메일");
-        validateField(memberJoinRequestDto.getPassword(), "비밀번호");
-        validateField(memberJoinRequestDto.getNickname(), "닉네임");
-        validateField(memberJoinRequestDto.getName(), "이름");
-        validateField(memberJoinRequestDto.getPhoneNumber(), "전화번호");
-        validateField(memberJoinRequestDto.getGender().name(), "성별");
+        validateField(memberJoinRequestDto.getEmail(), MemberField.EMAIL);
+        validateField(memberJoinRequestDto.getPassword(), MemberField.PASSWORD);
+        validateField(memberJoinRequestDto.getNickname(), MemberField.NICKNAME);
+        validateField(memberJoinRequestDto.getName(), MemberField.NAME);
+        validateField(memberJoinRequestDto.getPhoneNumber(), MemberField.PHONE_NUMBER);
+        validateField(memberJoinRequestDto.getGender().name(), MemberField.GENDER);
     }
 
-    private void validateField(String field, String fieldName) {
+    private void validateField(String field, MemberField fieldName) {
         if (field == null || field.isEmpty()) {
             throw new IllegalArgumentException(fieldName + "은(는) 필수 입력 항목입니다.");
         }
 
         switch (fieldName) {
-            case "이메일":
+            case EMAIL:
                 validateEmail(field);
                 break;
-            case "비밀번호":
+            case PASSWORD:
                 validatePassword(field);
                 break;
-            case "닉네임":
+            case NICKNAME:
                 validateNickname(field);
                 break;
-            case "전화번호":
+            case PHONE_NUMBER:
                 validatePhoneNumber(field);
                 break;
         }
