@@ -18,7 +18,7 @@ import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.member.Member;
 
 @Entity
-@Table(name = "like")
+@Table(name = "exchange_like")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
