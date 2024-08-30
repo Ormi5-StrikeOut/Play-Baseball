@@ -1,5 +1,6 @@
 package org.example.spring.domain.member.dto;
 
+import java.sql.Timestamp;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.example.spring.domain.member.Member;
+import org.example.spring.domain.member.MemberRole;
 
 /**
  * DTO for {@link Member}
@@ -18,15 +20,21 @@ import org.example.spring.domain.member.Member;
 @ToString
 public class MemberResponseDto {
 
+    private Long id;
     private String email;
     private String nickname;
-    private String name;
+    private MemberRole role;
+    private Timestamp createdAt;
+    private Timestamp lastLoginDate;
 
     public static MemberResponseDto toDto(Member member) {
         return MemberResponseDto.builder()
+            .id(member.getId())
             .email(member.getEmail())
             .nickname(member.getNickname())
-            .name(member.getName())
+            .role(member.getRole())
+            .createdAt(member.getCreatedAt())
+            .lastLoginDate(member.getLastLoginDate())
             .build();
     }
 }
