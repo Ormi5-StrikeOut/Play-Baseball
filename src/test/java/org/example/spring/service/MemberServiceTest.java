@@ -118,9 +118,9 @@ class MemberServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getEmail()).isEqualTo("test@example.com");
-        assertThat(result.getContent().get(0).getNickname()).isEqualTo("testuser");
-        assertThat(result.getContent().get(0).getRole()).isEqualTo(MemberRole.USER);
+        assertThat(result.getContent().getFirst().getEmail()).isEqualTo("test@example.com");
+        assertThat(result.getContent().getFirst().getNickname()).isEqualTo("testuser");
+        assertThat(result.getContent().getFirst().getRole()).isEqualTo(MemberRole.USER);
 
         verify(memberRepository).findAll(pageable);
     }
