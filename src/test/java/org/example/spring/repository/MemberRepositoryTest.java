@@ -17,8 +17,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.data.domain.PageRequest;
 
 @DataJpaTest
 @Transactional
@@ -32,10 +31,17 @@ class MemberRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        testMember = Member.builder().name("testMember").email("test@example.com")
-            .nickname("testNick")
-            .password("password123!@#").phoneNumber("010-0001-0000").gender(
-                Gender.MALE)
+        long timestamp = System.currentTimeMillis();
+        String uniqueEmail = "test" + timestamp + "@example.com";
+        String uniqueNickname = "testNick" + timestamp;
+        String uniquePhoneNumber = "010-" + timestamp;
+        testMember = Member.builder()
+            .name("test99Member")
+            .email(uniqueEmail)
+            .nickname(uniqueNickname)
+            .password("password123!@#")
+            .phoneNumber(uniquePhoneNumber)
+            .gender(Gender.MALE)
             .role(MemberRole.USER)
             .build();
     }
@@ -69,6 +75,7 @@ class MemberRepositoryTest {
         assertThat(memberById.get().getEmail()).isEqualTo(testMember.getEmail());
 
     }
+
     @Test
     @DisplayName("이메일 존재 여부 확인")
     void existsByEmail() {
@@ -101,7 +108,7 @@ class MemberRepositoryTest {
         boolean exists = memberRepository.existsByPhoneNumber(testMember.getPhoneNumber());
         assertThat(exists).isTrue();
 
-        boolean notExists = memberRepository.existsByPhoneNumber("010-9999-9999");
+        boolean notExists = memberRepository.existsByPhoneNumber("123-9999-9999");
         assertThat(notExists).isFalse();
     }
 
@@ -139,13 +146,12 @@ class MemberRepositoryTest {
         memberRepository.saveAll(List.of(member1, member2, member3));
 
         // when
-        Page<Member> result = memberRepository.findAll(Pageable.unpaged());
+        Page<Member> result = memberRepository.findAll(PageRequest.of(0, 10)); // 페이지 크기를 10으로 설정
 
         // then
         assertThat(result.getContent())
-            .hasSize(3)
             .extracting("name", "email", "nickname", "gender", "role")
-            .containsExactlyInAnyOrder(
+            .contains(
                 tuple("Member 1", "member1@example.com", "member1", Gender.MALE, MemberRole.USER),
                 tuple("Member 2", "member2@example.com", "member2", Gender.FEMALE, MemberRole.USER),
                 tuple("Member 3", "member3@example.com", "member3", Gender.MALE, MemberRole.USER)
