@@ -13,7 +13,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponseDto<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ApiResponseDto.error("회원가입에 실패했습니다: " + e.getMessage()));
+            .body(ApiResponseDto.error("요청에 실패했습니다: " + e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
