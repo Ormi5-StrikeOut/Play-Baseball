@@ -3,6 +3,8 @@ package org.example.spring.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +12,7 @@ import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
+import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +21,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -90,6 +97,24 @@ class MemberServiceTest {
         verify(memberRepository).existsByPhoneNumber(validMemberDto.getPhoneNumber());
         verify(memberRepository).save(any(Member.class));
 
+    }
+
+    @Test
+    @DisplayName("회원 전체 목록 조회 - 페이징")
+    void getAllMembers_no_search() {
+        // given
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Member> expectedPage = Page.empty();
+        given(memberRepository.findAll(pageable)).willReturn(expectedPage);
+
+        // when
+        Page<MemberResponseDto> result = memberService.getAllMembers(page, size);
+
+        // then
+        assertThat(result).isEqualTo(expectedPage);
+        then(memberRepository).should().findAll(pageable);
     }
 
 }

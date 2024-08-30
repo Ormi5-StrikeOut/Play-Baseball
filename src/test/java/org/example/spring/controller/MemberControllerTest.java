@@ -1,8 +1,12 @@
 package org.example.spring.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -19,16 +23,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest
-@ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
 class MemberControllerTest {
 
@@ -90,6 +94,7 @@ class MemberControllerTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.message").value("회원가입에 성공했습니다."))
             .andExpect(jsonPath("$.data").value(savedMember.getNickname()))
+            .andDo(print())
             .andReturn();
 
         String responseContent = result.getResponse().getContentAsString();
@@ -108,6 +113,7 @@ class MemberControllerTest {
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.message").value("서버 오류가 발생했습니다."))
             .andExpect(jsonPath("$.data").doesNotExist())
+            .andDo(print())
             .andReturn();
 
         String responseContent = result.getResponse().getContentAsString();
@@ -127,10 +133,32 @@ class MemberControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message").value("회원가입에 실패했습니다: " + errorMessage))
             .andExpect(jsonPath("$.data").doesNotExist())
+            .andDo(print())
             .andReturn();
 
         String responseContent = result.getResponse().getContentAsString();
         System.out.println("Actual response: " + responseContent);
+    }
+
+    @Test
+    @DisplayName("회원 전체 목록 조회 - 페이징")
+    void getAllMembers_no_search() throws Exception {
+        // given
+        given(memberService.getAllMembers(anyInt(), anyInt()))
+            .willReturn(Page.empty());
+
+        // when
+        ResultActions actions = mockMvc.perform(
+            get("/api/members")
+                .param("page", "0")
+                .param("size", "10"));
+
+        // then
+        actions
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("회원 목록 조회 성공"))
+            .andExpect(jsonPath("$.data").isMap())
+            .andDo(print());
     }
 
 }
