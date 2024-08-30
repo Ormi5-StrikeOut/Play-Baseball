@@ -36,7 +36,7 @@ public class Review {
     @OneToOne(fetch = FetchType.LAZY)
     private Exchange exchange;
 
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Member writer;
 

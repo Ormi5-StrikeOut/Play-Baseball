@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 import org.example.spring.domain.member.Member;
 
 @Entity
-@Table(name = "reviewOverview")
+@Table(name = "review_overview")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

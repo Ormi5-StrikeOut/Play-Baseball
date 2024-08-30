@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 import org.example.spring.domain.review.Review;
 
 @Entity
-@Table(name = "reviewImage")
+@Table(name = "review_image")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
