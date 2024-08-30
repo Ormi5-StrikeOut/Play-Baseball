@@ -137,7 +137,7 @@ class MemberControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("회원가입에 실패했습니다: " + errorMessage))
+            .andExpect(jsonPath("$.message").value("요청에 실패했습니다: " + errorMessage))
             .andExpect(jsonPath("$.data").doesNotExist())
             .andDo(print())
             .andReturn();
