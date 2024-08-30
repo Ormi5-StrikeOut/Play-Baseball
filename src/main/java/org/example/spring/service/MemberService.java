@@ -58,12 +58,11 @@ public class MemberService {
 
         String hashedPassword = passwordEncoder.encode(memberJoinRequestDto.getPassword());
 
-
         Member member = toEntity(memberJoinRequestDto, hashedPassword);
 
-        memberRepository.save(member);
+        Member saveMember = memberRepository.save(member);
 
-        return toDto(member);
+        return toDto(saveMember);
     }
 
     /**
