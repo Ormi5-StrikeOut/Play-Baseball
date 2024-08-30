@@ -1,16 +1,24 @@
 package org.example.spring.service;
 
-import jakarta.transaction.Transactional;
+import static org.example.spring.domain.member.dto.MemberJoinRequestDto.toEntity;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
+import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.repository.MemberRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -32,7 +40,6 @@ public class MemberService {
         }
     }
 
-    @Transactional
     public Member registerMember(MemberJoinRequestDto memberJoinRequestDto) {
         validateMemberDto(memberJoinRequestDto);
         checkDuplicates(memberJoinRequestDto);
@@ -44,16 +51,11 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    private Member toEntity(MemberJoinRequestDto memberJoinRequestDto,
-        String hashedPassword) {
-        return Member.builder()
-            .email(memberJoinRequestDto.getEmail())
-            .password(hashedPassword)
-            .nickname(memberJoinRequestDto.getNickname())
-            .name(memberJoinRequestDto.getName())
-            .phoneNumber(memberJoinRequestDto.getPhoneNumber())
-            .gender(memberJoinRequestDto.getGender())
-            .build();
+    @Transactional(readOnly = true)
+    public Page<MemberResponseDto> getAllMembers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Member> members= memberRepository.findAll(pageable);
+        return members.map(MemberResponseDto::toDto);
     }
 
     private void validateMemberDto(MemberJoinRequestDto memberJoinRequestDto) {
