@@ -15,6 +15,7 @@ import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
+import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -86,14 +87,19 @@ class MemberControllerTest {
             .role(MemberRole.USER)
             .build();
 
-        when(memberService.registerMember(any(MemberJoinRequestDto.class))).thenReturn(savedMember);
+        MemberResponseDto responseDto = MemberResponseDto.toDto(savedMember);
+
+        when(memberService.registerMember(any(MemberJoinRequestDto.class))).thenReturn(responseDto);
 
         MvcResult result = mockMvc.perform(post("/api/members/join")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.message").value("회원가입에 성공했습니다."))
-            .andExpect(jsonPath("$.data").value(savedMember.getNickname()))
+            .andExpect(jsonPath("$.data.id").value(savedMember.getId()))
+            .andExpect(jsonPath("$.data.email").value(savedMember.getEmail()))
+            .andExpect(jsonPath("$.data.nickname").value(savedMember.getNickname()))
+            .andExpect(jsonPath("$.data.role").value(savedMember.getRole().name()))
             .andDo(print())
             .andReturn();
 
