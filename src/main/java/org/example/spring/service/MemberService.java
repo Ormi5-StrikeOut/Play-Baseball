@@ -16,6 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 회원 관련 서비스 로직을 담당하는 클래스입니다.
+ * 회원 가입, 회원 목록 조회 등의 기능을 제공합니다.
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -40,6 +44,12 @@ public class MemberService {
         }
     }
 
+    /**
+     * 새로운 회원을 등록합니다.
+     *
+     * @param memberJoinRequestDto 회원 가입 정보를 담은 DTO
+     * @return 등록된 회원 MemberResponseDto
+     */
     public Member registerMember(MemberJoinRequestDto memberJoinRequestDto) {
         validateMemberDto(memberJoinRequestDto);
         checkDuplicates(memberJoinRequestDto);
@@ -51,6 +61,13 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
+    /**
+     * 페이징 처리된 전체 회원 목록을 조회합니다.
+     *
+     * @param page 조회할 페이지 번호
+     * @param size 한 페이지당 표시할 회원 수
+     * @return 페이징된 회원 목록 DTO
+     */
     @Transactional(readOnly = true)
     public Page<MemberResponseDto> getAllMembers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
