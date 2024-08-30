@@ -26,4 +26,16 @@ public class MemberJoinRequestDto {
     String phoneNumber;
     Gender gender;
 
+
+    public static Member toEntity(MemberJoinRequestDto memberJoinRequestDto,
+        String hashedPassword) {
+        return Member.builder()
+            .email(memberJoinRequestDto.getEmail())
+            .password(hashedPassword)
+            .nickname(memberJoinRequestDto.getNickname())
+            .name(memberJoinRequestDto.getName())
+            .phoneNumber(memberJoinRequestDto.getPhoneNumber())
+            .gender(memberJoinRequestDto.getGender())
+            .build();
+    }
 }
