@@ -1,17 +1,20 @@
 import React, { useState } from "react";
-import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import FormControl from "@mui/material/FormControl";
-import FormHelperText from "@mui/material/FormHelperText";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import { SelectChangeEvent } from "@mui/material/Select";
-import Alert from "@mui/material/Alert";
-import Grid from "@mui/material/Grid";
+import {
+  Container,
+  Box,
+  Typography,
+  Button,
+  Grid,
+  TextField,
+  FormControl,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Alert,
+  Link,
+} from "@mui/material";
 
 const SignupPage: React.FC = () => {
   const [formValues, setFormValues] = useState({
@@ -211,6 +214,11 @@ const SignupPage: React.FC = () => {
         >
           회원가입
         </Button>
+        <Box mt={2} display="flex" justifyContent="center" alignItems="center">
+          <Link href="/login" variant="body2" sx={{ mx: 2 }}>
+            로그인 페이지로 이동하기
+          </Link>
+        </Box>
       </Box>
     </Container>
   );
