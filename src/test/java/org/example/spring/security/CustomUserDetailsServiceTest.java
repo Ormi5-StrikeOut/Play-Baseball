@@ -8,6 +8,7 @@ import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.repository.MemberRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,11 +24,19 @@ class CustomUserDetailsServiceTest {
 
     private CustomUserDetailsService userDetailsService;
 
+    private AutoCloseable autoCloseable;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        autoCloseable = MockitoAnnotations.openMocks(this);
         userDetailsService = new CustomUserDetailsService(memberRepository);
     }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        autoCloseable.close();
+    }
+
 
     @Test
     @DisplayName("존재하는 사용자 정보 로드 확인")
