@@ -12,12 +12,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * 사용자 정의 UsernamePasswordAuthenticationProvider 구현체 입니다.
- * Spring Security에서 사용자 인증 과정을 처리합니다.
+ * 사용자 정의 UsernamePasswordAuthenticationProvider 구현체입니다.
+ * Spring Security의 인증 과정에서 사용자의 인증 정보를 검증합니다.
+ *
+ * <p>이 클래스는 {@link AuthenticationProvider} 인터페이스를 구현하여
+ * 사용자 이름(이메일)과 비밀번호를 이용한 인증 로직을 제공합니다.</p>
+ *
  */
 @Component
 @RequiredArgsConstructor
-public class CustomeUsernamePasswordAuthenticationProvider implements AuthenticationProvider {
+public class CustomUsernamePasswordAuthenticationProvider implements AuthenticationProvider {
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;

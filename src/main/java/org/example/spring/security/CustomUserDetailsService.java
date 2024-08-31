@@ -15,8 +15,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 /**
- * 사용자 인증 정보를 조회하는 사용자 정의 UserDetailsService 구현체 입니다.
- * Spring Security에서 사용자 인증을 위해 필요한 UserDetails 객체를 제공합니다.
+ * 사용자 정의 UserDetailsService 구현체입니다.
+ * Spring Security의 인증 과정에서 사용자 정보를 로드하는 역할을 담당합니다.
+ *
+ * <p>이 클래스는 {@link UserDetailsService} 인터페이스를 구현하여
+ * 데이터베이스에서 사용자 정보를 조회하고, 이를 Spring Security에서 사용 가능한
+ * {@link UserDetails} 객체로 변환합니다.</p>
  */
 @Service
 @RequiredArgsConstructor
