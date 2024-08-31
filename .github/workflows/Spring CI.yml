@@ -17,6 +17,9 @@ jobs:
       RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
       SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
       SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
 
     steps:
       - name: Check out code
