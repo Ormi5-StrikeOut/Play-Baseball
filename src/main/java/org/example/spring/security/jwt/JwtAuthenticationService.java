@@ -14,12 +14,10 @@ public class JwtAuthenticationService {
 
     private final JwtTokenValidator jwtTokenValidator;
     private final JwtTokenProvider jwtTokenProvider;
-    private final CookieService cookieService;
 
-    public JwtAuthenticationService(JwtTokenValidator jwtTokenValidator, JwtTokenProvider jwtTokenProvider, CookieService cookieService) {
+    public JwtAuthenticationService(JwtTokenValidator jwtTokenValidator, JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenValidator = jwtTokenValidator;
         this.jwtTokenProvider = jwtTokenProvider;
-        this.cookieService = cookieService;
     }
 
     public void authenticateWithTokens(String accessToken, String refreshToken, HttpServletResponse response) {
