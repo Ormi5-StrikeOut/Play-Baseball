@@ -3,7 +3,6 @@ package org.example.spring.security.jwt;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.Duration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
@@ -29,27 +28,12 @@ public class CookieService {
         return null;
     }
 
-    public void addAccessTokenCookie(HttpServletResponse response, String token) {
-        ResponseCookie cookie = ResponseCookie.from("access_token", token)
+    public void addRefreshTokenCookie(HttpServletResponse response, String token) {
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", token)
             .httpOnly(true)
             .secure(false)
             .path("/")
-            .maxAge(jwtTokenProvider.getAccessTokenExpiration())
-            .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-    }
-
-    public void setLoginCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        addCookie(response, "access_token", accessToken, jwtTokenProvider.getAccessTokenExpiration());
-        addCookie(response, "refresh_token", refreshToken, jwtTokenProvider.getRefreshTokenExpiration());
-    }
-
-    private void addCookie(HttpServletResponse response, String name, String value, long maxAgeInMillis) {
-        ResponseCookie cookie = ResponseCookie.from(name, value)
-            .httpOnly(true)
-            .secure(false)
-            .path("/")
-            .maxAge(Duration.ofMillis(maxAgeInMillis))
+            .maxAge(jwtTokenProvider.getRefreshTokenExpiration())
             .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
