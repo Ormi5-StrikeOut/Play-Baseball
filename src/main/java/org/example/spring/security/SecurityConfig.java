@@ -40,11 +40,13 @@ public class SecurityConfig {
             .addFilterBefore(jwtValidatorFilter(), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 .requestMatchers("/api/members", "api/members/verify-role/").hasAuthority(MemberRole.ADMIN.name())
-                .requestMatchers("/api/exchanges").hasAuthority(MemberRole.USER.name())
+                .requestMatchers("/api/exchanges").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .anyRequest().permitAll()
             );
         http.formLogin(withDefaults());
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
+
         return http.build();
     }
 
