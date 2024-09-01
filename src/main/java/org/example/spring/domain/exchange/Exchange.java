@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.spring.domain.member.Member;
+import org.example.spring.domain.review.Review;
 
 @Entity
 @Table(name = "exchange")
@@ -15,7 +16,6 @@ import org.example.spring.domain.member.Member;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-
 public class Exchange {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +25,9 @@ public class Exchange {
     @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Member writer;
+
+    @OneToOne(mappedBy = "exchange", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Review review;
 
     @Column(name = "title", length = 200, nullable = false)
     private String title;
