@@ -1,7 +1,8 @@
 import Link from "next/link"
+import SearchBar from "../components/SearchBar"
 
 export default function Home() {
-    return <div>Home
-      <Link href="/search">Goto search</Link>
+    return <div className="width-">
+      <SearchBar></SearchBar>
     </div>
   }
