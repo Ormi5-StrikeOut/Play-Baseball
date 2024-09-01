@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 public class JwtValidatorFilter extends OncePerRequestFilter {
@@ -21,19 +22,26 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
-        String accessToken = cookieService.extractTokenFromCookie(request, "access_token");
+        String accessToken = extractTokenFromHeader(request);
         String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
         try {
             jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, response);
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
         }
-
         filterChain.doFilter(request, response);
+    }
+
+    private String extractTokenFromHeader(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().equals("/api/members/join") || request.getServletPath().equals("/api/members/login");
+        return request.getServletPath().equals("/api/members/join") || request.getServletPath().equals("/api/login");
     }
 }
