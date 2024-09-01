@@ -19,7 +19,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException)
-        throws IOException, ServletException {
+        throws IOException {
         // 동적 값 설정
         String currentTimeStamp = LocalDateTime.now().toString();
         String message = (accessDeniedException != null && accessDeniedException.getMessage() != null) ? accessDeniedException.getMessage() : "Authentication Failed";
