@@ -23,14 +23,17 @@ public class JwtAuthenticationService {
     }
 
     public void authenticateWithTokens(String accessToken, String refreshToken, HttpServletResponse response) {
-        if (accessToken != null && jwtTokenValidator.isTokenExpired(accessToken)) {
+        if (accessToken != null && !jwtTokenValidator.isTokenExpired(accessToken)) {
             processToken(accessToken);
-        } else if (refreshToken != null && jwtTokenValidator.isTokenExpired(refreshToken)) {
-            String newAccessToken = jwtTokenProvider.generateAccessToken(createAuthenticationFromToken(refreshToken));
-            cookieService.addAccessTokenCookie(response, newAccessToken);
+        } else if (refreshToken != null && !jwtTokenValidator.isTokenExpired(refreshToken)) {
+            Authentication authentication = createAuthenticationFromToken(refreshToken);
+            String newAccessToken = jwtTokenProvider.generateAccessToken(authentication);
+
+            response.setHeader("Authorization", "Bearer " + newAccessToken);
             processToken(newAccessToken);
         } else {
             SecurityContextHolder.clearContext();
+            throw new RuntimeException("Invalid or expired tokens");
         }
     }
 
