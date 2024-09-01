@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
         throws IOException {
         // 동적 값 설정
-        LocalDateTime currentTimeStamp = LocalDateTime.now();
+        String currentTimeStamp = Instant.now().toString();
         String message = (authException != null && authException.getMessage() != null) ? authException.getMessage()
             : "Unauthorized";
         String path = request.getRequestURI();
