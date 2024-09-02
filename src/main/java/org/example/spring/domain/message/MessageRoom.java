@@ -9,7 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "messageRoom")
+@Table(name = "message_room")
 @Builder
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

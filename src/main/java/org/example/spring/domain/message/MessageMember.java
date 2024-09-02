@@ -6,7 +6,7 @@ import org.example.spring.audit.Auditable;
 import org.example.spring.domain.member.Member;
 
 @Entity
-@Table(name = "messageMember")
+@Table(name = "message_member")
 @Builder
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

@@ -17,6 +17,9 @@ jobs:
       RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
       SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
       SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
 
     steps:
       - name: Check out code
@@ -25,30 +28,38 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Setup MySQL
+        uses: samin/mysql-action@v1
+        with:
+          host port: ${{ secrets.RDS_PORT }}
+          mysql database: ${{ secrets.RDS_NAME }}
+          mysql user: ${{ secrets.RDS_USER }}
+          mysql password: ${{ secrets.RDS_PASSWORD }}
+          character set server: "utf8mb4"
+          collation server: "utf8mb4_unicode_ci"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Run tests
-        run: ./gradlew test
-
+      - name: Build and test with Gradle
+        run: |
+          ./gradlew build test --info || (
+            echo "Tests failed. Rerunning failed tests with debug logging:"
+            ./gradlew test --info -Dtest.single=* -Dtest.debug --tests `grep -h -r "FAILED" build/test-results/test/TEST-*.xml | sed -E "s/.*classname='(.*)'.*/\1/"`
+          )
   dependency-submission:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-
+          java-version: "21"
+          distribution: "temurin"
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
