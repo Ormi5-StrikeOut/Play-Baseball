@@ -1,4 +1,4 @@
-const REQUEST_URL: string = "http://localhost:8080/api";
+const REQUEST_URL: string = "3.36.114.27:8080/api";
 
 // Member Endpoints
 export const MEMBER: string = `${REQUEST_URL}/members`;
