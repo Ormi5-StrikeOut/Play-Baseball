@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 인증 관련 HTTP 요청을 처리하는 컨트롤러 클래스입니다.
  */
 @RestController
-@RequestMapping("/api/members")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
