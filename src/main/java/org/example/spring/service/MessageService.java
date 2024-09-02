@@ -52,21 +52,25 @@ public class MessageService {
 
     private final RedisSubscriber redisSubscriber;
 
+
+    /* 새로운 메시지 생성, Redis 채널 발행 */
     public MessageResponseDto createMessage(MessageRequestDto mrd) {
         MessageRoom messageRoom = verifiedMessageRoom(mrd.getMessageRoomId());
+
         Member user = memberService.findById(mrd.getMemberId());
+
         Message message = saveMessage(mrd, messageRoom, user);
+
         MessageResponseDto dto = MessageResponseDto.of(messageRepository.save(message));
+
         redisPublisher.publish(ChannelTopic.of("messageRoom" + messageRoom.getMessageRoomId()), dto);
+
         return dto;
     }
 
+    /* 특정 멤버한테 새로운 메시지 방 생성 */
     public MessageRoomResponseDto createMessageRoom(Long memberId) {
-        Member member = memberService.findById(memberId);
-
-        if (member.getRole() != MemberRole.USER) {
-            throw new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS); // 403 Forbidden 에러
-        }
+        Member member = validateUserRole(memberId);
 
         try {
             MessageRoom messageRoom = saveMessageRoom();
@@ -78,6 +82,7 @@ public class MessageService {
         }
     }
 
+    /* 특정 멤버 방 목록 조회 */
     public Page<MessageRoomResponseDto> getMessageRooms(Long memberId, Pageable pageable) {
         Page<MessageMember> userMessageRooms = messageMemberRepository.findQueryMessageRoom(memberId, pageable);
 
@@ -100,9 +105,55 @@ public class MessageService {
         );
     }
 
+    /* 메시지 방 삭제, 만약 참여자 모두 삭제한 경우는 메시지랑 방 전부 삭제 */
+    public void deleteMessageRoom(Long messageRoomId, Long memberId) {
+        MessageRoom messageRoom = verifiedMessageRoom(messageRoomId);
 
+        List<MessageMember> messageMembers = messageMemberRepository.findByMessageRoomIdAndMemberId(messageRoomId, memberId);
+
+        if (!messageMembers.isEmpty()) {
+            messageMemberRepository.deleteAll(messageMembers);
+        } else {
+            throw new MessageException(ErrorCode.MEMBER_NOT_FOUND_IN_ROOM);
+        }
+
+        List<MessageMember> remainingMembers = messageMemberRepository.findByMessageRoomId(messageRoomId);
+
+        if (remainingMembers.isEmpty()) {
+            messageRepository.deleteAllById(messageRoom.getMessages().stream()
+                    .map(Message::getMessageId)
+                    .collect(Collectors.toList()));
+
+            messageRoomRepository.deleteById(messageRoomId);
+        }
+    }
+
+    /* 메시지 생성 및 메시지 방 추가 */
+    public void sendRequestMessage(Long memberId, MessageRoom messageRoom, String messageContent) {
+        Member member = validateUserRole(memberId);
+
+        Message sendMessage = Message.builder()
+                .messageContent(messageContent)
+                .member(member)
+                .messageRoom(messageRoom)
+                .build();
+
+        Message saveSendMessage = messageRepository.save(sendMessage);
+
+        messageRoomRepository.save(messageRoom);
+    }
 
     /* 검증 및 유틸 로직 */
+
+    public Member validateUserRole(Long memberId) {
+        Member member = memberService.findById(memberId);
+
+        if (member.getRole() != MemberRole.USER) {
+            throw new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS);
+        }
+
+        return member;
+    }
 
     public MessageRoom verifiedMessageRoom(Long messageRoomId) {
         return messageRoomRepository.findById(messageRoomId)
