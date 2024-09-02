@@ -6,6 +6,13 @@ spring:
     url: jdbc:mysql://${RDS_HOST}:${RDS_PORT}/${RDS_NAME}
     username: ${RDS_USER}
     password: ${RDS_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
   servlet:
     multipart:
       enabled: true
