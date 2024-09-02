@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 import org.example.spring.domain.exchange.Exchange;
 
 @Entity
-@Table(name = "likeOverview")
+@Table(name = "like_overview")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

@@ -64,7 +64,7 @@ public class ExchangeService {
                 .content(request.getContent())
                 .viewCount(exchange.getViewCount())
                 .createdAt(exchange.getCreatedAt())
-                .updatedAt(exchange.getUpdatedAt())
+                .updatedAt(new Timestamp(System.currentTimeMillis()))
                 .build();
     }
 
@@ -86,7 +86,7 @@ public class ExchangeService {
                 .viewCount(exchange.getViewCount())
                 .createdAt(exchange.getCreatedAt())
                 .updatedAt(exchange.getUpdatedAt())
-                .deletedAt(exchange.getDeletedAt())
+                .deletedAt(new Timestamp(System.currentTimeMillis()))
                 .build();
         exchangeRepository.save(deletedExchange);
     }
@@ -133,7 +133,7 @@ public class ExchangeService {
                 .content(exchange.getContent())
                 .viewCount(exchange.getViewCount())
                 .createdAt(exchange.getCreatedAt())
-                .updatedAt(exchange.getUpdatedAt())
+                .updatedAt(new Timestamp(System.currentTimeMillis()))
                 // .status(newStatus) // Add this line when implementing status
                 .build();
         return convertToResponseDto(exchangeRepository.save(updatedExchange));
