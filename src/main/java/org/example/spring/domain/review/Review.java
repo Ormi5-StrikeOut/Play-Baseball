@@ -1,5 +1,6 @@
 package org.example.spring.domain.review;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,12 +34,12 @@ public class Review {
     private Long id;
 
     @JoinColumn(name = "exchange_id", nullable = false)
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Exchange exchange;
 
     @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Member writer;
+    private Member writer; // 작성자 id
 
     @Column(name = "content", length = 300, nullable = false)
     private String content;
@@ -57,4 +58,14 @@ public class Review {
 
     @Column(name = "deleted_at")
     private Timestamp deletedAt;
+
+    /**
+     * 특정 리뷰의 내용을 수정하고, 업데이트 시각을 현재 시각으로 설정합니다.
+     *
+     * @param content 수정할 새로운 리뷰 내용
+     */
+    public void modifyContent(String content) {
+        this.content = content;
+        this.updatedAt = new Timestamp(System.currentTimeMillis());
+    }
 }

@@ -19,9 +19,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.ContentTypeOptionsConfig;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.XXssConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,14 +28,15 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-@Profile("!dev")
+
 @Configuration
-public class SecurityConfig {
+@Profile("dev")
+public class SecurityDevConfig {
 
     private final CookieService cookieService;
     private final JwtAuthenticationService jwtAuthenticationService;
 
-    public SecurityConfig(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService) {
+    public SecurityDevConfig(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService) {
         this.cookieService = cookieService;
         this.jwtAuthenticationService = jwtAuthenticationService;
     }
@@ -58,12 +56,6 @@ public class SecurityConfig {
         http.formLogin(withDefaults());
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
-        http.headers(headersConfig -> headersConfig
-            .xssProtection(XXssConfig::disable)
-            .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-            .frameOptions(FrameOptionsConfig::sameOrigin)
-            .contentTypeOptions(withDefaults())
-        );
 
         return http.build();
     }
@@ -71,8 +63,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://3.38.208.39"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of("Authorization"));
