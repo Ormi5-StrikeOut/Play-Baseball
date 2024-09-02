@@ -24,7 +24,7 @@ public class MessageRoom extends Auditable {
     private Timestamp lastMessageAt;
 
     @OneToMany(mappedBy = "messageRoom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy("createAt DESC")
+    @OrderBy("createdAt DESC")
     private Set<Message> messages = new LinkedHashSet<>();
 
     public Message getLastMessage() {
@@ -36,7 +36,7 @@ public class MessageRoom extends Auditable {
     private void updateLastMessageAt() {
         if (!messages.isEmpty()) {
             this.lastMessageAt = messages.stream()
-                    .map(Message::getCreateAt)
+                    .map(Message::getCreatedAt)
                     .max(Timestamp::compareTo)
                     .orElse(null);
         }

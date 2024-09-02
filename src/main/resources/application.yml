@@ -26,8 +26,11 @@ spring:
       name: ${SECURITY_USER_NAME}
       password: ${SECURITY_USER_PASSWORD}
 
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  logging:
+    level:
+      org.hibernate.SQL: DEBUG
+      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
+  redis:
+    host: localhost
+    port: 6379

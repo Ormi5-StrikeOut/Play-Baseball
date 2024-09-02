@@ -31,7 +31,7 @@ public class MessageResponseDto {
                 .messageId(message.getMessageId())
                 .messageContent(message.getMessageContent())
                 .memberId(message.getMember().getId())
-                .createAt(message.getCreateAt())
+                .createAt(message.getCreatedAt())
                 .build();
     }
 
