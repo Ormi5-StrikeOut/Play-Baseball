@@ -1,4 +1,4 @@
-package org.example.spring.security;
+package org.example.spring.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
