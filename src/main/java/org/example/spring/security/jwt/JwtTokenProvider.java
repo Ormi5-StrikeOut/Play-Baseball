@@ -9,6 +9,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
+/**
+ * JWT 토큰을 생성하는 클래스입니다.
+ * 액세스 토큰과 리프레시 토큰을 생성합니다.
+ */
 @Component
 public class JwtTokenProvider {
 
@@ -18,14 +22,33 @@ public class JwtTokenProvider {
         this.jwtUtils = jwtUtils;
     }
 
+    /**
+     * 주어진 인증 정보로 액세스 토큰을 생성합니다.
+     *
+     * @param authentication 인증된 사용자 정보
+     * @return JWT 액세스 토큰
+     */
     public String generateAccessToken(Authentication authentication) {
         return generateToken(authentication, jwtUtils.getExpiration());
     }
 
+    /**
+     * 주어진 인증 정보로 리프레시 토큰을 생성합니다.
+     *
+     * @param authentication 인증된 사용자 정보
+     * @return JWT 리프레시 토큰
+     */
     public String generateRefreshToken(Authentication authentication) {
         return generateToken(authentication, jwtUtils.getRefreshExpiration());
     }
 
+    /**
+     * 인증 정보를 기반으로 토큰을 생성합니다.
+     *
+     * @param authentication 인증 정보
+     * @param expirationTime 토큰 만료 시간
+     * @return 생성된 JWT 토큰
+     */
     private  String generateToken(Authentication authentication, Long expirationTime) {
         return Jwts.builder()
             .setIssuer("play_baseball")

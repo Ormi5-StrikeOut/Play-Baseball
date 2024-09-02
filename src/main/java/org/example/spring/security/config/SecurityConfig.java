@@ -1,8 +1,10 @@
-package org.example.spring.security;
+package org.example.spring.security.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import org.example.spring.domain.member.MemberRole;
+import org.example.spring.security.handler.CustomAccessDeniedHandler;
+import org.example.spring.security.handler.CustomAuthenticationEntryPoint;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtAuthenticationService;
 import org.example.spring.security.jwt.JwtValidatorFilter;
