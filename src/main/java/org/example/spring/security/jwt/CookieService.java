@@ -51,6 +51,7 @@ public class CookieService {
             .secure(false)
             .path("/")
             .maxAge(jwtTokenProvider.getRefreshTokenExpiration())
+            .sameSite("Strict")
             .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
