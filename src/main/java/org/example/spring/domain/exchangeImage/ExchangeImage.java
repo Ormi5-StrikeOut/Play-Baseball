@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 import org.example.spring.domain.exchange.Exchange;
 
 @Entity
-@Table(name = "exchangeImage")
+@Table(name = "exchange_image")
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

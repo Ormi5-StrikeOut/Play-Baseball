@@ -6,10 +6,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
+import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +20,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,7 +43,6 @@ class MemberServiceTest {
 
     @BeforeEach
     void setUp() {
-
         validMemberDto = MemberJoinRequestDto.builder()
             .email("test@example.com")
             .password("Password1!")
@@ -46,6 +52,7 @@ class MemberServiceTest {
             .gender(Gender.MALE)
             .build();
 
+        assertThat(memberService).isNotNull();
     }
 
     @Test
@@ -71,17 +78,13 @@ class MemberServiceTest {
         when(memberRepository.save(any(Member.class))).thenReturn(savedMember);
 
         // When
-        Member registeredMember = memberService.registerMember(validMemberDto);
+        MemberResponseDto registeredMember = memberService.registerMember(validMemberDto);
 
         // Then
         assertThat(registeredMember).isNotNull();
-        assertThat(registeredMember.getId()).isNotNull();
-        assertThat(registeredMember.getName()).isEqualTo(validMemberDto.getName());
+        assertThat(registeredMember.getId()).isEqualTo(1L);
         assertThat(registeredMember.getEmail()).isEqualTo(validMemberDto.getEmail());
         assertThat(registeredMember.getNickname()).isEqualTo(validMemberDto.getNickname());
-        assertThat(registeredMember.getPassword()).isEqualTo(encodedPassword);
-        assertThat(registeredMember.getPhoneNumber()).isEqualTo(validMemberDto.getPhoneNumber());
-        assertThat(registeredMember.getGender()).isEqualTo(validMemberDto.getGender());
         assertThat(registeredMember.getRole()).isEqualTo(MemberRole.USER);
 
         verify(passwordEncoder).encode(validMemberDto.getPassword());
@@ -89,7 +92,36 @@ class MemberServiceTest {
         verify(memberRepository).existsByNickname(validMemberDto.getNickname());
         verify(memberRepository).existsByPhoneNumber(validMemberDto.getPhoneNumber());
         verify(memberRepository).save(any(Member.class));
-
     }
 
+    @Test
+    @DisplayName("회원 전체 목록 조회 - 페이징")
+    void getAllMembers_no_search() {
+        // given
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        Member member = Member.builder()
+            .id(1L)
+            .email("test@example.com")
+            .nickname("testuser")
+            .role(MemberRole.USER)
+            .build();
+
+        Page<Member> memberPage = new PageImpl<>(List.of(member), pageable, 1);
+        when(memberRepository.findAll(pageable)).thenReturn(memberPage);
+
+        // when
+        Page<MemberResponseDto> result = memberService.getAllMembers(page, size);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getEmail()).isEqualTo("test@example.com");
+        assertThat(result.getContent().getFirst().getNickname()).isEqualTo("testuser");
+        assertThat(result.getContent().getFirst().getRole()).isEqualTo(MemberRole.USER);
+
+        verify(memberRepository).findAll(pageable);
+    }
 }
