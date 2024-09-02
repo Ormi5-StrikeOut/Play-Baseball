@@ -16,8 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 회원 관련 API 엔드포인트를 담당하는 컨트롤러 클래스입니다.
- * 회원 가입, 회원 목록 조회 등의 기능을 제공합니다.
+ * 회원 관련 API 엔드포인트를 담당하는 컨트롤러 클래스입니다. 회원 가입, 회원 목록 조회 등의 기능을 제공합니다.
  */
 @RestController
 @RequestMapping("/api/members")
@@ -54,5 +53,4 @@ public class MemberController {
         Page<MemberResponseDto> members = memberService.getAllMembers(page, size);
         return ResponseEntity.ok(ApiResponseDto.success("회원 목록 조회 성공", members));
     }
-
 }
