@@ -2,7 +2,10 @@ name: Deploy Next.js FE to LightSail
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - dev
+
     paths:
       - "fe/play-baseball-fe/**"
 
