@@ -76,6 +76,12 @@ public class SecurityConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
+
+        // Https 요청 확인
+        http.requiresChannel(channel -> channel
+                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
+        );
+
         http.formLogin(withDefaults());
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
