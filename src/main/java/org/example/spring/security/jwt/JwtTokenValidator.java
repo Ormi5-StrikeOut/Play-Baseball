@@ -51,4 +51,13 @@ public class JwtTokenValidator {
         return validateToken(token).getExpiration().before(new Date());
     }
 
+    public boolean isTokenValid(String token) {
+        try {
+            validateToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }
