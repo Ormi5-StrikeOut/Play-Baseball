@@ -6,11 +6,11 @@ export const MEMBER_SIGNUP: string = `${MEMBER}/join`;
 export const MEMBER_MODIFY: string = `${MEMBER}/{memberId}`;
 export const MEMBER_VERIFY: string = `${MEMBER}/verify/{memberId}`;
 export const MEMBER_RESIGN: string = `${MEMBER}/my`;
-export const MEMBER_LOGIN: string = `${MEMBER}/login`;
+export const MEMBER_LOGIN: string = `${REQUEST_URL}/auth/login`;
 export const MEMBER_GET_ALL: string = `${MEMBER}`;
 export const MEMBER_REISSUE_TOKEN: string = `${REQUEST_URL}/auth/reissue-token/{memberId}`;
 export const MEMBER_GET: string = `${MEMBER}/{memberId}`;
-export const MEMBER_LOGOUT: string = `${REQUEST_URL}/logout`;
+export const MEMBER_LOGOUT: string = `${REQUEST_URL}/auth/logout`;
 export const MEMBER_MODIFY_ROLE: string = `${MEMBER}/verify-role/{memberId}`;
 
 // Exchange Endpoints
