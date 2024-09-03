@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.constant.ErrorCode;
 import org.example.spring.exception.MessageException;
+import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -18,7 +19,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Component
 public class WebSocketHandler implements ChannelInterceptor {
-    private final JwtTokenizer jwtTokenizer;
+    private final JwtTokenValidator jwtTokenValidator;
 
     /* 웹소켓 필터 역할 */
     @Override
@@ -29,7 +30,7 @@ public class WebSocketHandler implements ChannelInterceptor {
             String jwt = Optional.of(accessor.getFirstNativeHeader("Authorization")
                             .substring("Bearer ".length()))
                     .orElseThrow(() -> new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS));
-            jwtTokenizer.verifyAccessToken(jwt);
+            jwtTokenValidator.validateToken(jwt);
         }
         return message;
     }

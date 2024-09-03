@@ -9,13 +9,13 @@ import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.message.Message;
 import org.example.spring.domain.message.MessageMember;
 import org.example.spring.domain.message.MessageRoom;
-import org.example.spring.domain.message.messageDto.MessageMemberResponseDto;
 import org.example.spring.domain.message.messageDto.MessageRequestDto;
 import org.example.spring.domain.message.messageDto.MessageResponseDto;
 import org.example.spring.domain.message.messageDto.MessageRoomResponseDto;
 import org.example.spring.exception.MessageException;
 import org.example.spring.redis.RedisPublisher;
 import org.example.spring.redis.RedisSubscriber;
+import org.example.spring.repository.MemberRepository;
 import org.example.spring.repository.message.MessageMemberRepository;
 import org.example.spring.repository.message.MessageRepository;
 import org.example.spring.repository.message.MessageRoomRepository;
@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -42,7 +43,7 @@ public class MessageService {
 
     private final MessageMemberRepository messageMemberRepository;
 
-    private final MemberService memberService;
+    private final MemberRepository memberRepository;
 
     private final RedisPublisher redisPublisher;
 
@@ -57,9 +58,9 @@ public class MessageService {
     public MessageResponseDto createMessage(MessageRequestDto mrd) {
         MessageRoom messageRoom = verifiedMessageRoom(mrd.getMessageRoomId());
 
-        Member user = memberService.findById(mrd.getMemberId());
+        Member member = validateUserRole(mrd.getMemberId());
 
-        Message message = saveMessage(mrd, messageRoom, user);
+        Message message = saveMessage(mrd, messageRoom, member);
 
         MessageResponseDto dto = MessageResponseDto.of(messageRepository.save(message));
 
@@ -146,7 +147,9 @@ public class MessageService {
     /* 검증 및 유틸 로직 */
 
     public Member validateUserRole(Long memberId) {
-        Member member = memberService.findById(memberId);
+        Optional<Member> optionalMember = memberRepository.findById(memberId);
+
+        Member member = optionalMember.orElseThrow(() -> new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS));
 
         if (member.getRole() != MemberRole.USER) {
             throw new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS);
