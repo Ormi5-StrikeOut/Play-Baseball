@@ -35,12 +35,15 @@ const LoginPage: React.FC = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-
-        document.cookie = `Authorization=Bearer ${data.data}; path=/; sameSite=Lax`;
-        router.push({
-          pathname: "/",
-        });
+        const token = response.headers.get("Authorization");
+        if (token) {
+          localStorage.setItem("Authorization", token);
+          router.push({
+            pathname: "/",
+          });
+        } else {
+          throw new Error("token 생성 오류");
+        }
       } else {
         setShowError(true);
       }
