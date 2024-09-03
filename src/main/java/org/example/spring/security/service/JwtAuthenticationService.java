@@ -34,9 +34,9 @@ public class JwtAuthenticationService {
      * @throws RuntimeException 두 토큰 모두 유효하지 않거나 만료된 경우
      */
     public void authenticateWithTokens(String accessToken, String refreshToken, HttpServletResponse response) {
-        if (accessToken != null && !jwtTokenValidator.isTokenExpired(accessToken)) {
+        if (accessToken != null && jwtTokenValidator.isTokenValid(accessToken)) {
             processToken(accessToken);
-        } else if (refreshToken != null && !jwtTokenValidator.isTokenExpired(refreshToken)) {
+        } else if (refreshToken != null && jwtTokenValidator.isTokenValid(refreshToken)) {
             Authentication authentication = createAuthenticationFromToken(refreshToken);
             String newAccessToken = jwtTokenProvider.generateAccessToken(authentication);
 

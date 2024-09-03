@@ -24,7 +24,7 @@ public class RateLimiterService {
     }
 
     public boolean tryConsume(String token, String ip, String userAgent) {
-        if (token != null && !jwtTokenValidator.isTokenExpired(token) && jwtTokenValidator.isTokenValid(token)) {
+        if (token != null && jwtTokenValidator.isTokenValid(token)) {
             // 인증된 사용자
             String email = jwtTokenValidator.extractUsername(token);
             log.info("Authenticated user - Email: {}", email);

@@ -45,19 +45,11 @@ public class JwtTokenValidator {
      * JWT 토큰의 만료 여부를 확인합니다.
      *
      * @param token 확인할 JWT 토큰
-     * @return 토큰이 만료되었으면 true, 그렇지 않으면 false
+     * @return 토큰이 유효하면 true, 그렇지 않으면 false
      */
-    public boolean isTokenExpired(String token) {
-        return validateToken(token).getExpiration().before(new Date());
+    public boolean isTokenValid(String token) {
+        return !validateToken(token).getExpiration().before(new Date());
     }
 
-    public boolean isTokenValid(String token) {
-        try {
-            validateToken(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
 }
