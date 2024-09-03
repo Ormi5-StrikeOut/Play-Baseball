@@ -3,6 +3,7 @@ package org.example.spring.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.LoginRequestDto;
+import org.example.spring.domain.member.dto.LoginResponseDto;
 import org.example.spring.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,10 +32,10 @@ public class AuthController {
      * @return 로그인 결과와 액세스 토큰을 포함한 ResponseEntity
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponseDto<String>> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+    public ResponseEntity<ApiResponseDto<LoginResponseDto>> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
 
-        String accessToken = authService.login(loginRequestDto, response);
-        return ResponseEntity.ok(ApiResponseDto.success("로그인 성공", accessToken));
+        LoginResponseDto loginResponseDto = authService.login(loginRequestDto, response);
+        return ResponseEntity.ok(ApiResponseDto.success("로그인 성공", loginResponseDto));
 
     }
 
