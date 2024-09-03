@@ -1,10 +1,12 @@
-package org.example.spring.security.jwt;
+package org.example.spring.security.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.example.spring.security.jwt.CookieService;
+import org.example.spring.security.service.JwtAuthenticationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;

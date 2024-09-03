@@ -2,6 +2,7 @@ package org.example.spring.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.spring.domain.member.dto.LoginRequestDto;
+import org.example.spring.domain.member.dto.LoginResponseDto;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,15 +33,20 @@ public class AuthService {
      * @param response HTTP 응답
      * @return 생성된 액세스 토큰
      */
-    public String login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
+    public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
         Authentication authentication = UsernamePasswordAuthenticationToken.unauthenticated(loginRequestDto.email(), loginRequestDto.password());
         Authentication authenticate = authenticationManager.authenticate(authentication);
 
         String accessToken = jwtTokenProvider.generateAccessToken(authenticate);
         String refreshToken = jwtTokenProvider.generateRefreshToken(authenticate);
 
+        response.setHeader("Authorization", "Bearer " + accessToken);
         cookieService.addRefreshTokenCookie(response, refreshToken);
-        return accessToken;
+
+        return LoginResponseDto.builder()
+            .email(authenticate.getName())
+            .roles(authenticate.getAuthorities().toString())
+            .build();
     }
 
 }

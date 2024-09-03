@@ -8,11 +8,12 @@ import org.example.spring.domain.member.MemberRole;
 import org.example.spring.security.handler.CustomAccessDeniedHandler;
 import org.example.spring.security.handler.CustomAuthenticationEntryPoint;
 import org.example.spring.security.jwt.CookieService;
-import org.example.spring.security.jwt.JwtAuthenticationService;
-import org.example.spring.security.jwt.JwtValidatorFilter;
+import org.example.spring.security.service.JwtAuthenticationService;
+import org.example.spring.security.filter.JwtValidatorFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -49,9 +50,29 @@ public class SecurityDevConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .addFilterBefore(jwtValidatorFilter(), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
-                .requestMatchers("/api/members", "api/members/verify-role/").hasAuthority(MemberRole.ADMIN.name())
-                .requestMatchers("/api/exchanges").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .anyRequest().permitAll()
+                // 비회원 공개 엔드포인트
+                .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
+
+                // 사용자 및 관리자 엔드포인트
+                .requestMatchers(HttpMethod.PUT, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+
+                // 관리자 전용 엔드포인트
+                .requestMatchers(HttpMethod.GET, "/api/members").hasAuthority(MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/members/verify-role/**").hasAuthority(MemberRole.ADMIN.name())
+
+                // 인증된 사용자 엔드포인트
+                .requestMatchers(HttpMethod.GET, "/api/auth/logout", "/api/auth/reissue-token/**").authenticated()
+                .requestMatchers("/api/exchange-likes/**").authenticated()
+
+                // 기타 모든 요청
+                .anyRequest().authenticated()
             );
         http.formLogin(withDefaults());
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
