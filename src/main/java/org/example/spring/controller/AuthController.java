@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 인증 관련 HTTP 요청을 처리하는 컨트롤러 클래스입니다.
  */
 @RestController
-@RequestMapping("/api/login")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -30,7 +30,7 @@ public class AuthController {
      * @param response HTTP 응답
      * @return 로그인 결과와 액세스 토큰을 포함한 ResponseEntity
      */
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<ApiResponseDto<String>> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
 
         String accessToken = authService.login(loginRequestDto, response);

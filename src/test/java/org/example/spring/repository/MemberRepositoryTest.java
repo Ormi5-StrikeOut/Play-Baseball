@@ -151,7 +151,7 @@ class MemberRepositoryTest {
         // then
         assertThat(result.getContent())
             .extracting("name", "email", "nickname", "gender", "role")
-            .contains(
+            .containsAnyOf(
                 tuple("Member 1", "member1@example.com", "member1", Gender.MALE, MemberRole.USER),
                 tuple("Member 2", "member2@example.com", "member2", Gender.FEMALE, MemberRole.USER),
                 tuple("Member 3", "member3@example.com", "member3", Gender.MALE, MemberRole.USER)

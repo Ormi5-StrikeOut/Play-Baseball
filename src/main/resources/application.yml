@@ -3,9 +3,16 @@ spring:
     name: Play_Baseball
 
   datasource:
-    url: jdbc:mysql://database-1.c1ck2eio8ok7.ap-northeast-2.rds.amazonaws.com:3306/test_db
-    username: admin
-    password: KPNLKH0IQK1mD9SrrJtc
+    url: jdbc:mysql://${RDS_HOST}:${RDS_PORT}/${RDS_NAME}
+    username: ${RDS_USER}
+    password: ${RDS_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
   servlet:
     multipart:
       enabled: true
@@ -23,12 +30,12 @@ spring:
 
   security:
     user:
-      name: admin
-      password: admin
+      name: ${SECURITY_USER_NAME}
+      password: ${SECURITY_USER_PASSWORD}
 
-  redis:
-    host: local
-    port: 6379
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
 
 logging:
   level:
@@ -39,8 +46,7 @@ logging:
     org.springframework.security.authentication: DEBUG
 
 jwt:
-  secret: ${JWT_SECRET:기본값으로32자이상의충분히긴문자열사용}
-  expiration: ${JWT_EXPIRATION:86400000}  # 24시간
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}  # 24시간
   refresh-token:
-    expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7일
-
+    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
