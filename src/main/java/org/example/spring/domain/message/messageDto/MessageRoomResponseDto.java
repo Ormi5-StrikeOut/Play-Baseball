@@ -24,7 +24,7 @@ public class MessageRoomResponseDto {
 
     public static MessageRoomResponseDto of(MessageRoom messageRoom) {
         return MessageRoomResponseDto.builder()
-                .messageRoomId(messageRoom.getMessageRoomId())
+                .messageRoomId(messageRoom.getId())
                 .createAt(messageRoom.getCreatedAt())
                 .lastMessageAt(messageRoom.getLastMessageAt())
                 .messages(messageRoom.getMessages().stream()

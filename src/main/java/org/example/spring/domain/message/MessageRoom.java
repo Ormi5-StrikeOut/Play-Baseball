@@ -18,7 +18,8 @@ public class MessageRoom extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long messageRoomId;
+    @Column(name = "message_room_id", nullable = false)
+    private Long id;
 
     @Column(name = "last_message_at")
     private Timestamp lastMessageAt;

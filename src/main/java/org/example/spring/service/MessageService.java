@@ -9,6 +9,7 @@ import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.message.Message;
 import org.example.spring.domain.message.MessageMember;
 import org.example.spring.domain.message.MessageRoom;
+import org.example.spring.domain.message.messageDto.MessageMemberResponseDto;
 import org.example.spring.domain.message.messageDto.MessageRequestDto;
 import org.example.spring.domain.message.messageDto.MessageResponseDto;
 import org.example.spring.domain.message.messageDto.MessageRoomResponseDto;
@@ -64,7 +65,7 @@ public class MessageService {
 
         MessageResponseDto dto = MessageResponseDto.of(messageRepository.save(message));
 
-        redisPublisher.publish(ChannelTopic.of("messageRoom" + messageRoom.getMessageRoomId()), dto);
+        redisPublisher.publish(ChannelTopic.of("messageRoom" + messageRoom.getId()), dto);
 
         return dto;
     }
@@ -75,7 +76,7 @@ public class MessageService {
 
         try {
             MessageRoom messageRoom = saveMessageRoom();
-            sendTopic(messageRoom.getMessageRoomId());
+            sendTopic(messageRoom.getId());
             return MessageRoomResponseDto.of(messageRoom);
 
         } catch (MessageException error) {
@@ -90,7 +91,7 @@ public class MessageService {
         List<MessageMember> messageMembers = userMessageRooms.getContent();
 
         List<Long> messageRoomIds = messageMembers.stream()
-                .map(messageMember -> messageMember.getMessageRoom().getMessageRoomId())
+                .map(messageMember -> messageMember.getMessageRoom().getId())
                 .collect(Collectors.toList());
 
         List<MessageRoom> messageRooms = messageRoomRepository.findAllById(messageRoomIds);
@@ -122,7 +123,7 @@ public class MessageService {
 
         if (remainingMembers.isEmpty()) {
             messageRepository.deleteAllById(messageRoom.getMessages().stream()
-                    .map(Message::getMessageId)
+                    .map(Message::getId)
                     .collect(Collectors.toList()));
 
             messageRoomRepository.deleteById(messageRoomId);

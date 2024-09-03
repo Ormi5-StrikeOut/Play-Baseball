@@ -18,10 +18,10 @@ import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
-    @Value("${redis.host}")
+    @Value("localhost")
     private String host;
 
-    @Value("${redis.port}")
+    @Value("6379")
     private int port;
 
     /* Redis 서버와 연결 설정 */
