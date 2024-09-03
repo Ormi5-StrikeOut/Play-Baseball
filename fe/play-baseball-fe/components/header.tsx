@@ -1,27 +1,19 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import axios from "axios";
 import { MEMBER_LOGOUT, SERVER_URL } from "@/constants/endpoints";
-
-// 쿠키에서 특정 이름의 쿠키 값을 가져오는 함수
-const getCookie = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop()?.split(";").shift() ?? null;
-  }
-  return null;
-};
 
 const Header = () => {
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const router = useRouter();
-
-  // 로그인 상태 확인
   useEffect(() => {
-    const token = getCookie("Authorization");
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("Authorization")
+        : null;
     if (token) {
       setLoggedIn(true);
     }
@@ -29,28 +21,28 @@ const Header = () => {
 
   // 로그아웃 처리
   const handleLogout = () => {
-    const token = getCookie("Authorization");
-    fetch(MEMBER_LOGOUT, {
-      method: "GET",
-      headers: {
-        Authorization: `${token}`,
-        "Content-Type": "application/json",
-      },
-    })
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("Authorization")
+        : null;
+    axios
+      .post(
+        MEMBER_LOGOUT,
+        {},
+        {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      )
       .then((response) => {
-        if (response.ok) {
+        if (response.status === 200) {
+          localStorage.removeItem("Authorization");
           setLoggedIn(false);
           window.location.href = SERVER_URL;
         } else {
-          router.push({
-            pathname: "/result",
-            query: {
-              isSuccess: "false",
-              message: "통신 오류가 발생했습니다.",
-              buttonText: "메인 페이지로 돌아가기",
-              buttonAction: "/",
-            },
-          });
+          throw new Error("통신 오류가 발생했습니다: logout");
         }
       })
       .catch((error) => {
@@ -58,7 +50,7 @@ const Header = () => {
           pathname: "/result",
           query: {
             isSuccess: "false",
-            message: "통신 오류가 발생했습니다.",
+            message: error,
             buttonText: "메인 페이지로 돌아가기",
             buttonAction: "/",
           },
