@@ -48,7 +48,9 @@ public class SecurityConfig {
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .requiresChannel(rcc -> rcc.anyRequest().requiresSecure())
+            .requiresChannel(channel -> channel
+                    .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
+            )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
@@ -76,11 +78,6 @@ public class SecurityConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
-
-        // Https 요청 확인
-        http.requiresChannel(channel -> channel
-                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
-        );
 
         http.formLogin(withDefaults());
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
