@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import Alert from "@mui/material/Alert";
 import FormControl from "@mui/material/FormControl";
+import axios from "axios";
 import { MEMBER_LOGIN } from "@/constants/endpoints";
 
 const LoginPage: React.FC = () => {
@@ -23,19 +24,13 @@ const LoginPage: React.FC = () => {
   const handleLogin = async () => {
     setShowError(false);
     try {
-      const response = await fetch(MEMBER_LOGIN, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formValues.email,
-          password: formValues.password,
-        }),
+      const response = await axios.post(MEMBER_LOGIN, {
+        email: formValues.email,
+        password: formValues.password,
       });
 
-      if (response.ok) {
-        const token = response.headers.get("Authorization");
+      if (response.status === 200) {
+        const token = response.headers["authorization"];
         if (token) {
           localStorage.setItem("Authorization", token);
           router.push({
@@ -47,12 +42,13 @@ const LoginPage: React.FC = () => {
       } else {
         setShowError(true);
       }
-    } catch {
+    } catch (error) {
+      console.error("로그인 요청 실패", error);
       router.push({
         pathname: "/result",
         query: {
           isSuccess: "false",
-          message: "통신 오류가 발생했습니다.",
+          message: `통신 오류가 발생했습니다: ${error}`,
           buttonText: "다시 시도하기",
           buttonAction: "/login",
         },
