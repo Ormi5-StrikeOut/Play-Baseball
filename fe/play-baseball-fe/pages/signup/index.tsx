@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
+import axios from "axios"; // Import axios
 import { MEMBER_SIGNUP } from "@/constants/endpoints";
 import {
   Container,
@@ -132,22 +133,16 @@ const SignupPage: React.FC = () => {
 
     setErrors(currentErrors); // Reset errors before submit
     try {
-      const response = await fetch(MEMBER_SIGNUP, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formValues.name,
-          email: formValues.email,
-          password: formValues.password,
-          nickname: formValues.nickname,
-          phoneNumber: `${formValues.phoneFirst}-${formValues.phoneMiddle}-${formValues.phoneLast}`,
-          gender: formValues.gender,
-        }),
+      const response = await axios.post(MEMBER_SIGNUP, {
+        name: formValues.name,
+        email: formValues.email,
+        password: formValues.password,
+        nickname: formValues.nickname,
+        phoneNumber: `${formValues.phoneFirst}-${formValues.phoneMiddle}-${formValues.phoneLast}`,
+        gender: formValues.gender,
       });
 
-      if (response.ok) {
+      if (response.status === 200) {
         router.push({
           pathname: "/result",
           query: {
@@ -158,7 +153,7 @@ const SignupPage: React.FC = () => {
           },
         });
       } else {
-        const errorData = await response.json();
+        const errorData = response.data;
         router.push({
           pathname: "/result",
           query: {
@@ -169,16 +164,29 @@ const SignupPage: React.FC = () => {
           },
         });
       }
-    } catch {
-      router.push({
-        pathname: "/result",
-        query: {
-          isSuccess: "false",
-          message: "통신 오류가 발생했습니다.",
-          buttonText: "다시 시도하기",
-          buttonAction: "/signup",
-        },
-      });
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const errorData = error.response.data;
+        router.push({
+          pathname: "/result",
+          query: {
+            isSuccess: "false",
+            message: errorData.message || "회원가입 중 오류가 발생했습니다.",
+            buttonText: "다시 시도하기",
+            buttonAction: "/signup",
+          },
+        });
+      } else {
+        router.push({
+          pathname: "/result",
+          query: {
+            isSuccess: "false",
+            message: "통신 오류가 발생했습니다.",
+            buttonText: "다시 시도하기",
+            buttonAction: "/signup",
+          },
+        });
+      }
     }
 
     console.log("Form submitted", formValues);
