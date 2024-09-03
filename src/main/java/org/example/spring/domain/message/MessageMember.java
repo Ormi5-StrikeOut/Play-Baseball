@@ -15,7 +15,8 @@ public class MessageMember extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long messageMemberId;
+    @Column(name = "message_member_id", nullable = false)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)

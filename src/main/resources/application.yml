@@ -13,6 +13,7 @@ spring:
       connection-timeout: 30000
       max-lifetime: 1800000
       leak-detection-threshold: 60000
+
   servlet:
     multipart:
       enabled: true
@@ -33,13 +34,21 @@ spring:
       name: ${SECURITY_USER_NAME}
       password: ${SECURITY_USER_PASSWORD}
 
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.security: DEBUG
+    org.springframework.security.web: DEBUG
+    org.springframework.security.authentication: DEBUG
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
+  expiration: ${JWT_EXPIRATION}  # 24시간
   refresh-token:
-    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
+    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
+
