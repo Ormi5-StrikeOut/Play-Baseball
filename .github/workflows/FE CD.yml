@@ -42,5 +42,5 @@ jobs:
             docker load < image.tar
             docker stop fe-container || true
             docker rm fe-container || true
-            docker run -d --name fe-container -p 80:3000 -e NODE_ENV=production play-baseball-fe:latest
+            docker run -d --name fe-container -p 8080:3000 -e NODE_ENV=production play-baseball-fe:latest
           '
