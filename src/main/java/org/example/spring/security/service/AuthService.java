@@ -1,4 +1,4 @@
-package org.example.spring.service;
+package org.example.spring.security.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.spring.domain.member.dto.LoginRequestDto;
