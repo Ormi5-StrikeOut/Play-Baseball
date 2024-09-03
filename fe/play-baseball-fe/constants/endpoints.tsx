@@ -1,3 +1,4 @@
+export const SERVER_URL = "http://3.38.208.39"; // FE 서버 주소
 const REQUEST_URL: string = "http://3.36.114.27:8080/api";
 
 // Member Endpoints
