@@ -11,6 +11,7 @@ import {
   Divider,
   Avatar,
   ListItemAvatar,
+  ButtonBase,
 } from "@mui/material";
 
 interface ChatRoom {
@@ -177,7 +178,7 @@ const ChatInterface = () => {
               {chatRooms.map((chatRoom) => (
                 <React.Fragment key={chatRoom.id}>
                   <ListItem
-                    button
+                    component={ButtonBase}
                     onClick={() => handleChatRoomClick(chatRoom)}
                     sx={{
                       backgroundColor:
