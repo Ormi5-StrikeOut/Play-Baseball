@@ -47,12 +47,8 @@ logging:
     org.springframework.security.authentication: DEBUG
 
 jwt:
-  secret: ${JWT_SECRET:기본값으로32자이상의충분히긴문자열사용}
-  expiration: ${JWT_EXPIRATION:86400000}  # 24시간
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}  # 24시간
   refresh-token:
-    expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7일
-
     expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
 
