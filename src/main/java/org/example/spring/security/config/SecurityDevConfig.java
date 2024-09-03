@@ -5,11 +5,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import java.util.Arrays;
 import java.util.List;
 import org.example.spring.domain.member.MemberRole;
+import org.example.spring.security.filter.JwtValidatorFilter;
+import org.example.spring.security.filter.RateLimitFilter;
 import org.example.spring.security.handler.CustomAccessDeniedHandler;
 import org.example.spring.security.handler.CustomAuthenticationEntryPoint;
-import org.example.spring.security.jwt.CookieService;
-import org.example.spring.security.service.JwtAuthenticationService;
-import org.example.spring.security.filter.JwtValidatorFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -34,12 +33,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Profile("dev")
 public class SecurityDevConfig {
 
-    private final CookieService cookieService;
-    private final JwtAuthenticationService jwtAuthenticationService;
+    private final JwtValidatorFilter jwtValidatorFilter;
+    private final RateLimitFilter rateLimitFilter;
 
-    public SecurityDevConfig(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService) {
-        this.cookieService = cookieService;
-        this.jwtAuthenticationService = jwtAuthenticationService;
+    public SecurityDevConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter) {
+        this.jwtValidatorFilter = jwtValidatorFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -48,7 +47,9 @@ public class SecurityDevConfig {
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .addFilterBefore(jwtValidatorFilter(), UsernamePasswordAuthenticationFilter.class)
+            .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
@@ -114,8 +115,4 @@ public class SecurityDevConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public JwtValidatorFilter jwtValidatorFilter() {
-        return new JwtValidatorFilter(cookieService, jwtAuthenticationService);
-    }
 }

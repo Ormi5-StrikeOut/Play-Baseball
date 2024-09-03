@@ -6,22 +6,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.example.spring.security.jwt.CookieService;
+import org.example.spring.security.jwt.JwtUtils;
 import org.example.spring.security.service.JwtAuthenticationService;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StringUtils;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * 들어오는 요청에 대해 JWT 토큰의 유효성을 검사하는 필터 클래스입니다.
  */
+@Component
 public class JwtValidatorFilter extends OncePerRequestFilter {
 
     private final CookieService cookieService;
     private final JwtAuthenticationService jwtAuthenticationService;
+    private final JwtUtils jwtUtils;
 
-    public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService) {
+    public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService, JwtUtils jwtUtils) {
         this.cookieService = cookieService;
         this.jwtAuthenticationService = jwtAuthenticationService;
+        this.jwtUtils = jwtUtils;
     }
 
     /**
@@ -36,7 +40,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
-        String accessToken = extractTokenFromHeader(request);
+        String accessToken = jwtUtils.extractTokenFromHeader(request);
         String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
         try {
             jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, response);
@@ -44,20 +48,6 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
         }
         filterChain.doFilter(request, response);
-    }
-
-    /**
-     * 요청 헤더에서 토큰을 추출합니다.
-     *
-     * @param request HTTP 요청
-     * @return 추출된 토큰, 없으면 null
-     */
-    private String extractTokenFromHeader(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
     }
 
     /**

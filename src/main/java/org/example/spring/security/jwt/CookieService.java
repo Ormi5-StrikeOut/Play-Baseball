@@ -48,7 +48,7 @@ public class CookieService {
     public void addRefreshTokenCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from("refresh_token", token)
             .httpOnly(true)
-            .secure(false)
+            .secure(true)
             .path("/")
             .maxAge(jwtTokenProvider.getRefreshTokenExpiration())
             .sameSite("Lax")
