@@ -35,6 +35,9 @@ const LoginPage: React.FC = () => {
       });
 
       if (response.ok) {
+        const data = await response.json();
+
+        document.cookie = `Authorization=Bearer ${data.data}; path=/; sameSite=Lax`;
         router.push({
           pathname: "/",
         });
