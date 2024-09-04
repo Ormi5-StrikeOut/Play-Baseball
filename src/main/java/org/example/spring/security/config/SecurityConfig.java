@@ -80,15 +80,17 @@ public class SecurityConfig {
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
         http.headers(headersConfig -> headersConfig
-            .xssProtection(XXssConfig::disable)
-            .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-            .frameOptions(FrameOptionsConfig::sameOrigin)
-            .contentTypeOptions(withDefaults())
-            .httpStrictTransportSecurity(hsts -> hsts
-                .includeSubDomains(true)
-                .preload(true)
-                .maxAgeInSeconds(31536000)
-            )
+                .xssProtection(XXssConfig::disable)
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                .frameOptions(FrameOptionsConfig::sameOrigin)
+                .contentTypeOptions(withDefaults())
+                .httpStrictTransportSecurity(hsts -> hsts
+                        .includeSubDomains(true)
+                        .preload(true)
+                        .maxAgeInSeconds(31536000)
+
+                )
+                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.ORIGIN))
         );
 
         return http.build();
