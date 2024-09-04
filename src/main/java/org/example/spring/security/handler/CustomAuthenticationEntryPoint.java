@@ -32,17 +32,22 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
         throws IOException {
-        // 동적 값 설정
         String currentTimeStamp = Instant.now().toString();
-        String message = (authException != null && authException.getMessage() != null) ? authException.getMessage()
-            : "Unauthorized";
+        String message;
+        String errorReason = response.getHeader("play-baseball-error-reason");
+
+        if ("Invalid Token".equals(errorReason)) {
+            message = "The provided token is invalid. Please login again.";
+        } else {
+            message = (authException != null && authException.getMessage() != null) ? authException.getMessage()
+                : "Unauthorized";
+        }
+
         String path = request.getRequestURI();
 
-        response.setHeader("play-baseball-error-reason", "Authentication failed");
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        // JSON 응답 구성
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", currentTimeStamp);
         errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
