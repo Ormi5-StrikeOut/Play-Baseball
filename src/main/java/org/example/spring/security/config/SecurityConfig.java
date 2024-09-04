@@ -87,6 +87,11 @@ public class SecurityConfig {
             .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
             .frameOptions(FrameOptionsConfig::sameOrigin)
             .contentTypeOptions(withDefaults())
+            .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .preload(true)
+                    .maxAgeInSeconds(31536000)
+            )
         );
 
         return http.build();

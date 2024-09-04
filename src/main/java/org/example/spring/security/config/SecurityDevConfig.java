@@ -19,6 +19,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -81,6 +82,17 @@ public class SecurityDevConfig {
         http.formLogin(withDefaults());
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
+        http.headers(headersConfig -> headersConfig
+                .xssProtection(HeadersConfigurer.XXssConfig::disable)
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                .contentTypeOptions(withDefaults())
+                .httpStrictTransportSecurity(hsts -> hsts
+                        .includeSubDomains(true)
+                        .preload(true)
+                        .maxAgeInSeconds(31536000)
+                )
+        );
 
         return http.build();
     }
