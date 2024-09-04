@@ -55,7 +55,7 @@ public class SecurityConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers("/index.html").permitAll()
+                .requestMatchers("/").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
@@ -84,7 +84,7 @@ public class SecurityConfig {
         http.formLogin(login -> login
             .loginPage("/api/auth/login")
             .loginProcessingUrl("/api/auth/login")
-            .defaultSuccessUrl("/api/exchanges/five")
+            .defaultSuccessUrl("/")
         );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
