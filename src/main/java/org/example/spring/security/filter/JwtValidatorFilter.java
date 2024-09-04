@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtUtils;
 import org.example.spring.security.service.JwtAuthenticationService;
@@ -21,6 +23,10 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     private final CookieService cookieService;
     private final JwtAuthenticationService jwtAuthenticationService;
     private final JwtUtils jwtUtils;
+
+    private static final List<String> PUBLIC_PATHS = Arrays.asList(
+        "/", "/api/auth/login", "/api/members/join", "/api/exchanges", "/api/reviews"
+    );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService, JwtUtils jwtUtils) {
         this.cookieService = cookieService;
@@ -58,6 +64,8 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().equals("/api/members/join") || request.getServletPath().equals("/api/login");
+        String path = request.getServletPath();
+        return PUBLIC_PATHS.stream().anyMatch(path::startsWith) ||
+            path.startsWith("/api/members/verify/");
     }
 }
