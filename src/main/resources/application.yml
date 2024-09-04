@@ -55,4 +55,7 @@ jwt:
     expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
 
 server:
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
+  tomcat:
+    remote-ip-header: X-Forwarded-For
+    protocol-header: X-Forwarded-Proto
