@@ -80,10 +80,10 @@ public class SecurityConfig {
             );
 
         http.formLogin(login -> login
-                .loginPage("/api/auth/login")
-                .loginProcessingUrl("/api/auth/login")
-                .defaultSuccessUrl("/api/exchanges/five")
-                .failureUrl("/api/auth/login?error")
+                .loginPage("api/auth/login")
+                .loginProcessingUrl("api/auth/login")
+                .defaultSuccessUrl("api/exchanges/five")
+                .failureUrl("api/auth/login?error")
         );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
@@ -105,7 +105,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://3.38.208.39"));
+        configuration.setAllowedOrigins(List.of("https://3.38.208.39", "https://ioshane.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
