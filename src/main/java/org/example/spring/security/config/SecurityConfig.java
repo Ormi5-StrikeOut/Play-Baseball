@@ -79,7 +79,12 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             );
 
-        http.formLogin(withDefaults());
+        http.formLogin(login -> login
+                .loginPage("/api/auth/login")
+                .loginProcessingUrl("/api/auth/login")
+                .defaultSuccessUrl("/api/exchanges/five")
+                .failureUrl("/api/auth/login?error")
+        );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
         http.headers(headersConfig -> headersConfig
