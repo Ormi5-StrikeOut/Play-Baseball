@@ -78,8 +78,11 @@ public class SecurityConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
-        http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
+        http.httpBasic(AbstractHttpConfigurer::disable);
+        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
+            .accessDeniedHandler(new CustomAccessDeniedHandler())
+            .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+        );
         http.headers(headersConfig -> headersConfig
                 .xssProtection(XXssConfig::disable)
                 .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))

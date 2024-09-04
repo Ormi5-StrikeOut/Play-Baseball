@@ -48,14 +48,11 @@ public class SecurityDevConfig {
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .requiresChannel(channel -> channel
-                    .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
-            )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
@@ -65,33 +62,36 @@ public class SecurityDevConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**")
+                .hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
 
                 // 관리자 전용 엔드포인트
                 .requestMatchers(HttpMethod.GET, "/api/members").hasAuthority(MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.PUT, "/api/members/verify-role/**").hasAuthority(MemberRole.ADMIN.name())
 
                 // 인증된 사용자 엔드포인트
-                .requestMatchers(HttpMethod.GET, "/api/auth/logout", "/api/auth/reissue-token/**").authenticated()
+                .requestMatchers("/api/auth/reissue-token/**").authenticated()
                 .requestMatchers("/api/exchange-likes/**").authenticated()
 
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
 
-        http.formLogin(withDefaults());
-        http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
+        http.httpBasic(AbstractHttpConfigurer::disable);
+        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
+            .accessDeniedHandler(new CustomAccessDeniedHandler())
+            .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+        );
         http.headers(headersConfig -> headersConfig
-                .xssProtection(HeadersConfigurer.XXssConfig::disable)
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                .contentTypeOptions(withDefaults())
-                .httpStrictTransportSecurity(hsts -> hsts
-                        .includeSubDomains(true)
-                        .preload(true)
-                        .maxAgeInSeconds(31536000)
-                )
+            .xssProtection(HeadersConfigurer.XXssConfig::disable)
+            .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+            .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+            .contentTypeOptions(withDefaults())
+            .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .preload(true)
+                .maxAgeInSeconds(31536000)
+            )
         );
 
         return http.build();
