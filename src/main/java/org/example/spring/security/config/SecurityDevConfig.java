@@ -9,7 +9,6 @@ import org.example.spring.security.filter.JwtValidatorFilter;
 import org.example.spring.security.filter.RateLimitFilter;
 import org.example.spring.security.handler.CustomAccessDeniedHandler;
 import org.example.spring.security.handler.CustomAuthenticationEntryPoint;
-import org.example.spring.security.handler.CustomLogoutSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -37,13 +36,10 @@ public class SecurityDevConfig {
 
     private final JwtValidatorFilter jwtValidatorFilter;
     private final RateLimitFilter rateLimitFilter;
-    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
-    public SecurityDevConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter,
-        CustomLogoutSuccessHandler customLogoutSuccessHandler) {
+    public SecurityDevConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter) {
         this.jwtValidatorFilter = jwtValidatorFilter;
         this.rateLimitFilter = rateLimitFilter;
-        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
     }
 
     @Bean
@@ -56,7 +52,7 @@ public class SecurityDevConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
@@ -66,29 +62,26 @@ public class SecurityDevConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**")
+                .hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
 
                 // 관리자 전용 엔드포인트
                 .requestMatchers(HttpMethod.GET, "/api/members").hasAuthority(MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.PUT, "/api/members/verify-role/**").hasAuthority(MemberRole.ADMIN.name())
 
                 // 인증된 사용자 엔드포인트
-                .requestMatchers(HttpMethod.GET, "/api/auth/logout", "/api/auth/reissue-token/**").authenticated()
+                .requestMatchers("/api/auth/reissue-token/**").authenticated()
                 .requestMatchers("/api/exchange-likes/**").authenticated()
 
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
 
-        http.formLogin(withDefaults())
-            .logout(logout -> logout
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessHandler(customLogoutSuccessHandler)
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-            );
-        http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
+        http.httpBasic(AbstractHttpConfigurer::disable);
+        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
+            .accessDeniedHandler(new CustomAccessDeniedHandler())
+            .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+        );
         http.headers(headersConfig -> headersConfig
             .xssProtection(HeadersConfigurer.XXssConfig::disable)
             .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
