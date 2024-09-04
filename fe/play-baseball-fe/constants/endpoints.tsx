@@ -1,5 +1,5 @@
 export const SERVER_URL = "https://ioshane.com"; // FE 서버 주소
-const REQUEST_URL: string = "https://api.ioshane.com"; // BE 서버 주소
+const REQUEST_URL: string = "https://api.ioshane.com/api"; // BE 서버 주소
 
 // Member Endpoints
 export const MEMBER: string = `${REQUEST_URL}/members`;
