@@ -80,10 +80,10 @@ public class SecurityConfig {
             );
 
         http.formLogin(login -> login
-                .loginPage("api/auth/login")
-                .loginProcessingUrl("api/auth/login")
-                .defaultSuccessUrl("api/exchanges/five")
-                .failureUrl("api/auth/login?error")
+                .loginPage("/api/auth/login")
+                .loginProcessingUrl("/api/auth/login")
+                .defaultSuccessUrl("/api/exchanges/five")
+                .failureUrl("/api/auth/login?error")
         );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
