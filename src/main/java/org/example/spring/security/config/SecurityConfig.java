@@ -48,11 +48,14 @@ public class SecurityConfig {
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .requiresChannel(rcc -> rcc.anyRequest().requiresSecure())
+            .requiresChannel(channel -> channel
+                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
+            )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
+                .requestMatchers("/").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
@@ -63,7 +66,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**")
+                .hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
 
                 // 관리자 전용 엔드포인트
                 .requestMatchers(HttpMethod.GET, "/api/members").hasAuthority(MemberRole.ADMIN.name())
@@ -76,7 +80,12 @@ public class SecurityConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
-        http.formLogin(withDefaults());
+
+        http.formLogin(login -> login
+            .loginPage("/api/auth/login")
+            .loginProcessingUrl("/api/auth/login")
+            .defaultSuccessUrl("/")
+        );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
         http.headers(headersConfig -> headersConfig
@@ -84,6 +93,11 @@ public class SecurityConfig {
             .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
             .frameOptions(FrameOptionsConfig::sameOrigin)
             .contentTypeOptions(withDefaults())
+            .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .preload(true)
+                .maxAgeInSeconds(31536000)
+            )
         );
 
         return http.build();
@@ -92,7 +106,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://3.38.208.39"));
+        configuration.setAllowedOrigins(List.of("https://3.38.208.39", "https://ioshane.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
