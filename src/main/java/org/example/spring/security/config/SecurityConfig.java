@@ -48,15 +48,12 @@ public class SecurityConfig {
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .requiresChannel(channel -> channel
-                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
-            )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers("/").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
+                .requestMatchers("/", "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/members/join").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
@@ -80,12 +77,6 @@ public class SecurityConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
-
-        http.formLogin(login -> login
-            .loginPage("/api/auth/login")
-            .loginProcessingUrl("/api/auth/login")
-            .defaultSuccessUrl("/")
-        );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
         http.headers(headersConfig -> headersConfig
