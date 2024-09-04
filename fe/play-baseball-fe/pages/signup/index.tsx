@@ -133,14 +133,20 @@ const SignupPage: React.FC = () => {
 
     setErrors(currentErrors); // Reset errors before submit
     try {
-      const response = await axios.post(MEMBER_SIGNUP, {
-        name: formValues.name,
-        email: formValues.email,
-        password: formValues.password,
-        nickname: formValues.nickname,
-        phoneNumber: `${formValues.phoneFirst}-${formValues.phoneMiddle}-${formValues.phoneLast}`,
-        gender: formValues.gender,
-      });
+      const response = await axios.post(
+        MEMBER_SIGNUP,
+        {
+          name: formValues.name,
+          email: formValues.email,
+          password: formValues.password,
+          nickname: formValues.nickname,
+          phoneNumber: `${formValues.phoneFirst}-${formValues.phoneMiddle}-${formValues.phoneLast}`,
+          gender: formValues.gender,
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.status === 200) {
         router.push({
