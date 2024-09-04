@@ -1,5 +1,6 @@
 package org.example.spring.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.LoginRequestDto;
@@ -37,6 +38,19 @@ public class AuthController {
         LoginResponseDto loginResponseDto = authService.login(loginRequestDto, response);
         return ResponseEntity.ok(ApiResponseDto.success("로그인 성공", loginResponseDto));
 
+    }
+
+    /**
+     * 사용자 로그아웃 요청을 처리합니다.
+     *
+     * @param request HTTP 요청
+     * @param response HTTP 응답
+     * @return 로그아웃 결과를 포함한 ResponseEntity
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponseDto<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
+        authService.logout(request, response);
+        return ResponseEntity.ok(ApiResponseDto.success("로그아웃 성공", null));
     }
 
 }
