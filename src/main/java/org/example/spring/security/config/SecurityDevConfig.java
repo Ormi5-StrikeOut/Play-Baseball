@@ -9,6 +9,7 @@ import org.example.spring.security.filter.JwtValidatorFilter;
 import org.example.spring.security.filter.RateLimitFilter;
 import org.example.spring.security.handler.CustomAccessDeniedHandler;
 import org.example.spring.security.handler.CustomAuthenticationEntryPoint;
+import org.example.spring.security.handler.CustomLogoutSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -36,10 +37,13 @@ public class SecurityDevConfig {
 
     private final JwtValidatorFilter jwtValidatorFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
-    public SecurityDevConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter) {
+    public SecurityDevConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter,
+        CustomLogoutSuccessHandler customLogoutSuccessHandler) {
         this.jwtValidatorFilter = jwtValidatorFilter;
         this.rateLimitFilter = rateLimitFilter;
+        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
     }
 
     @Bean
@@ -48,9 +52,6 @@ public class SecurityDevConfig {
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .requiresChannel(channel -> channel
-                    .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
-            )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
@@ -79,19 +80,25 @@ public class SecurityDevConfig {
                 .anyRequest().authenticated()
             );
 
-        http.formLogin(withDefaults());
+        http.formLogin(withDefaults())
+            .logout(logout -> logout
+                .logoutUrl("/api/auth/logout")
+                .logoutSuccessHandler(customLogoutSuccessHandler)
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+            );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
         http.headers(headersConfig -> headersConfig
-                .xssProtection(HeadersConfigurer.XXssConfig::disable)
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                .contentTypeOptions(withDefaults())
-                .httpStrictTransportSecurity(hsts -> hsts
-                        .includeSubDomains(true)
-                        .preload(true)
-                        .maxAgeInSeconds(31536000)
-                )
+            .xssProtection(HeadersConfigurer.XXssConfig::disable)
+            .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+            .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+            .contentTypeOptions(withDefaults())
+            .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .preload(true)
+                .maxAgeInSeconds(31536000)
+            )
         );
 
         return http.build();

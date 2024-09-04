@@ -9,6 +9,7 @@ import org.example.spring.security.filter.JwtValidatorFilter;
 import org.example.spring.security.filter.RateLimitFilter;
 import org.example.spring.security.handler.CustomAccessDeniedHandler;
 import org.example.spring.security.handler.CustomAuthenticationEntryPoint;
+import org.example.spring.security.handler.CustomLogoutSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -36,10 +37,13 @@ public class SecurityConfig {
 
     private final JwtValidatorFilter jwtValidatorFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
-    public SecurityConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter) {
+    public SecurityConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter,
+        CustomLogoutSuccessHandler customLogoutSuccessHandler) {
         this.jwtValidatorFilter = jwtValidatorFilter;
         this.rateLimitFilter = rateLimitFilter;
+        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
     }
 
     @Bean
@@ -76,6 +80,13 @@ public class SecurityConfig {
 
                 // 기타 모든 요청
                 .anyRequest().authenticated()
+            );
+        http.formLogin(withDefaults())
+            .logout(logout -> logout
+                .logoutUrl("/api/auth/logout")
+                .logoutSuccessHandler(customLogoutSuccessHandler)
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
             );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
