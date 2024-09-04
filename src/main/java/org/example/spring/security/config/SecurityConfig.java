@@ -49,12 +49,13 @@ public class SecurityConfig {
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .requiresChannel(channel -> channel
-                    .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
+                .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null).requiresSecure()
             )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
+                .requestMatchers("/index.html").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
@@ -65,7 +66,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**")
+                .hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
 
                 // 관리자 전용 엔드포인트
                 .requestMatchers(HttpMethod.GET, "/api/members").hasAuthority(MemberRole.ADMIN.name())
@@ -80,9 +82,9 @@ public class SecurityConfig {
             );
 
         http.formLogin(login -> login
-                .loginPage("/api/auth/login")
-                .loginProcessingUrl("/api/auth/login")
-                .defaultSuccessUrl("/api/exchanges/five")
+            .loginPage("/api/auth/login")
+            .loginProcessingUrl("/api/auth/login")
+            .defaultSuccessUrl("/api/exchanges/five")
         );
         http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
@@ -92,9 +94,9 @@ public class SecurityConfig {
             .frameOptions(FrameOptionsConfig::sameOrigin)
             .contentTypeOptions(withDefaults())
             .httpStrictTransportSecurity(hsts -> hsts
-                    .includeSubDomains(true)
-                    .preload(true)
-                    .maxAgeInSeconds(31536000)
+                .includeSubDomains(true)
+                .preload(true)
+                .maxAgeInSeconds(31536000)
             )
         );
 
