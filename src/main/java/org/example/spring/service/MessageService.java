@@ -9,7 +9,6 @@ import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.message.Message;
 import org.example.spring.domain.message.MessageMember;
 import org.example.spring.domain.message.MessageRoom;
-import org.example.spring.domain.message.messageDto.MessageMemberResponseDto;
 import org.example.spring.domain.message.messageDto.MessageRequestDto;
 import org.example.spring.domain.message.messageDto.MessageResponseDto;
 import org.example.spring.domain.message.messageDto.MessageRoomResponseDto;
@@ -27,6 +26,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -70,12 +70,13 @@ public class MessageService {
         return dto;
     }
 
-    /* 특정 멤버한테 새로운 메시지 방 생성 */
+    /* 특정 멤버 새로운 메시지 방 생성 */
     public MessageRoomResponseDto createMessageRoom(Long memberId) {
         Member member = validateUserRole(memberId);
 
         try {
             MessageRoom messageRoom = saveMessageRoom();
+            addMemberToMessageRoom(messageRoom, member);
             sendTopic(messageRoom.getId());
             return MessageRoomResponseDto.of(messageRoom);
 
@@ -130,9 +131,40 @@ public class MessageService {
         }
     }
 
-    /* 메시지 생성 및 메시지 방 추가 */
-    public void sendRequestMessage(Long memberId, MessageRoom messageRoom, String messageContent) {
+    /* 특정 메시지 방 정보 조회 */
+    public MessageRoomResponseDto getMessageRoom(Long messageRoomId, Long memberId) {
+
+        MessageRoom findMessageRoom = verifiedMessageRoom(messageRoomId);
+
+        List<Message> messages = new ArrayList<>(findMessageRoom.getMessages());
+
+        boolean memberExistsInMessages = messages.stream()
+                .anyMatch(message -> message.getMember().getId().equals(memberId));
+
+        if (!memberExistsInMessages) {
+            throw new MessageException(ErrorCode.MEMBER_NOT_FOUND_IN_ROOM);
+        }
+
+        MessageRoomResponseDto messageRoomResponseDto = MessageRoomResponseDto.builder()
+                .messageRoomId(findMessageRoom.getId())
+                .createAt(findMessageRoom.getCreatedAt())
+                .lastMessageAt(findMessageRoom.getLastMessageAt())
+                .messages(messages.stream()
+                        .map(MessageResponseDto::of)
+                        .collect(Collectors.toList()))
+                .build();
+
+        sendTopic(findMessageRoom.getId());
+
+        return messageRoomResponseDto;
+    }
+
+    /* 특정 메시지 방 -> 메시지 전송 */
+    public void sendRequestMessage(Long memberId, Long messageRoomId, String messageContent) {
         Member member = validateUserRole(memberId);
+
+        MessageRoom messageRoom = messageRoomRepository.findById(messageRoomId)
+                .orElseThrow(() -> new MessageException(ErrorCode.MESSAGE_NOT_FOUND));
 
         Message sendMessage = Message.builder()
                 .messageContent(messageContent)
@@ -140,12 +172,22 @@ public class MessageService {
                 .messageRoom(messageRoom)
                 .build();
 
-        Message saveSendMessage = messageRepository.save(sendMessage);
+        messageRepository.save(sendMessage);
 
         messageRoomRepository.save(messageRoom);
     }
 
+    //////////////////////////////////////////////////////////////////////////////////
+
     /* 검증 및 유틸 로직 */
+    private void addMemberToMessageRoom(MessageRoom messageRoom, Member member) {
+        MessageMember messageMember = MessageMember.builder()
+                .messageRoom(messageRoom)
+                .member(member)
+                .build();
+
+        messageMemberRepository.save(messageMember);
+    }
 
     public Member validateUserRole(Long memberId) {
         Optional<Member> optionalMember = memberRepository.findById(memberId);
