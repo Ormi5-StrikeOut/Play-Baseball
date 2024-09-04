@@ -42,11 +42,14 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
+    root: INFO
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: INFO
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.security: DEBUG
     org.springframework.security.web: DEBUG
     org.springframework.security.authentication: DEBUG
+    org.example.spring: DEBUG
 
 jwt:
   secret: ${JWT_SECRET}

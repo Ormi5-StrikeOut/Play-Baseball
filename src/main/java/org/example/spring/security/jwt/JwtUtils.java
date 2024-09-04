@@ -1,10 +1,12 @@
 package org.example.spring.security.jwt;
 
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,6 +15,7 @@ import org.springframework.util.StringUtils;
  * JWT 관련 유틸리티 기능을 제공하는 클래스입니다.
  * JWT 비밀키, 만료 시간 등의 설정을 관리합니다.
  */
+@Slf4j
 @Component
 public class JwtUtils {
 
@@ -42,7 +45,8 @@ public class JwtUtils {
      * @return JWT 서명에 사용되는 Key 객체
      */
     public Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
 
@@ -54,9 +58,13 @@ public class JwtUtils {
      */
     public String extractTokenFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
+        log.debug("Extracted bearer token: {}", bearerToken);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+            String token = bearerToken.substring(7);
+            log.debug("Extracted JWT token: {}", token);
+            return token;
         }
+        log.debug("No valid JWT token found in request headers");
         return null;
     }
 
