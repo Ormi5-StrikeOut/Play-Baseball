@@ -24,18 +24,27 @@ const LoginPage: React.FC = () => {
   const handleLogin = async () => {
     setShowError(false);
     try {
-      const response = await axios.post(MEMBER_LOGIN, {
-        email: formValues.email,
-        password: formValues.password,
-      });
+      const response = await axios.post(
+        MEMBER_LOGIN,
+        {
+          email: formValues.email,
+          password: formValues.password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.status === 200) {
         const token = response.headers["authorization"];
         if (token) {
           localStorage.setItem("Authorization", token);
-          router.push({
-            pathname: "/",
-          });
+
+          setTimeout(() => {
+            router.push({
+              pathname: "/",
+            });
+          }, 100);
         } else {
           throw new Error("token 생성 오류");
         }

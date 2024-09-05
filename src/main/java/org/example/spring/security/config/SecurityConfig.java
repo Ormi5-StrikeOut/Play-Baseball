@@ -78,8 +78,11 @@ public class SecurityConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
-        http.httpBasic(basicConfig -> basicConfig.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer.accessDeniedHandler(new CustomAccessDeniedHandler()));
+        http.httpBasic(AbstractHttpConfigurer::disable);
+        http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
+            .accessDeniedHandler(new CustomAccessDeniedHandler())
+            .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+        );
         http.headers(headersConfig -> headersConfig
                 .xssProtection(XXssConfig::disable)
                 .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
@@ -100,12 +103,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "https://3.38.208.39",
-                "https://ioshane.com",
-                "http://3.38.208.39",
-                "http://ioshane.com"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedOrigins(List.of("https://ioshane.com"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "Accept", "Origin"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of("Authorization"));
