@@ -40,7 +40,7 @@ class AuthControllerTest {
         LoginRequestDto loginRequestDto = new LoginRequestDto("test@example.com", "password");
         LoginResponseDto loginResponseDto = LoginResponseDto.builder()
             .email("test@example.com")
-            .roles("[ROLE_USER]")
+            .role("[ROLE_USER]")
             .build();
 
         when(authService.login(any(LoginRequestDto.class), any())).thenReturn(loginResponseDto);
