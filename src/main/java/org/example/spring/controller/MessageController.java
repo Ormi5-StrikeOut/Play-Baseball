@@ -70,9 +70,9 @@ public class MessageController {
                     @ApiResponse(responseCode = "404", description = "회원이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    @PostMapping("/{memberId}")
-    public ResponseEntity<ResponseDto> createMessageRoom(@PathVariable("memberId") Long memberId) {
-        MessageRoomResponseDto messageRoomResponseDto = messageService.createMessageRoom(memberId);
+    @PostMapping("/room")
+    public ResponseEntity<ResponseDto> createMessageRoom() {
+        MessageRoomResponseDto messageRoomResponseDto = messageService.createMessageRoom();
         return new ResponseEntity<>(
                 ResponseDto.of(messageRoomResponseDto),
                 HttpStatus.CREATED
@@ -87,13 +87,12 @@ public class MessageController {
                     @ApiResponse(responseCode = "404", description = "회원이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    @GetMapping("/{memberId}")
+    @GetMapping("/member")
     public ResponseEntity<PageResponseDto> getMessageRooms(
-            @PathVariable("memberId") Long memberId,
             @PageableDefault(page = 0, size = 10, sort = "lastMessageAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Page<MessageRoomResponseDto> messageRooms = messageService.getMessageRooms(memberId, pageable);
+        Page<MessageRoomResponseDto> messageRooms = messageService.getMessageRooms(pageable);
         PageResponseDto response = PageResponseDto.of(messageRooms.getContent(), messageRooms);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -106,13 +105,12 @@ public class MessageController {
                     @ApiResponse(responseCode = "404", description = "회원 또는 메시지 방이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    @GetMapping("/rooms/{memberId}/{messageRoomId}")
+    @GetMapping("/rooms/member/{messageRoomId}")
     public ResponseEntity getMessages(
-            @PathVariable ("memberId") @Positive Long memberId,
             @PathVariable ("messageRoomId") @Positive Long messageRoomId
     ) {
         ResponseDto response =
-                ResponseDto.of(messageService.getMessageRoom(messageRoomId, memberId));
+                ResponseDto.of(messageService.getMessageRoom(messageRoomId));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -126,11 +124,10 @@ public class MessageController {
     )
     @PostMapping("/send")
     public ResponseEntity<Void> sendMessage(
-            @RequestParam("memberId") Long memberId,
             @RequestParam("messageRoomId") Long messageRoomId,
             @RequestParam("messageContent") String messageContent
     ) {
-        messageService.sendRequestMessage(memberId, messageRoomId, messageContent);
+        messageService.sendRequestMessage(messageRoomId, messageContent);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -142,12 +139,11 @@ public class MessageController {
                     @ApiResponse(responseCode = "404", description = "메시지 방 또는 회원이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    @DeleteMapping("/rooms/{messageRoomId}/{memberId}")
+    @DeleteMapping("/rooms/{messageRoomId}")
     public ResponseEntity deleteMessageRoom(
-            @PathVariable("messageRoomId") Long messageRoomId,
-            @PathVariable("memberId") Long memberId
+            @PathVariable("messageRoomId") Long messageRoomId
     ) {
-        messageService.deleteMessageRoom(messageRoomId, memberId);
+        messageService.deleteMessageRoom(messageRoomId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
