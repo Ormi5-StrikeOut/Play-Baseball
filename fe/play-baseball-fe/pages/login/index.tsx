@@ -24,16 +24,10 @@ const LoginPage: React.FC = () => {
   const handleLogin = async () => {
     setShowError(false);
     try {
-      const response = await axios.post(
-        MEMBER_LOGIN,
-        {
-          email: formValues.email,
-          password: formValues.password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.post(MEMBER_LOGIN, {
+        email: formValues.email,
+        password: formValues.password,
+      });
 
       if (response.status === 200) {
         const token = response.headers["authorization"];
