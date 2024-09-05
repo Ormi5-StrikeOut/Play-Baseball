@@ -48,10 +48,10 @@ jobs:
 
       - name: Build and test with Gradle
         run: |
-          ./gradlew build test --info || (
+          ./gradlew build test || (
             echo "Tests failed. Rerunning failed tests with debug logging:"
             failed_tests=$(grep -h -r "FAILED" build/test-results/test/TEST-*.xml | sed -E "s/.*classname='(.*)'.*/\1/")
-            ./gradlew test --info -Dtest.single=$failed_tests -Dtest.debug 
+            ./gradlew test -Dtest.single=$failed_tests -Dtest.debug --info
           )
   dependency-submission:
     runs-on: ubuntu-latest
