@@ -34,6 +34,7 @@ const Header = () => {
             Authorization: token,
             "Content-Type": "application/json",
           },
+          withCredentials: true,
         }
       )
       .then((response) => {
