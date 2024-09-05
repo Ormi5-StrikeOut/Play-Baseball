@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.example.spring.security.jwt.JwtUtils;
+import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.service.RateLimiterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,19 +21,19 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimiterService rateLimiter;
-    private final JwtUtils jwtUtils;
+    private final JwtTokenValidator jwtTokenValidator;
     private final ObjectMapper objectMapper;
 
-    public RateLimitFilter(RateLimiterService rateLimiter, JwtUtils jwtUtils, ObjectMapper objectMapper) {
+    public RateLimitFilter(RateLimiterService rateLimiter, JwtTokenValidator jwtTokenValidator, ObjectMapper objectMapper) {
         this.rateLimiter = rateLimiter;
-        this.jwtUtils = jwtUtils;
+        this.jwtTokenValidator = jwtTokenValidator;
         this.objectMapper = objectMapper;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
-        String token = jwtUtils.extractTokenFromHeader(request);
+        String token = jwtTokenValidator.extractTokenFromHeader(request);
         String ip = getClientIpAddress(request);
         String userAgent = request.getHeader("User-Agent");
 
