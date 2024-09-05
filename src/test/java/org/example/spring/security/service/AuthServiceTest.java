@@ -43,14 +43,11 @@ class AuthServiceTest {
     @Mock
     private CookieService cookieService;
 
-    @Mock
-    private JwtUtils jwtUtils;
-
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(authenticationManager, jwtTokenProvider, jwtTokenValidator, cookieService, jwtUtils);
+        authService = new AuthService(authenticationManager, jwtTokenProvider, jwtTokenValidator, cookieService);
     }
 
     @Test
@@ -84,7 +81,7 @@ class AuthServiceTest {
         // Given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtUtils.extractTokenFromHeader(request)).thenReturn("valid_token");
+        when(jwtTokenValidator.extractTokenFromHeader(request)).thenReturn("valid_token");
         when(jwtTokenValidator.isTokenBlacklisted("valid_token")).thenReturn(false);
 
         // When
@@ -100,7 +97,7 @@ class AuthServiceTest {
         // Given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtUtils.extractTokenFromHeader(request)).thenReturn(null);
+        when(jwtTokenValidator.extractTokenFromHeader(request)).thenReturn(null);
 
         // When & Then
         assertThrows(InvalidTokenException.class, () -> authService.logout(request, response));
@@ -111,7 +108,7 @@ class AuthServiceTest {
         // Given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(jwtUtils.extractTokenFromHeader(request)).thenReturn("blacklisted_token");
+        when(jwtTokenValidator.extractTokenFromHeader(request)).thenReturn("blacklisted_token");
         when(jwtTokenValidator.isTokenBlacklisted("blacklisted_token")).thenReturn(true);
 
         // When & Then
