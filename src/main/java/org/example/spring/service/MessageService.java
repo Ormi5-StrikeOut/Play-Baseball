@@ -1,5 +1,7 @@
 package org.example.spring.service;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +21,14 @@ import org.example.spring.repository.MemberRepository;
 import org.example.spring.repository.message.MessageMemberRepository;
 import org.example.spring.repository.message.MessageRepository;
 import org.example.spring.repository.message.MessageRoomRepository;
+import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -54,6 +59,9 @@ public class MessageService {
 
     private final RedisSubscriber redisSubscriber;
 
+    private final JwtTokenValidator jwtTokenValidator;
+
+    private final HttpServletRequest request;
 
     /* 새로운 메시지 생성, Redis 채널 발행 */
     public MessageResponseDto createMessage(MessageRequestDto mrd) {
@@ -71,7 +79,8 @@ public class MessageService {
     }
 
     /* 특정 멤버 새로운 메시지 방 생성 */
-    public MessageRoomResponseDto createMessageRoom(Long memberId) {
+    public MessageRoomResponseDto createMessageRoom() {
+        Long memberId = extractMemberIdFromJwt();
         Member member = validateUserRole(memberId);
 
         try {
@@ -86,7 +95,8 @@ public class MessageService {
     }
 
     /* 특정 멤버 방 목록 조회 */
-    public Page<MessageRoomResponseDto> getMessageRooms(Long memberId, Pageable pageable) {
+    public Page<MessageRoomResponseDto> getMessageRooms(Pageable pageable) {
+        Long memberId = extractMemberIdFromJwt();
         Page<MessageMember> userMessageRooms = messageMemberRepository.findQueryMessageRoom(memberId, pageable);
 
         List<MessageMember> messageMembers = userMessageRooms.getContent();
@@ -109,7 +119,9 @@ public class MessageService {
     }
 
     /* 메시지 방 삭제, 만약 참여자 모두 삭제한 경우는 메시지랑 방 전부 삭제 */
-    public void deleteMessageRoom(Long messageRoomId, Long memberId) {
+    public void deleteMessageRoom(Long messageRoomId) {
+        Long memberId = extractMemberIdFromJwt();
+
         MessageRoom messageRoom = verifiedMessageRoom(messageRoomId);
 
         List<MessageMember> messageMembers = messageMemberRepository.findByMessageRoomIdAndMemberId(messageRoomId, memberId);
@@ -132,7 +144,8 @@ public class MessageService {
     }
 
     /* 특정 메시지 방 정보 조회 */
-    public MessageRoomResponseDto getMessageRoom(Long messageRoomId, Long memberId) {
+    public MessageRoomResponseDto getMessageRoom(Long messageRoomId) {
+        Long memberId = extractMemberIdFromJwt();
 
         MessageRoom findMessageRoom = verifiedMessageRoom(messageRoomId);
 
@@ -160,7 +173,9 @@ public class MessageService {
     }
 
     /* 특정 메시지 방 -> 메시지 전송 */
-    public void sendRequestMessage(Long memberId, Long messageRoomId, String messageContent) {
+    public void sendRequestMessage(Long messageRoomId, String messageContent) {
+        Long memberId = extractMemberIdFromJwt();
+
         Member member = validateUserRole(memberId);
 
         MessageRoom messageRoom = messageRoomRepository.findById(messageRoomId)
@@ -180,6 +195,20 @@ public class MessageService {
     //////////////////////////////////////////////////////////////////////////////////
 
     /* 검증 및 유틸 로직 */
+    private Long extractMemberIdFromJwt() {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS);
+        }
+
+        String token = authHeader.substring("Bearer ".length());
+
+        Claims claims;
+        claims = jwtTokenValidator.validateToken(token);
+
+        return Long.parseLong(claims.get("memberId").toString());
+    }
+
     private void addMemberToMessageRoom(MessageRoom messageRoom, Member member) {
         MessageMember messageMember = MessageMember.builder()
                 .messageRoom(messageRoom)
