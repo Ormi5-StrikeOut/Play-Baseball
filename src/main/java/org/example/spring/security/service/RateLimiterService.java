@@ -27,18 +27,20 @@ public class RateLimiterService {
     }
 
     public boolean tryConsume(String token, String ip, String userAgent) {
-        String key = token != null && jwtTokenValidator.isTokenValid(token)
-            ? jwtTokenValidator.extractUsername(token)
-            : ip + "|" + userAgent;
-
+        String key = getKey(token, ip, userAgent);
         Bucket bucket = rateLimitCache.get(key, this::createBucket);
         boolean consumed = bucket.tryConsume(RateLimitBucketConstants.TOKEN_CONSUME_AMOUNT.getValue());
-        log.info("Rate limited user - Key: {}, Consumed: {}", key, consumed);
+        log.info("Rate limit check - Key: {}, Consumed: {}", key, consumed);
         return consumed;
+    }
+    private String getKey(String token, String ip, String userAgent) {
+        return token != null && jwtTokenValidator.validateToken(token)
+            ? jwtTokenValidator.extractUsername(token)
+            : ip + "|" + userAgent;
     }
 
     private Bucket createBucket(String key) {
-        boolean isAuthenticated = key.contains("|");
+        boolean isAuthenticated = !key.contains("|");
         long capacity = isAuthenticated
             ? RateLimitBucketConstants.AUTHENTICATED_CAPACITY.getValue()
             : RateLimitBucketConstants.UNAUTHENTICATED_CAPACITY.getValue();
@@ -47,8 +49,6 @@ public class RateLimiterService {
             .capacity(capacity)
             .refillGreedy(capacity, RateLimitBucketConstants.REFILL_PERIOD_IN_MINUTES.getDuration())
             .build();
-        return Bucket.builder()
-            .addLimit(limit)
-            .build();
+        return Bucket.builder().addLimit(limit).build();
     }
 }
