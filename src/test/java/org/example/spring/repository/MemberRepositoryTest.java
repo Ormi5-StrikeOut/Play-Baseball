@@ -18,6 +18,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 
 @DataJpaTest
 @Transactional
@@ -146,7 +148,7 @@ class MemberRepositoryTest {
         memberRepository.saveAll(List.of(member1, member2, member3));
 
         // when
-        Page<Member> result = memberRepository.findAll(PageRequest.of(0, 10)); // 페이지 크기를 10으로 설정
+        Page<Member> result = memberRepository.findAll(PageRequest.of(0, 10, Sort.by(Direction.DESC, "createdAt"))); // 페이지 크기를 10으로 설정
 
         // then
         assertThat(result.getContent())
