@@ -50,7 +50,8 @@ jobs:
         run: |
           ./gradlew build test --info || (
             echo "Tests failed. Rerunning failed tests with debug logging:"
-            ./gradlew test --info -Dtest.single=* -Dtest.debug --tests `grep -h -r "FAILED" build/test-results/test/TEST-*.xml | sed -E "s/.*classname='(.*)'.*/\1/"`
+            failed_tests=$(grep -h -r "FAILED" build/test-results/test/TEST-*.xml | sed -E "s/.*classname='(.*)'.*/\1/")
+            ./gradlew test --info -Dtest.single=$failed_tests -Dtest.debug 
           )
   dependency-submission:
     runs-on: ubuntu-latest
