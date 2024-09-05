@@ -5,7 +5,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.jwt.CookieService;
+import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.jwt.JwtUtils;
 import org.example.spring.security.service.JwtAuthenticationService;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,17 +20,25 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /**
  * 들어오는 요청에 대해 JWT 토큰의 유효성을 검사하는 필터 클래스입니다.
  */
+@Slf4j
 @Component
 public class JwtValidatorFilter extends OncePerRequestFilter {
 
     private final CookieService cookieService;
     private final JwtAuthenticationService jwtAuthenticationService;
     private final JwtUtils jwtUtils;
+    private final JwtTokenValidator jwtTokenValidator;
 
-    public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService, JwtUtils jwtUtils) {
+    private static final List<String> PUBLIC_PATHS = Arrays.asList(
+        "/", "/api/auth/login", "/api/members/join", "/api/exchanges", "/api/reviews"
+    );
+
+    public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService, JwtUtils jwtUtils,
+        JwtTokenValidator jwtTokenValidator) {
         this.cookieService = cookieService;
         this.jwtAuthenticationService = jwtAuthenticationService;
         this.jwtUtils = jwtUtils;
+        this.jwtTokenValidator = jwtTokenValidator;
     }
 
     /**
@@ -42,9 +55,22 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         String accessToken = jwtUtils.extractTokenFromHeader(request);
         String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
+
         try {
+            if (accessToken != null && jwtTokenValidator.isTokenBlacklisted(accessToken)) {
+                log.debug("Blacklisted token used: {}", accessToken);
+                throw new InvalidTokenException("This token has been blacklisted.");
+            }
+
             jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, response);
+        } catch (InvalidTokenException e) {
+            log.warn("Invalid token: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setHeader("play-baseball-error-reason", "Invalid Token");
+            return;
         } catch (Exception e) {
+            log.error("Authentication error: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
         filterChain.doFilter(request, response);
@@ -58,6 +84,8 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().equals("/api/members/join") || request.getServletPath().equals("/api/login");
+        String path = request.getServletPath();
+        return PUBLIC_PATHS.stream().anyMatch(path::startsWith) ||
+            path.startsWith("/api/members/verify/");
     }
 }
