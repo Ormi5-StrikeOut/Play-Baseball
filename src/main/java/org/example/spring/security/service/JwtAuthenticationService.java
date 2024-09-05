@@ -1,19 +1,23 @@
 package org.example.spring.security.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Arrays;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
+import org.example.spring.security.jwt.JwtUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 
 /**
  * JWT 토큰을 사용한 인증 프로세스를 처리하는 서비스 클래스입니다.
  */
+@Slf4j
 @Service
 public class JwtAuthenticationService {
 
@@ -33,18 +37,23 @@ public class JwtAuthenticationService {
      * @param response HTTP 응답
      * @throws RuntimeException 두 토큰 모두 유효하지 않거나 만료된 경우
      */
-    public void authenticateWithTokens(String accessToken, String refreshToken, HttpServletResponse response) {
-        if (accessToken != null && jwtTokenValidator.isTokenValid(accessToken)) {
-            processToken(accessToken);
-        } else if (refreshToken != null && jwtTokenValidator.isTokenValid(refreshToken)) {
-            Authentication authentication = createAuthenticationFromToken(refreshToken);
+    public void authenticateWithTokens(String accessToken, String refreshToken, HttpServletRequest request, HttpServletResponse response) {
+        if (accessToken != null && jwtTokenValidator.validateToken(accessToken)) {
+            log.debug("Authenticating with access token");
+            processToken(accessToken, request);
+        } else if (refreshToken != null && jwtTokenValidator.validateToken(refreshToken)) {
+            log.debug("Access token invalid or missing, attempting to use refresh token");
+            UserDetails userDetails = jwtTokenValidator.getUserDetails(refreshToken);
+            Authentication authentication = createAuthenticationFromUserDetails(userDetails);
             String newAccessToken = jwtTokenProvider.generateAccessToken(authentication);
 
             response.setHeader("Authorization", "Bearer " + newAccessToken);
-            processToken(newAccessToken);
+            log.debug("New access token generated and set in response header");
+            processToken(newAccessToken, request);
         } else {
+            log.warn("Both access token and refresh token are invalid or missing");
             SecurityContextHolder.clearContext();
-            throw new RuntimeException("Invalid or expired tokens");
+            throw new InvalidTokenException("Invalid or expired tokens");
         }
     }
 
@@ -53,29 +62,20 @@ public class JwtAuthenticationService {
      *
      * @param token 처리할 JWT 토큰
      */
-    private void processToken(String token) {
-        String username = jwtTokenValidator.extractUsername(token);
-        String authoritiesString = jwtTokenValidator.validateToken(token).get("authorities", String.class);
-        List<SimpleGrantedAuthority> authorities = Arrays.stream(authoritiesString.split(","))
-            .map(SimpleGrantedAuthority::new)
-            .toList();
-
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    private void processToken(String token, HttpServletRequest request) {
+        UserDetails userDetails = jwtTokenValidator.getUserDetails(token);
+        UsernamePasswordAuthenticationToken authentication = createAuthenticationFromUserDetails(userDetails);
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        log.debug("Authentication set in SecurityContext for user: {}", userDetails.getUsername());
     }
 
     /**
-     * JWT 토큰으로부터 Authentication 객체를 생성합니다.
+     * UserDetails 로부터  UsernamePasswordAuthenticationToken 객체를 생성합니다.
      *
-     * @param token 인증 정보를 추출할 JWT 토큰
-     * @return 생성된 Authentication 객체
+     * @return 생성된 UsernamePasswordAuthenticationToken 객체
      */
-    private Authentication createAuthenticationFromToken(String token) {
-        String username = jwtTokenValidator.extractUsername(token);
-        String authoritiesString = jwtTokenValidator.validateToken(token).get("authorities", String.class);
-        List<SimpleGrantedAuthority> authorities = Arrays.stream(authoritiesString.split(","))
-            .map(SimpleGrantedAuthority::new)
-            .toList();
-        return new UsernamePasswordAuthenticationToken(username, null, authorities);
+    private UsernamePasswordAuthenticationToken createAuthenticationFromUserDetails(UserDetails userDetails) {
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }
