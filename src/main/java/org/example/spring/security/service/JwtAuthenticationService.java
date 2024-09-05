@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
-import org.example.spring.security.jwt.JwtUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

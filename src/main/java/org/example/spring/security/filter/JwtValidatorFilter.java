@@ -44,12 +44,11 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
      * @param request HTTP 요청
      * @param response HTTP 응답
      * @param filterChain 필터 체인
-     * @throws ServletException 서블릿 예외 발생 시
      * @throws IOException I/O 예외 발생 시
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException {
+        throws IOException {
         String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
         String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
 
