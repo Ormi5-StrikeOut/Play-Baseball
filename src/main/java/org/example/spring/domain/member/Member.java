@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
+import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -71,4 +72,8 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, columnDefinition = "ENUM('USER', 'ADMIN', 'BANNED') DEFAULT 'USER'")
     private MemberRole role;
+
+    public void updateLastLoginDate() {
+        this.lastLoginDate = Timestamp.from(Instant.now());
+    }
 }
