@@ -23,7 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@ActiveProfiles("dev")
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
