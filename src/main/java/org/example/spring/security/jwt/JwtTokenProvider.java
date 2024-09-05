@@ -71,10 +71,6 @@ public class JwtTokenProvider {
             .collect(Collectors.joining(","));
     }
 
-    public long getAccessTokenExpiration() {
-        return jwtUtils.getExpiration();
-    }
-
     public long getRefreshTokenExpiration() {
         return jwtUtils.getRefreshExpiration();
     }
