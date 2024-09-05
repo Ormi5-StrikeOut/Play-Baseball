@@ -20,8 +20,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+@ActiveProfiles("dev")
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
@@ -51,7 +53,7 @@ class AuthControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message").value("로그인 성공"))
             .andExpect(jsonPath("$.data.email").value("test@example.com"))
-            .andExpect(jsonPath("$.data.roles").value("[ROLE_USER]"));
+            .andExpect(jsonPath("$.data.role").value("[ROLE_USER]"));
     }
 
     @Test
