@@ -52,6 +52,8 @@ public class SecurityDevConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
+
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
@@ -76,8 +78,7 @@ public class SecurityDevConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
-
-        http.httpBasic(AbstractHttpConfigurer::disable);
+      
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
             .accessDeniedHandler(new CustomAccessDeniedHandler())
             .authenticationEntryPoint(new CustomAuthenticationEntryPoint())

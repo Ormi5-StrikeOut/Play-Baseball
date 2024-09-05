@@ -53,7 +53,7 @@ public class SecurityConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers("/", "/api/auth/login").permitAll()
+                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**" ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
