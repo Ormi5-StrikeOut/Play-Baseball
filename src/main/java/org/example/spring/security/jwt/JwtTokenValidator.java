@@ -106,10 +106,6 @@ public class JwtTokenValidator {
         return extractAllClaims(token).getSubject();
     }
 
-    private boolean isTokenExpired(Claims claims) {
-        return claims.getExpiration().before(new Date());
-    }
-
     /**
      * 토큰이 블랙리스트에 있는지 확인합니다.
      *
