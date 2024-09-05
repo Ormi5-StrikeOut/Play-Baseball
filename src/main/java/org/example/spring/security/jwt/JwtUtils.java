@@ -48,23 +48,4 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-
-    /**
-     * 요청 헤더에서 토큰을 추출합니다.
-     *
-     * @param request HTTP 요청
-     * @return 추출된 토큰, 없으면 null
-     */
-    public String extractTokenFromHeader(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        log.debug("Extracted bearer token: {}", bearerToken);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            String token = bearerToken.substring(7);
-            log.debug("Extracted JWT token: {}", token);
-            return token;
-        }
-        log.debug("No valid JWT token found in request headers");
-        return null;
-    }
-
 }
