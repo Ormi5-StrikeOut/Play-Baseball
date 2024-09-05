@@ -39,9 +39,12 @@ const LoginPage: React.FC = () => {
         const token = response.headers["authorization"];
         if (token) {
           localStorage.setItem("Authorization", token);
-          router.push({
-            pathname: "/",
-          });
+
+          setTimeout(() => {
+            router.push({
+              pathname: "/",
+            });
+          }, 100);
         } else {
           throw new Error("token 생성 오류");
         }
