@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtTokenValidator;
-import org.example.spring.security.jwt.JwtUtils;
 import org.example.spring.security.service.JwtAuthenticationService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -26,18 +25,16 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 
     private final CookieService cookieService;
     private final JwtAuthenticationService jwtAuthenticationService;
-    private final JwtUtils jwtUtils;
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
         "/", "/api/auth/login", "/api/members/join", "/api/exchanges", "/api/reviews"
     );
 
-    public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService, JwtUtils jwtUtils,
+    public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
         JwtTokenValidator jwtTokenValidator) {
         this.cookieService = cookieService;
         this.jwtAuthenticationService = jwtAuthenticationService;
-        this.jwtUtils = jwtUtils;
         this.jwtTokenValidator = jwtTokenValidator;
     }
 
@@ -47,13 +44,12 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
      * @param request HTTP 요청
      * @param response HTTP 응답
      * @param filterChain 필터 체인
-     * @throws ServletException 서블릿 예외 발생 시
      * @throws IOException I/O 예외 발생 시
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException {
-        String accessToken = jwtUtils.extractTokenFromHeader(request);
+        throws IOException {
+        String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
         String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
 
         try {
@@ -62,18 +58,25 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
                 throw new InvalidTokenException("This token has been blacklisted.");
             }
 
-            jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, response);
+            jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
+
+            filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
             log.warn("Invalid token: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setHeader("play-baseball-error-reason", "Invalid Token");
-            return;
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
         } catch (Exception e) {
             log.error("Authentication error: {}", e.getMessage());
             SecurityContextHolder.clearContext();
+            sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Authentication Error");
         }
-        filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 
     /**

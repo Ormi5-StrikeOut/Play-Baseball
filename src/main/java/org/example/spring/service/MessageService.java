@@ -3,6 +3,11 @@ package org.example.spring.service;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.constant.ErrorCode;
@@ -27,15 +32,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -204,7 +201,7 @@ public class MessageService {
         String token = authHeader.substring("Bearer ".length());
 
         Claims claims;
-        claims = jwtTokenValidator.validateToken(token);
+        claims = jwtTokenValidator.extractAllClaims(token);
 
         return Long.parseLong(claims.get("memberId").toString());
     }

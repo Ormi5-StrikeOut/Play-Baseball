@@ -9,7 +9,6 @@ import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
-import org.example.spring.security.jwt.JwtUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,15 +26,13 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtTokenValidator jwtTokenValidator;
     private final CookieService cookieService;
-    private final JwtUtils jwtUtils;
 
     public AuthService(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, JwtTokenValidator jwtTokenValidator,
-        CookieService cookieService, JwtUtils jwtUtils) {
+        CookieService cookieService) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.jwtTokenValidator = jwtTokenValidator;
         this.cookieService = cookieService;
-        this.jwtUtils = jwtUtils;
     }
 
     /**
@@ -72,7 +69,7 @@ public class AuthService {
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Logout process started");
 
-        String token = jwtUtils.extractTokenFromHeader(request);
+        String token = jwtTokenValidator.extractTokenFromHeader(request);
 
         if (token == null) {
             log.warn("Logout attempt with no token");
