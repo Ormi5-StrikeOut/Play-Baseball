@@ -1,14 +1,13 @@
 package org.example.spring.security.filter;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.service.JwtAuthenticationService;
@@ -50,11 +49,18 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws IOException {
+        String requestURI = request.getRequestURI();
+        log.debug("Processing request: {}", requestURI);
         try {
-            String requestURI = request.getRequestURI();
-            log.debug("Processing request: {}", requestURI);
+
             String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
             String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
+
+            if (accessToken != null && jwtTokenValidator.isTokenBlacklisted(accessToken)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token has been invalidated. Please log in again.");
+                return;
+            }
 
             log.debug("Extracted tokens - Access: {}, Refresh: {}",
                 accessToken != null ? "Present" : "Not present",
@@ -62,48 +68,42 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 
             if (accessToken == null || refreshToken == null) {
                 log.warn("Missing access token or refresh token for request: {}", requestURI);
-                handleMissingTokens(response);
+                filterChain.doFilter(request, response);
                 return;
             }
 
-            Authentication authentication = jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
+            boolean tokenRefreshed = false;
+            Authentication authentication;
+            try {
+                authentication = jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
+                log.debug("Authentication successful without token refresh");
+            } catch (ExpiredJwtException e) {
+                log.debug("ExpiredJwtException caught, attempting to refresh token");
+                authentication = jwtAuthenticationService.refreshAccessToken(refreshToken, request, response);
+                tokenRefreshed = true;
+                log.debug("Token refreshed successfully, tokenRefreshed set to true");
+            }
             if (authentication != null) {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("Authentication successful for request: {}", requestURI);
+                if (tokenRefreshed) {
+                    // 토큰이 갱신되었음을 응답에 포함
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.getWriter().write("{\"message\":\"Access token has been refreshed.\"}");
+                    response.flushBuffer();
+                    return;
+                }
             } else {
-                log.warn("Authentication failed for request: {}", requestURI);
-                handleAuthenticationFailure(response);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Authentication failed. Please log in again.");
                 return;
             }
-
             filterChain.doFilter(request, response);
-        } catch (InvalidTokenException e) {
-            log.warn("Invalid token: {}", e.getMessage());
-            handleInvalidTokens(response);
         } catch (Exception e) {
-            log.error("Cannot set user authentication: {}", e.getMessage());
-            handleAuthenticationError(response, e);
+            log.error("Authentication error: {}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Authentication failed: " + e.getMessage());
         }
-    }
-
-    private void handleMissingTokens(HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("Missing access token or refresh token");
-    }
-
-    private void handleInvalidTokens(HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("Invalid or inconsistent tokens");
-    }
-
-    private void handleAuthenticationFailure(HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("Authentication failed");
-    }
-
-    private void handleAuthenticationError(HttpServletResponse response, Exception e) throws IOException {
-        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        response.getWriter().write("An error occurred during authentication: " + e.getMessage());
     }
 
     /**
