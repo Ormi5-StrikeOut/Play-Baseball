@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.LoginRequestDto;
 import org.example.spring.domain.member.dto.LoginResponseDto;
-import org.example.spring.security.service.AuthService;
+import org.example.spring.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
