@@ -52,7 +52,8 @@ public class SecurityDevConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**","/v3/api-docs/swagger-config", "/webjars/**").permitAll()
+                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs/swagger-config", "/webjars/**")
+                .permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
@@ -60,11 +61,11 @@ public class SecurityDevConfig {
 
                 // 사용자 및 관리자 엔드포인트
                 .requestMatchers(HttpMethod.PUT, "/api/members").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.GET, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers("/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**")
-                .hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers("/api/messages").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers("/api/messages/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
 
                 // 관리자 전용 엔드포인트
                 .requestMatchers(HttpMethod.GET, "/api/members").hasAuthority(MemberRole.ADMIN.name())
@@ -77,7 +78,7 @@ public class SecurityDevConfig {
                 // 기타 모든 요청
                 .anyRequest().authenticated()
             );
-      
+
         http.exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
             .accessDeniedHandler(new CustomAccessDeniedHandler())
             .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
@@ -86,7 +87,8 @@ public class SecurityDevConfig {
             .xssProtection(HeadersConfigurer.XXssConfig::disable)
             .contentSecurityPolicy(csp -> csp
                 .policyDirectives("default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';")
-            )            .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+            )
+            .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
             .contentTypeOptions(withDefaults())
             .httpStrictTransportSecurity(hsts -> hsts
                 .includeSubDomains(true)
