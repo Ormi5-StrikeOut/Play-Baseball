@@ -1,3 +1,5 @@
+
+
 spring:
   application:
     name: Play_Baseball
@@ -6,6 +8,14 @@ spring:
     url: jdbc:mysql://${RDS_HOST}:${RDS_PORT}/${RDS_NAME}
     username: ${RDS_USER}
     password: ${RDS_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
   servlet:
     multipart:
       enabled: true
@@ -26,8 +36,29 @@ spring:
       name: ${SECURITY_USER_NAME}
       password: ${SECURITY_USER_PASSWORD}
 
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
 logging:
   level:
-    org.hibernate.SQL: DEBUG
+    root: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: INFO
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.security: DEBUG
+    org.springframework.security.web: DEBUG
+    org.springframework.security.authentication: DEBUG
+    org.example.spring: DEBUG
 
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}  # 24시간
+  refresh-token:
+    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
+
+server:
+  forward-headers-strategy: native
+  tomcat:
+    remote-ip-header: X-Forwarded-For
+    protocol-header: X-Forwarded-Proto

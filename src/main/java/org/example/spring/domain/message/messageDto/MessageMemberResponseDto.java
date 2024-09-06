@@ -23,9 +23,9 @@ public class MessageMemberResponseDto {
 
     public static MessageMemberResponseDto of(MessageMember messageMember) {
         return MessageMemberResponseDto.builder()
-                .messageMemberId(messageMember.getMessageMemberId())
+                .messageMemberId(messageMember.getMember().getId())
                 .memberId(messageMember.getMember().getId())
-                .messageRoomId(messageMember.getMessageRoom().getMessageRoomId())
+                .messageRoomId(messageMember.getMessageRoom().getId())
                 .build();
     }
 }

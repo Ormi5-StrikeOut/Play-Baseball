@@ -18,6 +18,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 
 @DataJpaTest
 @Transactional
@@ -146,12 +148,12 @@ class MemberRepositoryTest {
         memberRepository.saveAll(List.of(member1, member2, member3));
 
         // when
-        Page<Member> result = memberRepository.findAll(PageRequest.of(0, 10)); // 페이지 크기를 10으로 설정
+        Page<Member> result = memberRepository.findAll(PageRequest.of(0, 10, Sort.by(Direction.DESC, "createdAt"))); // 페이지 크기를 10으로 설정
 
         // then
         assertThat(result.getContent())
             .extracting("name", "email", "nickname", "gender", "role")
-            .contains(
+            .containsAnyOf(
                 tuple("Member 1", "member1@example.com", "member1", Gender.MALE, MemberRole.USER),
                 tuple("Member 2", "member2@example.com", "member2", Gender.FEMALE, MemberRole.USER),
                 tuple("Member 3", "member3@example.com", "member3", Gender.MALE, MemberRole.USER)

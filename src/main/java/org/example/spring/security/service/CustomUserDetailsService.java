@@ -1,4 +1,4 @@
-package org.example.spring.security;
+package org.example.spring.security.service;
 
 import java.util.List;
 import java.util.stream.Collectors;

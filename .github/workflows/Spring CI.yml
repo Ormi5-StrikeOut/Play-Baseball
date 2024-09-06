@@ -15,8 +15,13 @@ jobs:
       RDS_NAME: ${{ secrets.RDS_NAME }}
       RDS_USER: ${{ secrets.RDS_USER }}
       RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
       SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
       SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
 
     steps:
       - name: Check out code
@@ -25,8 +30,8 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
 
       - name: Setup MySQL
         uses: samin/mysql-action@v1
@@ -35,18 +40,14 @@ jobs:
           mysql database: ${{ secrets.RDS_NAME }}
           mysql user: ${{ secrets.RDS_USER }}
           mysql password: ${{ secrets.RDS_PASSWORD }}
-          character set server: 'utf8mb4'
-          collation server: 'utf8mb4_unicode_ci'
+          character set server: "utf8mb4"
+          collation server: "utf8mb4_unicode_ci"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build and test with Gradle
-        run: |
-          ./gradlew build test --info || (
-            echo "Tests failed. Rerunning failed tests with debug logging:"
-            ./gradlew test --info -Dtest.single=* -Dtest.debug --tests `grep -h -r "FAILED" build/test-results/test/TEST-*.xml | sed -E "s/.*classname='(.*)'.*/\1/"`
-          )
+        run: ./gradlew build test
   dependency-submission:
     runs-on: ubuntu-latest
     permissions:
@@ -56,7 +57,7 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0

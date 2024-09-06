@@ -1,4 +1,4 @@
-package org.example.spring.security;
+package org.example.spring.security.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;

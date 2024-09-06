@@ -15,7 +15,8 @@ public class Message extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long messageId;
+    @Column(name = "message_id", nullable = false)
+    private Long id;
 
     @Column(name = "message_content", nullable = false, columnDefinition = "TEXT")
     private String messageContent;

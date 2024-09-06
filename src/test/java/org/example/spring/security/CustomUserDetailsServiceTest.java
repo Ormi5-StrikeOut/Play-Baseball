@@ -8,6 +8,7 @@ import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.repository.MemberRepository;
+import org.example.spring.security.service.CustomUserDetailsService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
