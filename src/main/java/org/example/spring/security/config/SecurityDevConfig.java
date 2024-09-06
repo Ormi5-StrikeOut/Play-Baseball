@@ -52,7 +52,6 @@ public class SecurityDevConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
@@ -60,9 +59,9 @@ public class SecurityDevConfig {
                 .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
 
                 // 사용자 및 관리자 엔드포인트
-                .requestMatchers(HttpMethod.PUT, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/members").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.GET, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**")
                 .hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())

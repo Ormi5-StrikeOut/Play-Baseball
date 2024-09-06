@@ -1,5 +1,6 @@
 package org.example.spring.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
@@ -52,5 +53,11 @@ public class MemberController {
     ) {
         Page<MemberResponseDto> members = memberService.getAllMembers(page, size);
         return ResponseEntity.ok(ApiResponseDto.success("회원 목록 조회 성공", members));
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponseDto<MemberResponseDto>> getMyMember(HttpServletRequest request) {
+        MemberResponseDto myMember = memberService.getMyMember(request);
+        return ResponseEntity.ok(ApiResponseDto.success("회원 조회 성공:", myMember));
     }
 }

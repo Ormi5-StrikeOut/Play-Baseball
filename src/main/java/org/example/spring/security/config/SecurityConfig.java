@@ -62,7 +62,7 @@ public class SecurityConfig {
                 // 사용자 및 관리자 엔드포인트
                 .requestMatchers(HttpMethod.PUT, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.DELETE, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.GET, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/members/my").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**")
                 .hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())

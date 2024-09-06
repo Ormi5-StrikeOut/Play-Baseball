@@ -5,6 +5,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
  * JWT 토큰을 생성하는 클래스입니다.
  * 액세스 토큰과 리프레시 토큰을 생성합니다.
  */
+@Slf4j
 @Component
 public class JwtTokenProvider {
 
@@ -29,6 +31,7 @@ public class JwtTokenProvider {
      * @return JWT 액세스 토큰
      */
     public String generateAccessToken(Authentication authentication) {
+        log.info("Access token generated for user: {}", authentication.getName());
         return generateToken(authentication, jwtUtils.getExpiration());
     }
 
@@ -39,6 +42,7 @@ public class JwtTokenProvider {
      * @return JWT 리프레시 토큰
      */
     public String generateRefreshToken(Authentication authentication) {
+        log.info("Refresh token generated for user: {}", authentication.getName());
         return generateToken(authentication, jwtUtils.getRefreshExpiration());
     }
 
@@ -65,10 +69,6 @@ public class JwtTokenProvider {
         return authentication.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.joining(","));
-    }
-
-    public long getAccessTokenExpiration() {
-        return jwtUtils.getExpiration();
     }
 
     public long getRefreshTokenExpiration() {

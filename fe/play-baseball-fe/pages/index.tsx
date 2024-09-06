@@ -8,8 +8,13 @@ import {
   Container,
 } from "@mui/material";
 import Link from "next/link";
+import SearchBar from "../components/SearchBar"
 
-const MainPage = () => {
+const MainPage: React.FC = () => {
+    const handleSearch = (searchTerm: string) => {
+    console.log('Searching for:', searchTerm);
+    // Add your search logic here
+  };
   const items = [
     {
       id: 1,
@@ -49,7 +54,11 @@ const MainPage = () => {
   ];
 
   return (
+    
     <Container maxWidth="lg" sx={{ py: 3 }}>
+      <div className="width-[70%]">
+    <SearchBar onSearch={handleSearch}></SearchBar>
+    </div>
       <Box
         sx={{
           width: "100%",

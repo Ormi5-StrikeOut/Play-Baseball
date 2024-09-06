@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.security.core.Authentication;
 
 @Getter
 @Builder
@@ -13,6 +14,14 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
 public class LoginResponseDto {
+
     private String email;
-    private String roles;
+    private String role;
+
+    public static LoginResponseDto toDto(Authentication Authentication) {
+        return LoginResponseDto.builder()
+            .email(Authentication.getName())
+            .role(Authentication.getAuthorities().toString())
+            .build();
+    }
 }
