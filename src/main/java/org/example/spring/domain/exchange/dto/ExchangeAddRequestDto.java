@@ -7,7 +7,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ExchangeAddRequestDto {
-  private final Long memberId;
   private String title;
   private int price;
   private String content;
