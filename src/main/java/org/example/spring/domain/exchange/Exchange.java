@@ -1,12 +1,18 @@
 package org.example.spring.domain.exchange;
 
 import jakarta.persistence.*;
+
+import java.awt.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.review.Review;
 
@@ -52,4 +58,21 @@ public class Exchange {
 
     @Column(name = "deleted_at")
     private Timestamp deletedAt;
+
+    @OneToMany(
+            mappedBy = "exchange",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ExchangeImage> images = new ArrayList<>();
+
+    public void addImage(ExchangeImage image){
+        images.add(image);
+        image.associateExchange(this);
+    }
+
+    public void removeImage(ExchangeImage image){
+        images.remove(image);
+        image.disassociateExchange();
+    }
 }

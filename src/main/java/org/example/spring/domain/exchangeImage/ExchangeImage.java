@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.spring.domain.exchange.Exchange;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "exchange_image")
@@ -37,6 +38,19 @@ public class ExchangeImage {
     @Column(name = "url", nullable = false)
     private String url;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private Timestamp createdAt;
+
+    public ExchangeImage(String url){
+        this.url = url;
+    }
+
+    public void associateExchange(Exchange exchange){
+        this.exchange = exchange;
+    }
+
+    public void disassociateExchange(){
+        this.exchange = null;
+    }
 }
