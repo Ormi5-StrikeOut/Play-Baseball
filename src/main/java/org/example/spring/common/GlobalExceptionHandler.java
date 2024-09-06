@@ -1,12 +1,13 @@
 package org.example.spring.common;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.spring.exception.AccountBannedException;
 import org.example.spring.exception.AccountDeletedException;
 import org.example.spring.exception.InvalidCredentialsException;
+import org.example.spring.exception.InvalidTokenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
@@ -21,7 +22,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseDto<Void>> handleException(Exception e) {
-        log.error("서버 오류 발생: " + e.getMessage());
+        log.debug("서버 오류 발생: " + e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ApiResponseDto.error("서버 오류가 발생했습니다."));
     }
@@ -45,5 +46,12 @@ public class GlobalExceptionHandler {
         log.warn("Invalid credentials: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(ApiResponseDto.error("Invalid email or password"));
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleInvalidTokenException(InvalidTokenException ex) {
+        log.warn("Invalid token: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponseDto.error("토큰이 유효하지 않습니다 " + ex.getMessage()));
     }
 }
