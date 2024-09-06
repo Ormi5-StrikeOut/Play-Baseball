@@ -2,6 +2,8 @@ package org.example.spring.domain.exchange.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.example.spring.constants.SalesStatus;
+
 import java.sql.Timestamp;
 
 @Getter
@@ -14,7 +16,6 @@ public class ExchangeResponseDto {
     private final int regularPrice;
     private final String content;
     private final int viewCount;
+    private SalesStatus status;
     private Timestamp createdAt;
-    private Timestamp updatedAt;
-    private Timestamp deletedAt;
 }
