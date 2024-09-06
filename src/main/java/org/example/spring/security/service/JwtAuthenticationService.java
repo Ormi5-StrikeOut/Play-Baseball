@@ -42,20 +42,14 @@ public class JwtAuthenticationService {
      * @throws RuntimeException 두 토큰 모두 유효하지 않거나 만료된 경우
      */
     public Authentication authenticateWithTokens(String accessToken, String refreshToken, HttpServletRequest request, HttpServletResponse response) {
-        if (accessToken != null && jwtTokenValidator.validateToken(accessToken)) {
-            log.debug("Authenticating with access token");
+        if (accessToken != null && jwtTokenValidator.validateToken(accessToken) && jwtTokenValidator.validateAccessAndRefreshTokenConsistency(accessToken, refreshToken)) {
+            log.debug("Authenticating with valid access token");
             return processToken(accessToken, request);
-        } else if (refreshToken != null) {
-            if (jwtTokenValidator.validateToken(refreshToken)) {
-                log.debug("Access token invalid or missing, attempting to use refresh token");
-                return refreshAccessToken(refreshToken, request, response);
-            } else {
-                log.warn("Refresh token is invalid or expired");
-                handleExpiredRefreshToken(response);
-                return null;
-            }
+        } else if (refreshToken != null && jwtTokenValidator.validateToken(refreshToken)) {
+            log.debug("Access token invalid or expired, attempting to refresh token");
+            return refreshAccessToken(refreshToken, request, response);
         } else {
-            log.warn("Both access token and refresh token are missing");
+            log.warn("Both access token and refresh token are invalid or missing");
             handleInvalidTokens(response);
             return null;
         }
@@ -93,13 +87,22 @@ public class JwtAuthenticationService {
      * @param response HTTP 응답
      */
     private Authentication refreshAccessToken(String refreshToken, HttpServletRequest request, HttpServletResponse response) {
-        UserDetails userDetails = jwtTokenValidator.getUserDetails(refreshToken);
-        Authentication authentication = createAuthenticationFromUserDetails(userDetails);
-        String newAccessToken = jwtTokenProvider.generateAccessToken(authentication);
-        response.setHeader("Authorization", "Bearer " + newAccessToken);
-        Authentication newAuthentication = processToken(newAccessToken, request);
-        log.debug("Access token refreshed for user: {}", userDetails.getUsername());
-        return newAuthentication;
+        try {
+            UserDetails userDetails = jwtTokenValidator.getUserDetails(refreshToken);
+            Authentication authentication = createAuthenticationFromUserDetails(userDetails);
+            String newAccessToken = jwtTokenProvider.generateAccessToken(authentication);
+
+            response.setHeader("Authorization", "Bearer " + newAccessToken);
+            response.setHeader("Access-Control-Expose-Headers", "Authorization");
+
+            Authentication newAuthentication = processToken(newAccessToken, request);
+            log.debug("Access token refreshed for user: {}", userDetails.getUsername());
+            return newAuthentication;
+        } catch (Exception e) {
+            log.error("Error refreshing access token", e);
+            handleExpiredRefreshToken(response);
+            return null;
+        }
     }
 
     /**
