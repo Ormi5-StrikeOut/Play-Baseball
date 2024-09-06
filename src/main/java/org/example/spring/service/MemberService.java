@@ -4,6 +4,7 @@ import static org.example.spring.domain.member.dto.MemberJoinRequestDto.toEntity
 import static org.example.spring.domain.member.dto.MemberResponseDto.toDto;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -70,20 +71,8 @@ public class MemberService {
      * @param request HttpServletRequest
      */
     @Transactional
-    public void deleteMember(HttpServletRequest request) {
-        String token = jwtValidator.extractTokenFromHeader(request);
-        String email = jwtValidator.extractUsername(token);
-
-        Member member = memberRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
-
-        member.updateDeletedAt();
-
-        memberRepository.save(member);
-
-        // 로깅
-        log.debug("회원 삭제 완료 - ID: {}, Email: {}, 시간: {}",
-            member.getId(), member.getEmail(), member.getDeletedAt());
+    public void deleteMember(HttpServletRequest request, HttpServletResponse response) {
+        jwtValidator.deactivateAccount(request, response);
     }
 
     /**
