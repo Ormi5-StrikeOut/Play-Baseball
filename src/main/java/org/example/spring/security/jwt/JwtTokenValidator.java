@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
- * JWT 토큰의 유효성을 검사하고 관련 정보를 추출하는 클래스입니다.
- * 이 클래스는 토큰의 검증, 사용자 정보 추출, 블랙리스트 관리 등의 기능을 제공합니다.
+ * JWT 토큰의 유효성을 검사하고 관련 정보를 추출하는 클래스입니다. 이 클래스는 토큰의 검증, 사용자 정보 추출, 블랙리스트 관리 등의 기능을 제공합니다.
  */
 @Component
 @Slf4j
@@ -31,12 +31,15 @@ public class JwtTokenValidator {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
+    private final CookieService cookieService;
     private final MemberRepository memberRepository;
     private final Cache<String, Date> tokenBlacklist;
 
-    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService, MemberRepository memberRepository) {
+    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService, CookieService cookieService,
+        MemberRepository memberRepository) {
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
+        this.cookieService = cookieService;
         this.memberRepository = memberRepository;
         this.tokenBlacklist = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofDays(1)) // 토큰을 블랙리스트에 추가한 후 1일 후에 자동으로 제거
@@ -45,9 +48,48 @@ public class JwtTokenValidator {
     }
 
     /**
+     * 계정을 비활성화하고 관련 토큰을 무효화합니다.
+     *
+     * @param request  HTTP 요청
+     * @param response HTTP 응답
+     */
+    public void deactivateAccount(HttpServletRequest request, HttpServletResponse response) {
+        String token = extractTokenFromHeader(request);
+        String email = extractUsername(token);
+
+        log.info("Deactivating account for user: {}", email);
+
+        // 1. 사용자 계정 비활성화
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
+        member.updateDeletedAt();
+        memberRepository.save(member);
+
+        // 2. 현재 사용 중인 토큰 무효화
+        addToBlacklist(token);
+
+        // 3. 리프레시 토큰 제거
+        cookieService.removeRefreshTokenCookie(response);
+
+        log.info("Account deactivated successfully for user: {}", email);
+    }
+
+    /**
+     * 계정이 활성 상태인지 확인합니다.
+     *
+     * @param email 확인할 사용자의 이메일
+     * @return 계정이 활성 상태이면 true, 그렇지 않으면 false
+     */
+    public boolean isAccountActive(String email) {
+        return memberRepository.findByEmail(email)
+            .map(member -> member.getDeletedAt() == null)
+            .orElse(false);
+    }
+
+    /**
      * 액세스토큰과 리프레시토큰을 비교합니다
      *
-     * @param accessToken 검증할 JWT access token
+     * @param accessToken  검증할 JWT access token
      * @param refreshToken 검증할 JWT refresh token
      * @return 유효하면 ture, 그렇지 않으면 false
      */
@@ -82,8 +124,7 @@ public class JwtTokenValidator {
     }
 
     /**
-     * JWT 토큰의 유효성을 검증합니다.
-     * 토큰이 블랙리스트에 없고, 만료되지 않았으며, 사용자 정보와 일치하는지 확인합니다.
+     * JWT 토큰의 유효성을 검증합니다. 토큰이 블랙리스트에 없고, 만료되지 않았으며, 사용자 정보와 일치하는지 확인합니다.
      *
      * @param token 검증할 JWT 토큰
      * @return 토큰이 유효하면 true, 그렇지 않으면 false
@@ -232,7 +273,7 @@ public class JwtTokenValidator {
      *
      * @param token JWT 토큰
      * @return 검증된 토큰에 해당하는 Member 객체
-     * @throws InvalidTokenException 토큰이 유효하지 않은 경우
+     * @throws InvalidTokenException     토큰이 유효하지 않은 경우
      * @throws ResourceNotFoundException 멤버를 찾을 수 없는 경우
      */
     public Member validateTokenAndGetMember(String token) {
