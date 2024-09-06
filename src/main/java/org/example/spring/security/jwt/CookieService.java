@@ -56,6 +56,10 @@ public class CookieService {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
+    /**
+     * HTTP 응답에 리프레시 토큰을 제거합니다
+     * @param response HttpServletResponse
+     */
     public void removeRefreshTokenCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("refresh_token", null);
         cookie.setPath("/");
