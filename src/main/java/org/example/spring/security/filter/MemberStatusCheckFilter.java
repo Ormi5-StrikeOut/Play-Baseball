@@ -62,7 +62,6 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
                 return;
             } catch (Exception e) {
                 log.error("Could not set user authentication in security context", e);
-                SecurityContextHolder.clearContext();
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
