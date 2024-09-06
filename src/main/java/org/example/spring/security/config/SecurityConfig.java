@@ -53,7 +53,7 @@ public class SecurityConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**" ).permitAll()
+                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs/swagger-config").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
@@ -84,18 +84,21 @@ public class SecurityConfig {
             .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
         );
         http.headers(headersConfig -> headersConfig
-                .xssProtection(XXssConfig::disable)
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-                .frameOptions(FrameOptionsConfig::sameOrigin)
-                .contentTypeOptions(withDefaults())
-                .httpStrictTransportSecurity(hsts -> hsts
-                        .includeSubDomains(true)
-                        .preload(true)
-                        .maxAgeInSeconds(31536000)
+            .xssProtection(XXssConfig::disable)
+            .contentSecurityPolicy(csp -> csp
+                .policyDirectives("default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';")
+            )
+            .frameOptions(FrameOptionsConfig::sameOrigin)
+            .contentTypeOptions(withDefaults())
+            .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .preload(true)
+                .maxAgeInSeconds(31536000)
 
-                )
-                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.ORIGIN))
-        );
+            )
+            .referrerPolicy(referrer -> referrer
+                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+            )        );
 
         return http.build();
     }

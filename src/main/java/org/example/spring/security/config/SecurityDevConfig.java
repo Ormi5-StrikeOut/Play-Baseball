@@ -52,7 +52,7 @@ public class SecurityDevConfig {
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**","/v3/api-docs/swagger-config", "/webjars/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join", "/api/auth/login", "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
@@ -84,8 +84,9 @@ public class SecurityDevConfig {
         );
         http.headers(headersConfig -> headersConfig
             .xssProtection(HeadersConfigurer.XXssConfig::disable)
-            .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-            .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+            .contentSecurityPolicy(csp -> csp
+                .policyDirectives("default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';")
+            )            .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
             .contentTypeOptions(withDefaults())
             .httpStrictTransportSecurity(hsts -> hsts
                 .includeSubDomains(true)
