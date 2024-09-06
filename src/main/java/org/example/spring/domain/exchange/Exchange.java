@@ -2,7 +2,6 @@ package org.example.spring.domain.exchange;
 
 import jakarta.persistence.*;
 
-import java.awt.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +15,8 @@ import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.review.Review;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "exchange")
@@ -31,7 +32,7 @@ public class Exchange {
 
     @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Member memberId;
+    private Member member;
 
     @Column(name = "title", length = 200, nullable = false)
     private String title;
@@ -53,9 +54,11 @@ public class Exchange {
     private SalesStatus status;
 
     @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
     private Timestamp createdAt;
 
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private Timestamp updatedAt;
 
     @Column(name = "deleted_at")
@@ -64,20 +67,36 @@ public class Exchange {
     @OneToOne(mappedBy = "exchange", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Review review;
 
-    @OneToMany(
-            mappedBy = "exchange",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "exchange", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExchangeImage> images = new ArrayList<>();
 
-    public void addImage(ExchangeImage image){
+    public void addImage(ExchangeImage image) {
+        if(images == null){
+            images = new ArrayList<>();
+        }
         images.add(image);
         image.associateExchange(this);
     }
 
-    public void removeImage(ExchangeImage image){
+    public void removeImage(ExchangeImage image) {
         images.remove(image);
         image.disassociateExchange();
+    }
+
+    public ExchangeBuilder toBuilder() {
+        return Exchange.builder()
+                .id(this.id)
+                .member(this.member)
+                .title(this.title)
+                .price(this.price)
+                .regularPrice(this.regularPrice)
+                .content(this.content)
+                .viewCount(this.viewCount)
+                .status(this.status)
+                .createdAt(this.createdAt)
+                .updatedAt(this.updatedAt)
+                .deletedAt(this.deletedAt)
+                .review(this.review)
+                .images(this.images);
     }
 }
