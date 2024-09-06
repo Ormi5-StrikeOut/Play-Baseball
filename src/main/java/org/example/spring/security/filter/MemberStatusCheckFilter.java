@@ -57,13 +57,6 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
                         handleBannedUser(request, response, filterChain, member);
                         return;
                     }
-
-                    // 정상 사용자의 경우 인증 처리
-                    UserDetails userDetails = jwtTokenValidator.getUserDetails(token);
-                    UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (AccountDeletedException e) {
                 handleDeletedUser(response);

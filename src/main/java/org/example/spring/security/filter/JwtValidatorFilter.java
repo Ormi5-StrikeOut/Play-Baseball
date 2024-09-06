@@ -12,6 +12,7 @@ import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.service.JwtAuthenticationService;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -71,7 +72,10 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
                     accessToken != null, refreshToken != null);
             }
 
-            jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
+            Authentication authentication = jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
+            if (authentication != null) {
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
             log.debug("Authentication successful for request: {}", requestURI);
 
             filterChain.doFilter(request, response);
