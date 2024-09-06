@@ -1,4 +1,4 @@
-package org.example.spring.security.jwt;
+package org.example.spring.security.utils;
 
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
