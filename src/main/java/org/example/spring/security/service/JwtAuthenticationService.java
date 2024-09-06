@@ -4,12 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.exception.InvalidTokenException;
+import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.utils.AuthUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
@@ -23,11 +23,13 @@ public class JwtAuthenticationService {
 
     private final JwtTokenValidator jwtTokenValidator;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CookieService cookieService;
     private final AuthUtils authUtils;
 
-    public JwtAuthenticationService(JwtTokenValidator jwtTokenValidator, JwtTokenProvider jwtTokenProvider, AuthUtils authUtils) {
+    public JwtAuthenticationService(JwtTokenValidator jwtTokenValidator, JwtTokenProvider jwtTokenProvider, CookieService cookieService, AuthUtils authUtils) {
         this.jwtTokenValidator = jwtTokenValidator;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.cookieService = cookieService;
         this.authUtils = authUtils;
     }
 
@@ -43,12 +45,18 @@ public class JwtAuthenticationService {
         if (accessToken != null && jwtTokenValidator.validateToken(accessToken)) {
             log.debug("Authenticating with access token");
             return processToken(accessToken, request);
-        } else if (refreshToken != null && jwtTokenValidator.validateToken(refreshToken)) {
-            log.debug("Access token invalid or missing, attempting to use refresh token");
-            return refreshAccessToken(refreshToken, request, response);
+        } else if (refreshToken != null) {
+            if (jwtTokenValidator.validateToken(refreshToken)) {
+                log.debug("Access token invalid or missing, attempting to use refresh token");
+                return refreshAccessToken(refreshToken, request, response);
+            } else {
+                log.warn("Refresh token is invalid or expired");
+                handleExpiredRefreshToken(response);
+                return null;
+            }
         } else {
-            log.warn("Both access token and refresh token are invalid or missing");
-            handleInvalidTokens();
+            log.warn("Both access token and refresh token are missing");
+            handleInvalidTokens(response);
             return null;
         }
     }
@@ -95,13 +103,21 @@ public class JwtAuthenticationService {
     }
 
     /**
+     * 만료된 리프레시 토큰을 처리합니다.
+     */
+    private void handleExpiredRefreshToken(HttpServletResponse response) {
+        cookieService.removeRefreshTokenCookie(response);
+        throw new InvalidTokenException("Refresh token expired. Please log in again.");
+    }
+
+    /**
      * 유효하지 않은 토큰을 처리합니다.
      *
      * @throws InvalidTokenException 항상 발생
      */
-    private void handleInvalidTokens() {
-        SecurityContextHolder.clearContext();
-        throw new InvalidTokenException("Invalid or expired tokens");
+    private void handleInvalidTokens(HttpServletResponse response) {
+        cookieService.removeRefreshTokenCookie(response);
+        throw new InvalidTokenException("Invalid or expired tokens. Please log in again.");
     }
 
     /**
