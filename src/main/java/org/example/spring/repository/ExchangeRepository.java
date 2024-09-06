@@ -20,5 +20,5 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
     List<Exchange> findTop5ByOrderByCreatedAtDesc();
 
     // 특정 회원이 작성한 게시글 조회
-    Page<Exchange> findByWriterId(Long memberId, Pageable pageable);
+    Page<Exchange> findByMemberId(Long memberId, Pageable pageable);
 }
