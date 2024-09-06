@@ -1,42 +1,109 @@
 package org.example.spring.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
-import org.example.spring.domain.exchange.dto.ExchangeRequestDto;
+import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
+import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
 import org.example.spring.repository.ExchangeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ExchangeService {
 
     private final ExchangeRepository exchangeRepository;
+    private final ExchangeImageService exchangeImageService;
 
     /**
      * 새로운 게시글 생성요청
      * 응답 DTO
      */
     @Transactional
-    public ExchangeResponseDto addExchange(ExchangeRequestDto request) {
+    public ExchangeResponseDto addExchange(ExchangeAddRequestDto request, List<MultipartFile> images) {
+
         Exchange exchange = Exchange.builder()
-                .writer(Member.builder().id(request.getMemberId()).build())
+                .member(Member.builder().id(request.getMemberId()).build())
                 .title(request.getTitle())
                 .price(request.getPrice())
-                .regularPrice(request.getRegularPrice())
+                .regularPrice(123123123) // todo: Alan api 연결
                 .content(request.getContent())
-                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .status(SalesStatus.SALE)
                 .build();
 
-        Exchange savedExchange = exchangeRepository.save(exchange);
-        return convertToResponseDto(savedExchange);
+        exchangeRepository.save(exchange);
+
+
+        if (!images.isEmpty()) {
+            for (MultipartFile image : images) {
+                ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, exchange);
+                exchange.addImage(exchangeImage);
+            }
+        }
+
+        exchangeRepository.save(exchange);
+
+        return ExchangeResponseDto.fromExchange(exchange);
+    }
+
+    /**
+     * 작성된 모든 게시글 대상으로 페이지별로 조회
+     *
+     * @param page 불러올 페이지를 작성
+     * @return pageable에 해당하는 페이지의 게시글을 리턴합니다.
+     */
+    @Transactional(readOnly = true)
+    public Page<ExchangeResponseDto> getAllExchanges(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return exchangeRepository
+                .findAll(pageable)
+                .map(ExchangeResponseDto::fromExchange);
+    }
+
+    /**
+     * 최근 5개 게시글 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ExchangeResponseDto> getLatestFiveExchanges() {
+        return exchangeRepository
+                .findTop5ByOrderByCreatedAtDesc()
+                .stream()
+                .map(ExchangeResponseDto::fromExchange)
+                .collect(Collectors.toList());
+
+    }
+
+    /**
+     * 특정회원 판매 게시글 조회
+     */
+    @Transactional(readOnly = true)
+    public Page<ExchangeResponseDto> getUserExchanges(Long memberId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return exchangeRepository
+                .findByMemberId(memberId, pageable)
+                .map(ExchangeResponseDto::fromExchange);
+    }
+
+    @Transactional
+    public Page<ExchangeResponseDto> getExchangesByTitleContaining(String title, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return exchangeRepository
+                .findByTitleContaining(title, pageable)
+                .map(ExchangeResponseDto::fromExchange);
     }
 
     /**
@@ -45,27 +112,35 @@ public class ExchangeService {
      * 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력
      */
     @Transactional
-    public ExchangeResponseDto modifyExchange(Long id, ExchangeModifyRequestDto request) {
+    public ExchangeResponseDto modifyExchange(
+            Long id,
+            ExchangeModifyRequestDto request,
+            List<MultipartFile> images) {
+
         Exchange exchange = exchangeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
 
-        Exchange updatedExchange = updateExchangeFields(exchange, request);
+        List<ExchangeImage> imagesCopy = new ArrayList<>(exchange.getImages());
+        for (ExchangeImage image : imagesCopy) {
+            exchange.removeImage(image);
+        }
 
-        return convertToResponseDto(exchangeRepository.save(updatedExchange));
-    }
-
-    private Exchange updateExchangeFields(Exchange exchange, ExchangeModifyRequestDto request) {
-        return Exchange.builder()
-                .id(exchange.getId())
-                .writer(exchange.getWriter())
+        Exchange updateExchange = exchange.toBuilder()
                 .title(request.getTitle())
                 .price(request.getPrice())
-                .regularPrice(request.getRegularPrice())
                 .content(request.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
                 .updatedAt(new Timestamp(System.currentTimeMillis()))
+                .status(request.getStatus())
                 .build();
+
+        if (!images.isEmpty()) {
+            for (MultipartFile image : images) {
+                ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, updateExchange);
+                updateExchange.addImage(exchangeImage);
+            }
+        }
+
+        return ExchangeResponseDto.fromExchange(exchangeRepository.save(updateExchange));
     }
 
     /**
@@ -76,95 +151,10 @@ public class ExchangeService {
     public void deleteExchange(Long id) {
         Exchange exchange = exchangeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
-        Exchange deletedExchange = Exchange.builder()
-                .id(exchange.getId())
-                .writer(exchange.getWriter())
-                .title(exchange.getTitle())
-                .price(exchange.getPrice())
-                .regularPrice(exchange.getRegularPrice())
-                .content(exchange.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
-                .updatedAt(exchange.getUpdatedAt())
+        Exchange deletedExchange = exchange.toBuilder()
                 .deletedAt(new Timestamp(System.currentTimeMillis()))
                 .build();
         exchangeRepository.save(deletedExchange);
-    }
-
-    /**
-     * 모든 게시글을 조회
-     */
-    @Transactional(readOnly = true)
-    public List<ExchangeResponseDto> getAllExchanges() {
-        List<Exchange> exchanges = exchangeRepository.findAll();
-        List<ExchangeResponseDto> responseDto = new ArrayList<>();
-        for (Exchange exchange : exchanges) {
-            responseDto.add(convertToResponseDto(exchange));
-        }
-        return responseDto;
-    }
-
-    /**
-     * 최근 5개 게시글 조회
-     */
-    @Transactional(readOnly = true)
-    public List<ExchangeResponseDto> getLatestFiveExchanges() {
-        List<Exchange> exchanges = exchangeRepository.findTop5ByOrderByCreatedAtDesc();
-        List<ExchangeResponseDto> responseDto = new ArrayList<>();
-        for (Exchange exchange : exchanges) {
-            responseDto.add(convertToResponseDto(exchange));
-        }
-        return responseDto;
-    }
-
-    /**
-     * 게시글 판매상태 수정
-     */
-    @Transactional
-    public ExchangeResponseDto modifySalesStatus(Long id) {
-        Exchange exchange = exchangeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
-        Exchange updatedExchange = Exchange.builder()
-                .id(exchange.getId())
-                .writer(exchange.getWriter())
-                .title(exchange.getTitle())
-                .price(exchange.getPrice())
-                .regularPrice(exchange.getRegularPrice())
-                .content(exchange.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
-                .updatedAt(new Timestamp(System.currentTimeMillis()))
-                // .status(newStatus) // Add this line when implementing status
-                .build();
-        return convertToResponseDto(exchangeRepository.save(updatedExchange));
-    }
-
-    /**
-     * 특정회원 판매 게시글 조회
-     */
-    @Transactional(readOnly = true)
-    public List<ExchangeResponseDto> getMyExchanges(Long memberId) {
-        List<Exchange> exchanges = exchangeRepository.findByWriterId(memberId);
-        List<ExchangeResponseDto> responseDto = new ArrayList<>();
-        for (Exchange exchange : exchanges) {
-            responseDto.add(convertToResponseDto(exchange));
-        }
-        return responseDto;
-    }
-
-    private ExchangeResponseDto convertToResponseDto(Exchange exchange) {
-        return ExchangeResponseDto.builder()
-                .id(exchange.getId())
-                .memberId(exchange.getWriter().getId())
-                .title(exchange.getTitle())
-                .price(exchange.getPrice())
-                .regularPrice(exchange.getRegularPrice())
-                .content(exchange.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
-                .updatedAt(exchange.getUpdatedAt())
-                .deletedAt(exchange.getDeletedAt())
-                .build();
     }
 }
 
