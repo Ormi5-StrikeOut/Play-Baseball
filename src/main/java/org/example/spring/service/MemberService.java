@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
@@ -18,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 회원 관련 서비스 로직을 담당하는 클래스입니다. 회원 가입, 회원 목록 조회 등의 기능을 제공합니다.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -49,16 +50,40 @@ public class MemberService {
         return members.map(MemberResponseDto::toDto);
     }
 
+    /**
+     * JWT 토큰에서 추출된 회원의 정보를 조회합니다.
+     *
+     * @param request HttpServletRequest
+     * @return MemberResponseDto
+     */
     @Transactional(readOnly = true)
     public MemberResponseDto getMyMember(HttpServletRequest request) {
         String token = jwtValidator.extractTokenFromHeader(request);
-        UserDetails userDetails = jwtValidator.getUserDetails(token);
         String email = jwtValidator.extractUsername(token);
-        if (userDetails.getUsername().equals(email)) {
             Member member = memberRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
             return MemberResponseDto.toDto(member);
-        }
-        return null;
+    }
+
+    /**
+     * JWT 토큰에서 추출된 회원의 탈퇴(soft delete)
+     *
+     * @param request HttpServletRequest
+     */
+    @Transactional
+    public void deleteMember(HttpServletRequest request) {
+        String token = jwtValidator.extractTokenFromHeader(request);
+        String email = jwtValidator.extractUsername(token);
+
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
+
+        member.updateDeletedAt();
+
+        memberRepository.save(member);
+
+        // 로깅
+        log.debug("회원 삭제 완료 - ID: {}, Email: {}, 시간: {}",
+            member.getId(), member.getEmail(), member.getDeletedAt());
     }
 
     /**
