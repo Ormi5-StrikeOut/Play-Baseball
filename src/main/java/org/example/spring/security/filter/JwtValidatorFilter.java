@@ -65,13 +65,6 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
                 handleMissingTokens(response);
                 return;
             }
-            // 토큰 일관성 검사 추가
-            log.debug("Performing token consistency check for request: {}", requestURI);
-            if (!jwtTokenValidator.validateAccessAndRefreshTokenConsistency(accessToken, refreshToken)) {
-                log.warn("Token consistency check failed for request: {}", requestURI);
-                throw new InvalidTokenException("Access token and refresh token are inconsistent");
-            }
-            log.debug("Token consistency check passed for request: {}", requestURI);
 
             Authentication authentication = jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
             if (authentication != null) {
