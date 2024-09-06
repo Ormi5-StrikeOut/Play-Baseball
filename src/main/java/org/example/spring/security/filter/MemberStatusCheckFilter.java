@@ -72,7 +72,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
     private void handleBannedUser(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, Member member)
         throws IOException, ServletException {
         // BANNED 사용자에게 허용된 엔드포인트 목록
-        List<String> allowedEndpoints = Arrays.asList("/api/support", "/api/account/status");
+        List<String> allowedEndpoints = Arrays.asList("/api/auth/logout", "/api/members/my/**", "/api/members/my");
 
         if (allowedEndpoints.contains(request.getRequestURI())) {
             // 허용된 엔드포인트에 대해서는 제한된 권한으로 인증 처리
