@@ -9,8 +9,8 @@ import org.example.spring.constants.SalesStatus;
 @Builder
 @AllArgsConstructor
 public class ExchangeModifyRequestDto {
-    private final String title;
-    private final int price;
-    private final String content;
-    private final SalesStatus status;
+  private final String title;
+  private final int price;
+  private final String content;
+  private final SalesStatus status;
 }
