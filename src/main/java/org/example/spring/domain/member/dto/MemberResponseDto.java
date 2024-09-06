@@ -25,7 +25,9 @@ public class MemberResponseDto {
     private String nickname;
     private MemberRole role;
     private Timestamp createdAt;
+    private Timestamp updatedAt;
     private Timestamp lastLoginDate;
+    private Timestamp deletedAt;
 
     public static MemberResponseDto toDto(Member member) {
         return MemberResponseDto.builder()
@@ -34,7 +36,9 @@ public class MemberResponseDto {
             .nickname(member.getNickname())
             .role(member.getRole())
             .createdAt(member.getCreatedAt())
+            .updatedAt(member.getUpdatedAt())
             .lastLoginDate(member.getLastLoginDate())
+            .deletedAt(member.getDeletedAt())
             .build();
     }
 }

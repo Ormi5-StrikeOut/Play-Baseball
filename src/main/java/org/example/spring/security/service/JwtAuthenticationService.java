@@ -35,10 +35,9 @@ public class JwtAuthenticationService {
      *
      * @param accessToken 액세스 토큰
      * @param refreshToken 리프레시 토큰
-     * @param response HTTP 응답
      * @throws RuntimeException 두 토큰 모두 유효하지 않거나 만료된 경우
      */
-    public Authentication authenticateWithTokens(String accessToken, String refreshToken, HttpServletRequest request, HttpServletResponse response) {
+    public Authentication authenticateWithTokens(String accessToken, String refreshToken, HttpServletRequest request) {
         try {
             if (accessToken != null && refreshToken != null &&
                 jwtTokenValidator.validateAccessAndRefreshTokenConsistency(accessToken, refreshToken)) {

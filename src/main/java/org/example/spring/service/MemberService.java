@@ -1,6 +1,5 @@
 package org.example.spring.service;
 
-import static org.example.spring.domain.member.dto.MemberJoinRequestDto.toEntity;
 import static org.example.spring.domain.member.dto.MemberResponseDto.toDto;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
+import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
@@ -59,10 +59,8 @@ public class MemberService {
      */
     @Transactional(readOnly = true)
     public MemberResponseDto getMyMember(HttpServletRequest request) {
-        String token = jwtValidator.extractTokenFromHeader(request);
-        String email = jwtValidator.extractUsername(token);
-            Member member = memberRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
-            return MemberResponseDto.toDto(member);
+        Member member = getMemberByToken(request);
+        return MemberResponseDto.toDto(member);
     }
 
     /**
@@ -86,7 +84,7 @@ public class MemberService {
 
         String hashedPassword = passwordEncoder.encode(memberJoinRequestDto.getPassword());
 
-        Member member = toEntity(memberJoinRequestDto, hashedPassword);
+        Member member = MemberJoinRequestDto.toEntity(memberJoinRequestDto, hashedPassword);
 
         Member saveMember = memberRepository.save(member);
 
@@ -111,6 +109,26 @@ public class MemberService {
         if (!errorMessages.isEmpty()) {
             throw new IllegalArgumentException("이미 존재하는 " + String.join(", ", errorMessages) + "입니다.");
         }
+    }
+
+    /**
+     * 요청온 Request 에서 추출한 email 을 가지고 있는 회원을 modify 합니다.
+     *
+     * @param request 요청
+     * @param memberModifyRequestDto 회원 정보 수정 요청 Dto
+     * @return 수정된 회원 응답 Dto
+     */
+    public MemberResponseDto modifyMember(HttpServletRequest request, MemberModifyRequestDto memberModifyRequestDto) {
+        Member member = getMemberByToken(request);
+        member.updateFrom(memberModifyRequestDto);
+        Member modifiedMember = memberRepository.save(member);
+        return MemberResponseDto.toDto(modifiedMember);
+    }
+
+    private Member getMemberByToken(HttpServletRequest request) {
+        String token = jwtValidator.extractTokenFromHeader(request);
+        String email = jwtValidator.extractUsername(token);
+        return memberRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
     }
 
     @Getter

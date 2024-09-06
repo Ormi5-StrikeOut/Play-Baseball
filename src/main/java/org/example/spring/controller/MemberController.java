@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
+import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.service.MemberService;
 import org.springframework.data.domain.Page;
@@ -78,5 +79,17 @@ public class MemberController {
     public ResponseEntity<ApiResponseDto<Void>> deleteMember(HttpServletRequest request, HttpServletResponse response) {
         memberService.deleteMember(request, response);
         return ResponseEntity.ok(ApiResponseDto.success("회원 삭제 성공", null));
+    }
+
+    /**
+     * 요청온 Request 에서 추출한 email 을 가지고 있는 회원을 modify 합니다.
+     *
+     * @param request 요청
+     * @return 수정된 회원 응답 Dto
+     */
+    @PutMapping("/my/modify-member")
+    public ResponseEntity<ApiResponseDto<MemberResponseDto>> modifyMember(HttpServletRequest request, @RequestBody MemberModifyRequestDto member) {
+        MemberResponseDto modifiedMember = memberService.modifyMember(request, member);
+        return ResponseEntity.ok(ApiResponseDto.success("회원 정보 수정 성공:", modifiedMember));
     }
 }
