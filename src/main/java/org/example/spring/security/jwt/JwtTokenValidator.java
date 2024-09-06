@@ -74,21 +74,6 @@ public class JwtTokenValidator {
                 return false;
             }
 
-            // 3. 특정 클레임 검증 (예: 클라이언트 ID)
-            String accessClientId = (String) accessClaims.get("client_id");
-            String refreshClientId = (String) refreshClaims.get("client_id");
-            if (!accessClientId.equals(refreshClientId)) {
-                log.warn("Client ID mismatch between access token and refresh token");
-                return false;
-            }
-
-            // 4. 토큰 타입 확인
-            if (!"access".equals(accessClaims.get("token_type")) ||
-                !"refresh".equals(refreshClaims.get("token_type"))) {
-                log.warn("Invalid token types");
-                return false;
-            }
-
             return true;
         } catch (Exception e) {
             log.error("Error validating token consistency: {}", e.getMessage());
