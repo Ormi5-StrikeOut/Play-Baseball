@@ -58,6 +58,9 @@ public class Member {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
+    @Column(name = "deleted_at")
+    private Timestamp deletedAt;
+
     @Column(name = "last_login_date")
     private Timestamp lastLoginDate;
 
@@ -75,5 +78,8 @@ public class Member {
 
     public void updateLastLoginDate() {
         this.lastLoginDate = Timestamp.from(Instant.now());
+    }
+    public void updateDeletedAt() {
+        this.deletedAt = Timestamp.from(Instant.now());
     }
 }
