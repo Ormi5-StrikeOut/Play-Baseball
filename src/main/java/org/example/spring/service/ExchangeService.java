@@ -92,13 +92,15 @@ public class ExchangeService {
   @Transactional(readOnly = true)
   public Page<ExchangeResponseDto> getAllExchanges(int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
-    return exchangeRepository.findAll(pageable).map(ExchangeResponseDto::fromExchange);
+    return exchangeRepository
+        .findByDeletedAtIsNull(pageable)
+        .map(ExchangeResponseDto::fromExchange);
   }
 
   /** 최근 5개 게시글 조회 */
   @Transactional(readOnly = true)
   public List<ExchangeResponseDto> getLatestFiveExchanges() {
-    return exchangeRepository.findTop5ByOrderByCreatedAtDesc().stream()
+    return exchangeRepository.findTop5ByDeletedAtIsNullOrderByCreatedAtDesc().stream()
         .map(ExchangeResponseDto::fromExchange)
         .collect(Collectors.toList());
   }
@@ -108,7 +110,7 @@ public class ExchangeService {
   public Page<ExchangeResponseDto> getUserExchanges(Long memberId, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
-        .findByMemberId(memberId, pageable)
+        .findByMemberIdAndDeletedAtIsNull(memberId, pageable)
         .map(ExchangeResponseDto::fromExchange);
   }
 
@@ -116,7 +118,7 @@ public class ExchangeService {
   public Page<ExchangeResponseDto> getExchangesByTitleContaining(String title, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
-        .findByTitleContaining(title, pageable)
+        .findByTitleContainingAndDeletedAtIsNull(title, pageable)
         .map(ExchangeResponseDto::fromExchange);
   }
 
