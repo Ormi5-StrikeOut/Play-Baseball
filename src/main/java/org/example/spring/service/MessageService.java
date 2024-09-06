@@ -200,10 +200,9 @@ public class MessageService {
 
         String token = authHeader.substring("Bearer ".length());
 
-        Claims claims;
-        claims = jwtTokenValidator.extractAllClaims(token);
+        Member member = jwtTokenValidator.validateTokenAndGetMember(token);
 
-        return Long.parseLong(claims.get("memberId").toString());
+        return member.getId();
     }
 
     private void addMemberToMessageRoom(MessageRoom messageRoom, Member member) {
