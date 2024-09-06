@@ -5,9 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.LoginRequestDto;
 import org.example.spring.domain.member.dto.LoginResponseDto;
-import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.security.service.AuthService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,12 +50,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponseDto<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
-        try {
+
             authService.logout(request, response);
             return ResponseEntity.ok(ApiResponseDto.success("로그아웃 성공", null));
-        } catch (InvalidTokenException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponseDto.success(e.getMessage(), null));
-        }
+
     }
 }
