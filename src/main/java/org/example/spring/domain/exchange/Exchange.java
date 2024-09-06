@@ -31,7 +31,7 @@ public class Exchange {
 
     @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Member writer;
+    private Member memberId;
 
     @Column(name = "title", length = 200, nullable = false)
     private String title;
