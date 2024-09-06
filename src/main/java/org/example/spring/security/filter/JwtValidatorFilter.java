@@ -28,7 +28,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-        "/api/auth/login", "/api/members/join", "/api/exchanges", "/api/reviews"
+        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join"
     );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
