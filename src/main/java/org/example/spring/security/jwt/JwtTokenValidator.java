@@ -9,7 +9,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
+import org.example.spring.domain.member.Member;
 import org.example.spring.exception.InvalidTokenException;
+import org.example.spring.exception.ResourceNotFoundException;
+import org.example.spring.repository.MemberRepository;
+import org.example.spring.security.utils.JwtUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,11 +30,13 @@ public class JwtTokenValidator {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
+    private final MemberRepository memberRepository;
     private final Cache<String, Date> tokenBlacklist;
 
-    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService) {
+    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService, MemberRepository memberRepository) {
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
+        this.memberRepository = memberRepository;
         this.tokenBlacklist = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofDays(1)) // 토큰을 블랙리스트에 추가한 후 1일 후에 자동으로 제거
             .maximumSize(10_000)
@@ -83,7 +89,7 @@ public class JwtTokenValidator {
      * @return 토큰에 포함된 모든 클레임
      * @throws InvalidTokenException 토큰이 유효하지 않은 경우
      */
-    public Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token) {
         try {
             return Jwts.parserBuilder()
                 .setSigningKey(jwtUtils.getSigningKey())
@@ -97,7 +103,7 @@ public class JwtTokenValidator {
     }
 
     /**
-     * JWT 토큰에서 사용자 이름을 추출합니다.
+     * JWT 토큰에서 사용자 이름(email)을 추출합니다.
      *
      * @param token JWT 토큰
      * @return 토큰에 포함된 사용자 이름
@@ -154,5 +160,36 @@ public class JwtTokenValidator {
         }
         log.debug("No valid JWT token found in request headers");
         return null;
+    }
+
+    /**
+     * JWT 토큰에서 멤버 정보를 추출합니다.
+     *
+     * @param token JWT 토큰
+     * @return 토큰에 해당하는 Member 객체
+     * @throws ResourceNotFoundException 멤버를 찾을 수 없는 경우
+     */
+    private Member getMemberFromToken(String token) {
+        String email = extractUsername(token);
+        return memberRepository.findByEmail(email)
+            .orElseThrow(() -> {
+                log.error("Member not found for email: {}", email);
+                return new ResourceNotFoundException("Member", "email", email);
+            });
+    }
+
+    /**
+     * 토큰의 유효성을 검사하고 멤버를 반환합니다.
+     *
+     * @param token JWT 토큰
+     * @return 검증된 토큰에 해당하는 Member 객체
+     * @throws InvalidTokenException 토큰이 유효하지 않은 경우
+     * @throws ResourceNotFoundException 멤버를 찾을 수 없는 경우
+     */
+    public Member validateTokenAndGetMember(String token) {
+        if (validateToken(token)) {
+            return getMemberFromToken(token);
+        }
+        throw new InvalidTokenException("Invalid or expired JWT token");
     }
 }
