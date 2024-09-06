@@ -3,6 +3,7 @@ package org.example.spring.security.jwt;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
@@ -95,25 +96,8 @@ public class JwtTokenValidator {
      */
     public boolean validateAccessAndRefreshTokenConsistency(String accessToken, String refreshToken) {
         try {
-            if (accessToken == null || refreshToken == null) {
-                return false;
-            }
-
-            Claims accessClaims;
-            try {
-                accessClaims = extractAllClaims(accessToken);
-            } catch (InvalidTokenException e) {
-                log.warn("Access token is invalid: {}", e.getMessage());
-                return false;
-            }
-
-            Claims refreshClaims;
-            try {
-                refreshClaims = extractAllClaims(refreshToken);
-            } catch (InvalidTokenException e) {
-                log.warn("Refresh token is invalid: {}", e.getMessage());
-                return false;
-            }
+            Claims accessClaims = extractAllClaims(accessToken);
+            Claims refreshClaims = extractAllClaims(refreshToken);
 
             // 1. 사용자 이름(subject) 일치 확인
             if (!accessClaims.getSubject().equals(refreshClaims.getSubject())) {
@@ -129,7 +113,15 @@ public class JwtTokenValidator {
                 return false;
             }
 
+            // 3. 액세스 토큰 만료 확인
+            if (accessClaims.getExpiration().before(new Date())) {
+                throw new ExpiredJwtException(null, accessClaims, "Access token has expired");
+            }
+
             return true;
+        } catch (ExpiredJwtException e) {
+            log.debug("Access token has expired");
+            throw e;
         } catch (Exception e) {
             log.error("Error validating token consistency: {}", e.getMessage());
             return false;
@@ -150,16 +142,10 @@ public class JwtTokenValidator {
 
         try {
             Claims claims = extractAllClaims(token);
-
-            String username = claims.getSubject();
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (!username.equals(userDetails.getUsername())) {
-                log.debug("Token username doesn't match UserDetails");
-                return false;
-            }
-
-            log.debug("Token validation result for user: {}", username);
-            return true;
+            return !claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            log.debug("Token has expired");
+            throw e;
         } catch (Exception e) {
             log.debug("Token validation failed: {}", e.getMessage());
             return false;
@@ -232,8 +218,6 @@ public class JwtTokenValidator {
             if (expirationDate.after(new Date())) {
                 tokenBlacklist.put(token, expirationDate);
                 log.info("Token added to blacklist. Expires at: {}", expirationDate);
-            } else {
-                log.warn("Attempted to blacklist an already expired token");
             }
         } catch (InvalidTokenException e) {
             log.warn("Attempted to blacklist an invalid token: {}", e.getMessage());
