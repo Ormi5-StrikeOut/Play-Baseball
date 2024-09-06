@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.spring.constants.Gender;
+import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -76,9 +77,20 @@ public class Member {
     @Column(name = "role", nullable = false, columnDefinition = "ENUM('USER', 'ADMIN', 'BANNED') DEFAULT 'USER'")
     private MemberRole role;
 
+    public void updateFrom(MemberModifyRequestDto dto) {
+        this.email = dto.getEmail();
+        this.password = dto.getPassword();
+        this.nickname = dto.getNickname();
+        this.name = dto.getName();
+        this.phoneNumber = dto.getPhoneNumber();
+        this.gender = dto.getGender();
+        this.updatedAt = Timestamp.from(Instant.now());
+    }
+
     public void updateLastLoginDate() {
         this.lastLoginDate = Timestamp.from(Instant.now());
     }
+
     public void updateDeletedAt() {
         this.deletedAt = Timestamp.from(Instant.now());
     }
