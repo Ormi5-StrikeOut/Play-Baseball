@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
+import org.example.spring.exception.AccountDeletedException;
 import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
@@ -44,6 +45,58 @@ public class JwtTokenValidator {
     }
 
     /**
+     * 액세스토큰과 리프레시토큰을 비교합니다
+     *
+     * @param accessToken 검증할 JWT access token
+     * @param refreshToken 검증할 JWT refresh token
+     * @return 유효하면 ture, 그렇지 않으면 false
+     */
+    public boolean validateAccessAndRefreshTokenConsistency(String accessToken, String refreshToken) {
+        try {
+            if (accessToken == null || refreshToken == null) {
+                return false;
+            }
+
+            Claims accessClaims = extractAllClaims(accessToken);
+            Claims refreshClaims = extractAllClaims(refreshToken);
+
+            // 1. 사용자 이름(subject) 일치 확인
+            if (!accessClaims.getSubject().equals(refreshClaims.getSubject())) {
+                log.warn("Username mismatch between access token and refresh token");
+                return false;
+            }
+
+            // 2. 토큰 발행 시간(iat) 비교
+            Date accessIssuedAt = accessClaims.getIssuedAt();
+            Date refreshIssuedAt = refreshClaims.getIssuedAt();
+            if (accessIssuedAt.before(refreshIssuedAt)) {
+                log.warn("Access token was issued before refresh token");
+                return false;
+            }
+
+            // 3. 특정 클레임 검증 (예: 클라이언트 ID)
+            String accessClientId = (String) accessClaims.get("client_id");
+            String refreshClientId = (String) refreshClaims.get("client_id");
+            if (!accessClientId.equals(refreshClientId)) {
+                log.warn("Client ID mismatch between access token and refresh token");
+                return false;
+            }
+
+            // 4. 토큰 타입 확인
+            if (!"access".equals(accessClaims.get("token_type")) ||
+                !"refresh".equals(refreshClaims.get("token_type"))) {
+                log.warn("Invalid token types");
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Error validating token consistency: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * JWT 토큰의 유효성을 검증합니다.
      * 토큰이 블랙리스트에 없고, 만료되지 않았으며, 사용자 정보와 일치하는지 확인합니다.
      *
@@ -61,9 +114,13 @@ public class JwtTokenValidator {
 
             String username = claims.getSubject();
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            boolean isValid = username.equals(userDetails.getUsername());
-            log.debug("Token validation result for user {}: {}", username, isValid);
-            return isValid;
+            if (!username.equals(userDetails.getUsername())) {
+                log.debug("Token username doesn't match UserDetails");
+                return false;
+            }
+
+            log.debug("Token validation result for user: {}", username);
+            return true;
         } catch (Exception e) {
             log.debug("Token validation failed: {}", e.getMessage());
             return false;
@@ -169,13 +226,20 @@ public class JwtTokenValidator {
      * @return 토큰에 해당하는 Member 객체
      * @throws ResourceNotFoundException 멤버를 찾을 수 없는 경우
      */
-    private Member getMemberFromToken(String token) {
+    public Member getMemberFromToken(String token) {
         String email = extractUsername(token);
-        return memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
             .orElseThrow(() -> {
                 log.error("Member not found for email: {}", email);
                 return new ResourceNotFoundException("Member", "email", email);
             });
+
+        if (member.getDeletedAt() != null) {
+            log.warn("Attempt to access with deleted account: {}", email);
+            throw new AccountDeletedException("This account has been deleted");
+        }
+
+        return member;
     }
 
     /**
