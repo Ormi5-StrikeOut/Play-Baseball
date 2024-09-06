@@ -36,7 +36,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // 로그인 요청의 경우 별도 처리
-        if ("/api/auth/login".equals(path)) {
+        if ("/api/auth/login".equals(path) || response.isCommitted()) {
             filterChain.doFilter(request, response);
             return;
         }
