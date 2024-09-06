@@ -59,35 +59,58 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
             log.debug("Extracted tokens - Access: {}, Refresh: {}",
                 accessToken != null ? "Present" : "Not present",
                 refreshToken != null ? "Present" : "Not present");
-            // 토큰 일관성 검사 추가
-            if (accessToken != null && refreshToken != null) {
-                log.debug("Performing token consistency check for request: {}", requestURI);
-                if (!jwtTokenValidator.validateAccessAndRefreshTokenConsistency(accessToken, refreshToken)) {
-                    log.warn("Token consistency check failed for request: {}", requestURI);
-                    throw new InvalidTokenException("Access token and refresh token are inconsistent");
-                }
-                log.debug("Token consistency check passed for request: {}", requestURI);
-            } else {
-                log.debug("Skipping token consistency check. AccessToken: {}, RefreshToken: {}",
-                    accessToken != null, refreshToken != null);
+
+            if (accessToken == null || refreshToken == null) {
+                log.warn("Missing access token or refresh token for request: {}", requestURI);
+                handleMissingTokens(response);
+                return;
             }
+            // 토큰 일관성 검사 추가
+            log.debug("Performing token consistency check for request: {}", requestURI);
+            if (!jwtTokenValidator.validateAccessAndRefreshTokenConsistency(accessToken, refreshToken)) {
+                log.warn("Token consistency check failed for request: {}", requestURI);
+                throw new InvalidTokenException("Access token and refresh token are inconsistent");
+            }
+            log.debug("Token consistency check passed for request: {}", requestURI);
 
             Authentication authentication = jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
             if (authentication != null) {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("Authentication successful for request: {}", requestURI);
+            } else {
+                log.warn("Authentication failed for request: {}", requestURI);
+                handleAuthenticationFailure(response);
+                return;
             }
-            log.debug("Authentication successful for request: {}", requestURI);
 
             filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
             log.warn("Invalid token: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write(e.getMessage());
+            handleInvalidTokens(response);
         } catch (Exception e) {
             log.error("Cannot set user authentication: {}", e.getMessage());
-            throw new ServletException("An error occurred during authentication", e);
+            handleAuthenticationError(response, e);
         }
+    }
+
+    private void handleMissingTokens(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Missing access token or refresh token");
+    }
+
+    private void handleInvalidTokens(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Invalid or inconsistent tokens");
+    }
+
+    private void handleAuthenticationFailure(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Authentication failed");
+    }
+
+    private void handleAuthenticationError(HttpServletResponse response, Exception e) throws IOException {
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        response.getWriter().write("An error occurred during authentication: " + e.getMessage());
     }
 
     /**
