@@ -7,11 +7,14 @@ import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
 import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
+import org.example.spring.domain.member.dto.MemberRoleModifyRequestDto;
 import org.example.spring.service.MemberService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -91,5 +94,21 @@ public class MemberController {
     public ResponseEntity<ApiResponseDto<MemberResponseDto>> modifyMember(HttpServletRequest request, @RequestBody MemberModifyRequestDto member) {
         MemberResponseDto modifiedMember = memberService.modifyMember(request, member);
         return ResponseEntity.ok(ApiResponseDto.success("회원 정보 수정 성공:", modifiedMember));
+    }
+
+    /**
+     * admin 권한을 가지고 있으면 회원의 권한을 수정할 수 있습니다.
+     * @param memberId 수정할 회원 ID
+     * @param memberRoleModifyRequestDto 변경할 권한 요청
+     * @param request HttpServletRequest
+     * @return 권한이 변경된 회원 Dto
+     */
+    @PatchMapping("verify-role/{memberId}")
+    public ResponseEntity<ApiResponseDto<MemberResponseDto>> modifyMemberRole(
+        @PathVariable Long memberId,
+        @RequestBody MemberRoleModifyRequestDto memberRoleModifyRequestDto,
+        HttpServletRequest request) {
+        MemberResponseDto modifiedMember = memberService.modifyMemberRole(memberId, memberRoleModifyRequestDto, request);
+        return ResponseEntity.ok(ApiResponseDto.success("회원 권한 수정 성공", modifiedMember));
     }
 }
