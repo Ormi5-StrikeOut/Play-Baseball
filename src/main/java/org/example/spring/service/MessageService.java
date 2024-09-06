@@ -1,6 +1,5 @@
 package org.example.spring.service;
 
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
