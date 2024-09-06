@@ -74,7 +74,7 @@ public class MemberController {
      *
      * @param request HttpServletRequest
      */
-    @PutMapping("/resign")
+    @PutMapping("/my/resign")
     public ResponseEntity<ApiResponseDto<Void>> deleteMember(HttpServletRequest request, HttpServletResponse response) {
         memberService.deleteMember(request, response);
         return ResponseEntity.ok(ApiResponseDto.success("회원 삭제 성공", null));
