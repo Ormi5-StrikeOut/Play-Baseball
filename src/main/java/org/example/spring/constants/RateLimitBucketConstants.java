@@ -5,9 +5,9 @@ import lombok.Getter;
 
 @Getter
 public enum RateLimitBucketConstants {
-    AUTHENTICATED_CAPACITY(100),
-    UNAUTHENTICATED_CAPACITY(30),
-    REFILL_PERIOD_IN_MINUTES(1),
+    AUTHENTICATED_CAPACITY(150),
+    UNAUTHENTICATED_CAPACITY(50),
+    REFILL_PERIOD_IN_MINUTES(3),
     TOKEN_CONSUME_AMOUNT(1);
 
     private final long value;
