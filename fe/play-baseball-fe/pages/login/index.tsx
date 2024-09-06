@@ -9,7 +9,7 @@ import Link from "@mui/material/Link";
 import Alert from "@mui/material/Alert";
 import FormControl from "@mui/material/FormControl";
 import axios from "axios";
-import { MEMBER_LOGIN } from "@/constants/endpoints";
+import { MEMBER_LOGIN, SERVER_URL } from "@/constants/endpoints";
 
 const LoginPage: React.FC = () => {
   const [formValues, setFormValues] = useState({
@@ -39,12 +39,7 @@ const LoginPage: React.FC = () => {
         const token = response.headers["authorization"];
         if (token) {
           localStorage.setItem("Authorization", token);
-
-          setTimeout(() => {
-            router.push({
-              pathname: "/",
-            });
-          }, 100);
+          window.location.href = SERVER_URL;
         } else {
           throw new Error("token 생성 오류");
         }
