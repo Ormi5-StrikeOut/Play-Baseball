@@ -1,6 +1,5 @@
 package org.example.spring.service;
 
-import lombok.RequiredArgsConstructor;
 import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
@@ -23,15 +22,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ExchangeService {
 
     private final ExchangeRepository exchangeRepository;
     private final ExchangeImageService exchangeImageService;
 
+    public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageService exchangeImageService){
+        this.exchangeRepository = exchangeRepository;
+        this.exchangeImageService = exchangeImageService;
+    }
+
     /**
-     * 새로운 게시글 생성요청
-     * 응답 DTO
+     * 게시글 추가 로직을 수행합니다.
+     * 상세 내용 추가 예정
+     *
+     * @param request
+     * @param images
+     * @return
      */
     @Transactional
     public ExchangeResponseDto addExchange(ExchangeAddRequestDto request, List<MultipartFile> images) {
