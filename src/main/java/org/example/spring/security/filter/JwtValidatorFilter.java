@@ -41,8 +41,8 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     /**
      * 들어오는 요청을 필터링하여 JWT 토큰의 유효성을 검사하고 인증을 설정합니다.
      *
-     * @param request HTTP 요청
-     * @param response HTTP 응답
+     * @param request     HTTP 요청
+     * @param response    HTTP 응답
      * @param filterChain 필터 체인
      * @throws IOException I/O 예외 발생 시
      */
@@ -50,11 +50,30 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws IOException, ServletException {
         try {
-            log.debug("Processing request: {}", request.getRequestURI());
+            String requestURI = request.getRequestURI();
+            log.debug("Processing request: {}", requestURI);
             String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
             String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
 
+            log.debug("Extracted tokens - Access: {}, Refresh: {}",
+                accessToken != null ? "Present" : "Not present",
+                refreshToken != null ? "Present" : "Not present");
+            // 토큰 일관성 검사 추가
+            if (accessToken != null && refreshToken != null) {
+                log.debug("Performing token consistency check for request: {}", requestURI);
+                if (!jwtTokenValidator.validateAccessAndRefreshTokenConsistency(accessToken, refreshToken)) {
+                    log.warn("Token consistency check failed for request: {}", requestURI);
+                    throw new InvalidTokenException("Access token and refresh token are inconsistent");
+                }
+                log.debug("Token consistency check passed for request: {}", requestURI);
+            } else {
+                log.debug("Skipping token consistency check. AccessToken: {}, RefreshToken: {}",
+                    accessToken != null, refreshToken != null);
+            }
+
             jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
+            log.debug("Authentication successful for request: {}", requestURI);
+
             filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
             log.warn("Invalid token: {}", e.getMessage());
