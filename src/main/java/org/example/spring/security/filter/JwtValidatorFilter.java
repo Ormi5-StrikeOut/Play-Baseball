@@ -28,7 +28,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-        "/", "/api/auth/login", "/api/members/join", "/api/exchanges", "/api/reviews"
+        "/api/auth/login", "/api/members/join", "/api/exchanges", "/api/reviews"
     );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
@@ -48,35 +48,23 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws IOException {
-        String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
-        String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
-
+        throws IOException, ServletException {
         try {
-            if (accessToken != null && jwtTokenValidator.isTokenBlacklisted(accessToken)) {
-                log.debug("Blacklisted token used: {}", accessToken);
-                throw new InvalidTokenException("This token has been blacklisted.");
-            }
+            log.debug("Processing request: {}", request.getRequestURI());
+            String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
+            String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
 
             jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
-
             filterChain.doFilter(request, response);
         } catch (InvalidTokenException e) {
             log.warn("Invalid token: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(e.getMessage());
         } catch (Exception e) {
-            log.error("Authentication error: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
-            sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Authentication Error");
+            log.error("Cannot set user authentication: {}", e.getMessage());
+            throw new ServletException("An error occurred during authentication", e);
         }
-    }
-
-    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
-        response.setStatus(status);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 
     /**
@@ -88,7 +76,8 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return PUBLIC_PATHS.stream().anyMatch(path::startsWith) ||
-            path.startsWith("/api/members/verify/");
+        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith) || path.startsWith("/api/members/verify/");
+        log.debug("Should skip filter for path {}: {}", path, shouldSkip);
+        return shouldSkip;
     }
 }

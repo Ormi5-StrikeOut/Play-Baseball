@@ -3,13 +3,18 @@ package org.example.spring.security.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.dto.LoginRequestDto;
 import org.example.spring.domain.member.dto.LoginResponseDto;
-import org.example.spring.exception.InvalidTokenException;
+import org.example.spring.exception.AuthenticationFailedException;
+import org.example.spring.exception.InvalidCredentialsException;
+import org.example.spring.exception.ResourceNotFoundException;
+import org.example.spring.repository.MemberRepository;
 import org.example.spring.security.jwt.CookieService;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,38 +31,45 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtTokenValidator jwtTokenValidator;
     private final CookieService cookieService;
+    private final MemberRepository memberRepository;
 
     public AuthService(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, JwtTokenValidator jwtTokenValidator,
-        CookieService cookieService) {
+        CookieService cookieService, MemberRepository memberRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.jwtTokenValidator = jwtTokenValidator;
         this.cookieService = cookieService;
+        this.memberRepository = memberRepository;
     }
 
     /**
      * 사용자 로그인을 수행하고 JWT 토큰을 생성합니다.
      *
      * @param loginRequestDto 로그인 요청 데이터
-     * @param response HTTP 응답
+     * @param response        HTTP 응답
      * @return 생성된 액세스 토큰
      */
     public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        Authentication authentication = UsernamePasswordAuthenticationToken.unauthenticated(loginRequestDto.email(), loginRequestDto.password());
-        Authentication authenticate = authenticationManager.authenticate(authentication);
+        try {
+            log.info("Attempting login for user: {}", loginRequestDto.email());
+            Authentication authentication = authenticateUser(loginRequestDto);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            String accessToken = jwtTokenProvider.generateAccessToken(authentication);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
-        String accessToken = jwtTokenProvider.generateAccessToken(authenticate);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(authenticate);
+            setTokensInResponse(response, accessToken, refreshToken);
+            updateMemberLastLoginDate(loginRequestDto.email());
 
-        response.setHeader("Authorization", "Bearer " + accessToken);
-        cookieService.addRefreshTokenCookie(response, refreshToken);
-
-        return LoginResponseDto.builder()
-            .email(authenticate.getName())
-            .roles(authenticate.getAuthorities().toString())
-            .build();
+            log.info("User logged in successfully: {}", loginRequestDto.email());
+            return createLoginResponse(authentication);
+        } catch (BadCredentialsException e) {
+            log.warn("Login failed for user {}: Bad credentials", loginRequestDto.email());
+            throw new InvalidCredentialsException("Invalid email or password");
+        } catch (Exception e) {
+            log.error("Login failed for user {}: {}", loginRequestDto.email(), e.getMessage());
+            throw new AuthenticationFailedException("Authentication failed. Please try again.");
+        }
     }
 
     /**
@@ -67,30 +79,34 @@ public class AuthService {
      * @param response HTTP 응답
      */
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Logout process started");
-
         String token = jwtTokenValidator.extractTokenFromHeader(request);
+        jwtTokenValidator.addToBlacklist(token);
+        cookieService.removeRefreshTokenCookie(response);
+        SecurityContextHolder.clearContext();
+        log.info("User logged out successfully");
+    }
 
-        if (token == null) {
-            log.warn("Logout attempt with no token");
-            throw new InvalidTokenException("No valid token provided");
-        }
 
-        if (jwtTokenValidator.isTokenBlacklisted(token)) {
-            log.warn("Logout attempt with blacklisted token");
-            throw new InvalidTokenException("Token is already invalidated");
-        }
+    private Authentication authenticateUser(LoginRequestDto loginRequestDto) {
+        return authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(loginRequestDto.email(), loginRequestDto.password())
+        );
+    }
 
-        try {
-            jwtTokenValidator.addToBlacklist(token);
-            log.debug("Access token added to blacklist");
+    private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
+        response.setHeader("Authorization", "Bearer " + accessToken);
+        cookieService.addRefreshTokenCookie(response, refreshToken);
+    }
 
-            cookieService.removeRefreshTokenCookie(response);
-            SecurityContextHolder.clearContext();
-            log.debug("Logout process completed successfully");
-        } catch (Exception e) {
-            log.error("Error during logout process", e);
-            throw new RuntimeException("로그아웃 처리 중 오류가 발생했습니다.", e);
-        }
+    private void updateMemberLastLoginDate(String email) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
+        member.updateLastLoginDate();
+        memberRepository.save(member);
+        log.debug("Updated last login date for user: {}", email);
+    }
+
+    private LoginResponseDto createLoginResponse(Authentication authentication) {
+        return LoginResponseDto.toDto(authentication);
     }
 }

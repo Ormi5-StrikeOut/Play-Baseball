@@ -51,14 +51,15 @@ public class JwtTokenValidator {
         }
 
         try {
-            String username = extractUsername(token);
+            Claims claims = extractAllClaims(token);
+
+            String username = claims.getSubject();
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            return (username.equals(userDetails.getUsername()) && isTokenNotExpired(token));
-        } catch (UsernameNotFoundException e) {
-            log.error("User not found for token: {}", e.getMessage());
-            return false;
-        } catch (InvalidTokenException e) {
-            log.error("Invalid token: {}", e.getMessage());
+            boolean isValid = username.equals(userDetails.getUsername());
+            log.debug("Token validation result for user {}: {}", username, isValid);
+            return isValid;
+        } catch (Exception e) {
+            log.debug("Token validation failed: {}", e.getMessage());
             return false;
         }
     }
@@ -105,10 +106,6 @@ public class JwtTokenValidator {
         return extractAllClaims(token).getSubject();
     }
 
-    private boolean isTokenNotExpired(String token) {
-        return !extractAllClaims(token).getExpiration().before(new Date());
-    }
-
     /**
      * 토큰이 블랙리스트에 있는지 확인합니다.
      *
@@ -138,29 +135,6 @@ public class JwtTokenValidator {
             }
         } catch (InvalidTokenException e) {
             log.warn("Attempted to blacklist an invalid token: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * JWT 토큰이 유효한지 검사합니다. 토큰이 블랙리스트에 없고 만료되지 않은 경우에만 유효합니다.
-     *
-     * @param token 확인할 JWT 토큰
-     * @return 토큰이 유효하면 true, 그렇지 않으면 false
-     */
-    public boolean isTokenValid(String token) {
-        log.debug("Validating token: {}", token);
-
-        if (isTokenBlacklisted(token)) {
-            log.debug("Token is blacklisted");
-            return false;
-        }
-
-        try {
-            extractAllClaims(token);
-            return isTokenNotExpired(token);
-        } catch (InvalidTokenException e) {
-            log.debug("Token validation failed: {}", e.getMessage());
-            return false;
         }
     }
 
