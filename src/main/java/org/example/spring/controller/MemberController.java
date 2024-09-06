@@ -1,6 +1,7 @@
 package org.example.spring.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
@@ -74,8 +75,8 @@ public class MemberController {
      * @param request HttpServletRequest
      */
     @PutMapping("/resign")
-    public ResponseEntity<ApiResponseDto<Void>> deleteMember(HttpServletRequest request) {
-        memberService.deleteMember(request);
+    public ResponseEntity<ApiResponseDto<Void>> deleteMember(HttpServletRequest request, HttpServletResponse response) {
+        memberService.deleteMember(request, response);
         return ResponseEntity.ok(ApiResponseDto.success("회원 삭제 성공", null));
     }
 }
