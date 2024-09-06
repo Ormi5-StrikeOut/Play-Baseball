@@ -75,7 +75,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
             boolean tokenRefreshed = false;
             Authentication authentication;
             try {
-                authentication = jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request, response);
+                authentication = jwtAuthenticationService.authenticateWithTokens(accessToken, refreshToken, request);
                 log.debug("Authentication successful without token refresh");
             } catch (ExpiredJwtException e) {
                 log.debug("ExpiredJwtException caught, attempting to refresh token");
