@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import jakarta.transaction.Transactional;
 import java.sql.Timestamp;
 import org.example.spring.constants.Gender;
+import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
@@ -52,23 +53,25 @@ class ReviewRepositoryTest {
         memberRepository.save(testMember);
 
         testExchange1 = Exchange.builder()
-            .writer(testMember)
+            .member(testMember)
             .title("테스트 중고 거래 게시물 1")
             .price(18000)
             .regularPrice(20000)
             .content("테스트")
             .viewCount(0)
+            .status(SalesStatus.COMPLETE)
             .createdAt(new Timestamp(System.currentTimeMillis()))
             .build();
         exchangeRepository.save(testExchange1);
 
         testExchange2 = Exchange.builder()
-            .writer(testMember)
+            .member(testMember)
             .title("테스트 중고 거래 게시물 2")
             .price(36000)
             .regularPrice(40000)
             .content("테스트")
             .viewCount(0)
+            .status(SalesStatus.COMPLETE)
             .createdAt(new Timestamp(System.currentTimeMillis()))
             .build();
         exchangeRepository.save(testExchange2);

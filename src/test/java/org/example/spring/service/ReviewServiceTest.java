@@ -65,7 +65,7 @@ class ReviewServiceTest {
             .build();
 
         testExchange1 = Exchange.builder()
-            .writer(testMember)
+            .member(testMember)
             .title("테스트 중고 거래 게시물 1")
             .price(18000)
             .regularPrice(20000)
@@ -75,7 +75,7 @@ class ReviewServiceTest {
             .build();
 
         testExchange2 = Exchange.builder()
-            .writer(testMember)
+            .member(testMember)
             .title("테스트 중고 거래 게시물 2")
             .price(36000)
             .regularPrice(40000)

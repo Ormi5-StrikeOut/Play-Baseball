@@ -1,170 +1,202 @@
 package org.example.spring.service;
 
-import lombok.RequiredArgsConstructor;
-import org.example.spring.domain.exchange.Exchange;
-import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
-import org.example.spring.domain.exchange.dto.ExchangeRequestDto;
-import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
-import org.example.spring.domain.member.Member;
-import org.example.spring.repository.ExchangeRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.servlet.http.HttpServletRequest;
+import java.nio.file.AccessDeniedException;
 import java.sql.Timestamp;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.example.spring.constants.SalesStatus;
+import org.example.spring.domain.exchange.Exchange;
+import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
+import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
+import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
+import org.example.spring.domain.exchangeImage.ExchangeImage;
+import org.example.spring.domain.member.Member;
+import org.example.spring.exception.AuthenticationFailedException;
+import org.example.spring.repository.ExchangeRepository;
+import org.example.spring.security.jwt.JwtTokenValidator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
-@RequiredArgsConstructor
 public class ExchangeService {
 
-    private final ExchangeRepository exchangeRepository;
+  private final ExchangeRepository exchangeRepository;
+  private final ExchangeImageService exchangeImageService;
+  private final JwtTokenValidator jwtTokenValidator;
 
-    /**
-     * 새로운 게시글 생성요청
-     * 응답 DTO
-     */
-    @Transactional
-    public ExchangeResponseDto addExchange(ExchangeRequestDto request) {
-        Exchange exchange = Exchange.builder()
-                .writer(Member.builder().id(request.getMemberId()).build())
-                .title(request.getTitle())
-                .price(request.getPrice())
-                .regularPrice(request.getRegularPrice())
-                .content(request.getContent())
-                .createdAt(new Timestamp(System.currentTimeMillis()))
-                .build();
+  public ExchangeService(
+      ExchangeRepository exchangeRepository,
+      ExchangeImageService exchangeImageService,
+      JwtTokenValidator jwtTokenValidator) {
+    this.exchangeRepository = exchangeRepository;
+    this.exchangeImageService = exchangeImageService;
+    this.jwtTokenValidator = jwtTokenValidator;
+  }
 
-        Exchange savedExchange = exchangeRepository.save(exchange);
-        return convertToResponseDto(savedExchange);
+  /**
+   * 게시글 추가 로직을 수행합니다. 상세 내용 추가 예정
+   *
+   * @param exchangeAddRequestDto
+   * @param images
+   * @return
+   */
+  @Transactional
+  public ExchangeResponseDto addExchange(
+      HttpServletRequest request,
+      ExchangeAddRequestDto exchangeAddRequestDto,
+      List<MultipartFile> images) {
+
+    // token 유효성 검사 후 요청한 member 정보
+    Member member =
+        jwtTokenValidator.validateTokenAndGetMember(
+            jwtTokenValidator.extractTokenFromHeader(request));
+
+    Exchange exchange =
+        Exchange.builder()
+            .member(member)
+            .title(exchangeAddRequestDto.getTitle())
+            .price(exchangeAddRequestDto.getPrice())
+            .regularPrice(123123123) // todo: Alan api 연결
+            .content(exchangeAddRequestDto.getContent())
+            .status(SalesStatus.SALE)
+            .build();
+
+    exchangeRepository.save(exchange);
+
+    if (!images.isEmpty()) {
+      for (MultipartFile image : images) {
+        ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, exchange);
+        exchange.addImage(exchangeImage);
+      }
     }
 
-    /**
-     * 게시글 수청 요청
-     * 응답 DTO
-     * 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력
-     */
-    @Transactional
-    public ExchangeResponseDto modifyExchange(Long id, ExchangeModifyRequestDto request) {
-        Exchange exchange = exchangeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
+    exchangeRepository.save(exchange);
 
-        Exchange updatedExchange = updateExchangeFields(exchange, request);
+    return ExchangeResponseDto.fromExchange(exchange);
+  }
 
-        return convertToResponseDto(exchangeRepository.save(updatedExchange));
-    }
+  /**
+   * 작성된 모든 게시글 대상으로 페이지별로 조회
+   *
+   * @param page 불러올 페이지를 작성
+   * @return pageable에 해당하는 페이지의 게시글을 리턴합니다.
+   */
+  @Transactional(readOnly = true)
+  public Page<ExchangeResponseDto> getAllExchanges(int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return exchangeRepository
+        .findByDeletedAtIsNull(pageable)
+        .map(ExchangeResponseDto::fromExchange);
+  }
 
-    private Exchange updateExchangeFields(Exchange exchange, ExchangeModifyRequestDto request) {
-        return Exchange.builder()
-                .id(exchange.getId())
-                .writer(exchange.getWriter())
-                .title(request.getTitle())
-                .price(request.getPrice())
-                .regularPrice(request.getRegularPrice())
-                .content(request.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
-                .updatedAt(new Timestamp(System.currentTimeMillis()))
-                .build();
-    }
+  /** 최근 5개 게시글 조회 */
+  @Transactional(readOnly = true)
+  public List<ExchangeResponseDto> getLatestFiveExchanges() {
+    return exchangeRepository.findTop5ByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+        .map(ExchangeResponseDto::fromExchange)
+        .collect(Collectors.toList());
+  }
 
-    /**
-     * 게시글 삭제 요청
-     * 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력
-     */
-    @Transactional
-    public void deleteExchange(Long id) {
-        Exchange exchange = exchangeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
-        Exchange deletedExchange = Exchange.builder()
-                .id(exchange.getId())
-                .writer(exchange.getWriter())
-                .title(exchange.getTitle())
-                .price(exchange.getPrice())
-                .regularPrice(exchange.getRegularPrice())
-                .content(exchange.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
-                .updatedAt(exchange.getUpdatedAt())
-                .deletedAt(new Timestamp(System.currentTimeMillis()))
-                .build();
-        exchangeRepository.save(deletedExchange);
-    }
+  /** 특정회원 판매 게시글 조회 */
+  @Transactional(readOnly = true)
+  public Page<ExchangeResponseDto> getUserExchanges(Long memberId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return exchangeRepository
+        .findByMemberIdAndDeletedAtIsNull(memberId, pageable)
+        .map(ExchangeResponseDto::fromExchange);
+  }
 
-    /**
-     * 모든 게시글을 조회
-     */
-    @Transactional(readOnly = true)
-    public List<ExchangeResponseDto> getAllExchanges() {
-        List<Exchange> exchanges = exchangeRepository.findAll();
-        List<ExchangeResponseDto> responseDto = new ArrayList<>();
-        for (Exchange exchange : exchanges) {
-            responseDto.add(convertToResponseDto(exchange));
+  @Transactional
+  public Page<ExchangeResponseDto> getExchangesByTitleContaining(String title, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return exchangeRepository
+        .findByTitleContainingAndDeletedAtIsNull(title, pageable)
+        .map(ExchangeResponseDto::fromExchange);
+  }
+
+  /** 게시글 수청 요청 응답 DTO 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력 */
+  @Transactional
+  public ExchangeResponseDto modifyExchange(
+      HttpServletRequest request,
+      Long id,
+      ExchangeModifyRequestDto exchangeModifyRequestDto,
+      List<MultipartFile> images) {
+
+    // token 유효성 검사 후 요청한 member 정보
+    Member member =
+        jwtTokenValidator.validateTokenAndGetMember(
+            jwtTokenValidator.extractTokenFromHeader(request));
+
+    Exchange exchange =
+        exchangeRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
+
+    try {
+      if (!member.equals(exchange.getMember())) {
+        throw new AccessDeniedException("Warning: Another user attempted to modify the post.");
+      }
+
+      List<ExchangeImage> imagesCopy = new ArrayList<>(exchange.getImages());
+      for (ExchangeImage image : imagesCopy) {
+        exchange.removeImage(image);
+      }
+
+      Exchange updateExchange =
+          exchange.toBuilder()
+              .title(exchangeModifyRequestDto.getTitle())
+              .price(exchangeModifyRequestDto.getPrice())
+              .content(exchangeModifyRequestDto.getContent())
+              .updatedAt(new Timestamp(System.currentTimeMillis()))
+              .status(exchangeModifyRequestDto.getStatus())
+              .build();
+
+      if (!images.isEmpty()) {
+        for (MultipartFile image : images) {
+          ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, updateExchange);
+          updateExchange.addImage(exchangeImage);
         }
-        return responseDto;
-    }
+      }
 
-    /**
-     * 최근 5개 게시글 조회
-     */
-    @Transactional(readOnly = true)
-    public List<ExchangeResponseDto> getLatestFiveExchanges() {
-        List<Exchange> exchanges = exchangeRepository.findTop5ByOrderByCreatedAtDesc();
-        List<ExchangeResponseDto> responseDto = new ArrayList<>();
-        for (Exchange exchange : exchanges) {
-            responseDto.add(convertToResponseDto(exchange));
-        }
-        return responseDto;
+      return ExchangeResponseDto.fromExchange(exchangeRepository.save(updateExchange));
+    } catch (AccessDeniedException e) {
+      log.error("{} [{} -> {}]", e.getMessage(), member.getEmail(), exchange.getTitle());
+      throw new AuthenticationFailedException(
+          "Warning: Access denied. You do not have permission to modify the post.");
     }
+  }
 
-    /**
-     * 게시글 판매상태 수정
-     */
-    @Transactional
-    public ExchangeResponseDto modifySalesStatus(Long id) {
-        Exchange exchange = exchangeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
-        Exchange updatedExchange = Exchange.builder()
-                .id(exchange.getId())
-                .writer(exchange.getWriter())
-                .title(exchange.getTitle())
-                .price(exchange.getPrice())
-                .regularPrice(exchange.getRegularPrice())
-                .content(exchange.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
-                .updatedAt(new Timestamp(System.currentTimeMillis()))
-                // .status(newStatus) // Add this line when implementing status
-                .build();
-        return convertToResponseDto(exchangeRepository.save(updatedExchange));
-    }
+  /** 게시글 삭제 요청 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력 */
+  @Transactional
+  public void deleteExchange(HttpServletRequest request, Long id) {
 
-    /**
-     * 특정회원 판매 게시글 조회
-     */
-    @Transactional(readOnly = true)
-    public List<ExchangeResponseDto> getMyExchanges(Long memberId) {
-        List<Exchange> exchanges = exchangeRepository.findByWriterId(memberId);
-        List<ExchangeResponseDto> responseDto = new ArrayList<>();
-        for (Exchange exchange : exchanges) {
-            responseDto.add(convertToResponseDto(exchange));
-        }
-        return responseDto;
-    }
+    // token 유효성 검사 후 요청한 member 정보
+    Member member =
+        jwtTokenValidator.validateTokenAndGetMember(
+            jwtTokenValidator.extractTokenFromHeader(request));
 
-    private ExchangeResponseDto convertToResponseDto(Exchange exchange) {
-        return ExchangeResponseDto.builder()
-                .id(exchange.getId())
-                .memberId(exchange.getWriter().getId())
-                .title(exchange.getTitle())
-                .price(exchange.getPrice())
-                .regularPrice(exchange.getRegularPrice())
-                .content(exchange.getContent())
-                .viewCount(exchange.getViewCount())
-                .createdAt(exchange.getCreatedAt())
-                .updatedAt(exchange.getUpdatedAt())
-                .deletedAt(exchange.getDeletedAt())
-                .build();
+    Exchange exchange =
+        exchangeRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
+
+    try {
+      if (!member.equals(exchange.getMember())) {
+        throw new AccessDeniedException("Warning: Another user has attempted to delete the post.");
+      }
+
+      Exchange deletedExchange =
+          exchange.toBuilder().deletedAt(new Timestamp(System.currentTimeMillis())).build();
+      exchangeRepository.save(deletedExchange);
+
+    } catch (AccessDeniedException e) {
+      log.error("{} [{} -> {}]", e.getMessage(), member.getEmail(), exchange.getTitle());
+      throw new AuthenticationFailedException(
+          "Warning: Access denied. You do not have permission to delete the post.");
     }
+  }
 }
-

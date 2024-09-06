@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.spring.domain.exchange.Exchange;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "exchange_image")
@@ -24,19 +25,27 @@ import org.example.spring.domain.exchange.Exchange;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExchangeImage {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "exchange_image_id")
+  private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "exchange_image_id")
-    private Long id;
+  @JoinColumn(name = "exchange_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Exchange exchange;
 
-    @JoinColumn(name = "exchange_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Exchange exchange;
+  @Column(name = "url", nullable = false)
+  private String url;
 
-    @Column(name = "url", nullable = false)
-    private String url;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  @CreationTimestamp
+  private Timestamp createdAt;
 
-    @Column(name = "created_at", nullable = false)
-    private Timestamp createdAt;
+  public void associateExchange(Exchange exchange) {
+    this.exchange = exchange;
+  }
+
+  public void disassociateExchange() {
+    this.exchange = null;
+  }
 }
