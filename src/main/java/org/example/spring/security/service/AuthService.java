@@ -4,8 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
+import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.member.dto.LoginRequestDto;
 import org.example.spring.domain.member.dto.LoginResponseDto;
+import org.example.spring.exception.AccountBannedException;
+import org.example.spring.exception.AccountDeletedException;
 import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.exception.InvalidCredentialsException;
 import org.example.spring.exception.ResourceNotFoundException;
@@ -18,6 +21,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -52,6 +56,20 @@ public class AuthService {
     public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
         try {
             log.info("Attempting login for user: {}", loginRequestDto.email());
+
+            Member member = memberRepository.findByEmail(loginRequestDto.email())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + loginRequestDto.email()));
+
+            if (member.getDeletedAt() != null) {
+                log.warn("Login attempt for deleted account: {}", loginRequestDto.email());
+                throw new AccountDeletedException("This account has been deleted.");
+            }
+
+            if (member.getRole() == MemberRole.BANNED) {
+                log.warn("Login attempt for banned account: {}", loginRequestDto.email());
+                throw new AccountBannedException("This account has been banned.");
+            }
+
             Authentication authentication = authenticateUser(loginRequestDto);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -63,6 +81,8 @@ public class AuthService {
 
             log.info("User logged in successfully: {}", loginRequestDto.email());
             return createLoginResponse(authentication);
+        } catch (AccountDeletedException | AccountBannedException e) {
+            throw e;
         } catch (BadCredentialsException e) {
             log.warn("Login failed for user {}: Bad credentials", loginRequestDto.email());
             throw new InvalidCredentialsException("Invalid email or password");
