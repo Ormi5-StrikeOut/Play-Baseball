@@ -99,8 +99,21 @@ public class JwtTokenValidator {
                 return false;
             }
 
-            Claims accessClaims = extractAllClaims(accessToken);
-            Claims refreshClaims = extractAllClaims(refreshToken);
+            Claims accessClaims;
+            try {
+                accessClaims = extractAllClaims(accessToken);
+            } catch (InvalidTokenException e) {
+                log.warn("Access token is invalid: {}", e.getMessage());
+                return false;
+            }
+
+            Claims refreshClaims;
+            try {
+                refreshClaims = extractAllClaims(refreshToken);
+            } catch (InvalidTokenException e) {
+                log.warn("Refresh token is invalid: {}", e.getMessage());
+                return false;
+            }
 
             // 1. 사용자 이름(subject) 일치 확인
             if (!accessClaims.getSubject().equals(refreshClaims.getSubject())) {
