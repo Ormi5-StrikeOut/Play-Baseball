@@ -1,7 +1,6 @@
 package org.example.spring.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
@@ -37,11 +36,19 @@ public class ExchangeController {
    */
   @PostMapping
   public ResponseEntity<ApiResponseDto<ExchangeResponseDto>> addExchange(
+      HttpServletRequest request,
       @RequestPart("exchangeRequestDto") ExchangeAddRequestDto exchangeAddRequestDto,
       @RequestPart("images") List<MultipartFile> images) {
-    ExchangeResponseDto response = exchangeService.addExchange(exchangeAddRequestDto, images);
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponseDto.success(response.getTitle(), response));
+
+    try {
+      ExchangeResponseDto exchangeResponseDto =
+          exchangeService.addExchange(request, exchangeAddRequestDto, images);
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .body(ApiResponseDto.success(exchangeResponseDto.getTitle(), exchangeResponseDto));
+    } catch (InvalidTokenException e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(ApiResponseDto.success(e.getMessage(), null));
+    }
   }
 
   /**
@@ -53,15 +60,14 @@ public class ExchangeController {
    */
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponseDto<ExchangeResponseDto>> modifyExchange(
+      HttpServletRequest request,
       @PathVariable Long id,
       @RequestPart("exchangeRequestDto") ExchangeModifyRequestDto exchangeModifyRequestDto,
-      @RequestPart("images") List<MultipartFile> images,
-      HttpServletRequest request,
-      HttpServletResponse response) {
+      @RequestPart("images") List<MultipartFile> images) {
 
     try {
       ExchangeResponseDto exchangeResponseDto =
-          exchangeService.modifyExchange(id, exchangeModifyRequestDto, images);
+          exchangeService.modifyExchange(request, id, exchangeModifyRequestDto, images);
       return ResponseEntity.status(HttpStatus.OK)
           .body(ApiResponseDto.success(exchangeResponseDto.getTitle(), exchangeResponseDto));
     } catch (InvalidTokenException e) {
@@ -77,8 +83,9 @@ public class ExchangeController {
    * @return 삭제된 게시물 응답 DTO
    */
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponseDto<Void>> deleteExchange(@PathVariable Long id) {
-    exchangeService.deleteExchange(id);
+  public ResponseEntity<ApiResponseDto<Void>> deleteExchange(
+      HttpServletRequest request, @PathVariable Long id) {
+    exchangeService.deleteExchange(request, id);
     return ResponseEntity.status(HttpStatus.OK)
         .body(ApiResponseDto.success("게시물이 삭제 되었습니다.", null));
   }

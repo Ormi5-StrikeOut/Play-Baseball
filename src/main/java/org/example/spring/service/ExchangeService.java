@@ -1,9 +1,12 @@
 package org.example.spring.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import java.nio.file.AccessDeniedException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
@@ -11,7 +14,9 @@ import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
+import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.repository.ExchangeRepository;
+import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,36 +24,48 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 public class ExchangeService {
 
   private final ExchangeRepository exchangeRepository;
   private final ExchangeImageService exchangeImageService;
+  private final JwtTokenValidator jwtTokenValidator;
 
   public ExchangeService(
-      ExchangeRepository exchangeRepository, ExchangeImageService exchangeImageService) {
+      ExchangeRepository exchangeRepository,
+      ExchangeImageService exchangeImageService,
+      JwtTokenValidator jwtTokenValidator) {
     this.exchangeRepository = exchangeRepository;
     this.exchangeImageService = exchangeImageService;
+    this.jwtTokenValidator = jwtTokenValidator;
   }
 
   /**
    * 게시글 추가 로직을 수행합니다. 상세 내용 추가 예정
    *
-   * @param request
+   * @param exchangeAddRequestDto
    * @param images
    * @return
    */
   @Transactional
   public ExchangeResponseDto addExchange(
-      ExchangeAddRequestDto request, List<MultipartFile> images) {
+      HttpServletRequest request,
+      ExchangeAddRequestDto exchangeAddRequestDto,
+      List<MultipartFile> images) {
+
+    // token 유효성 검사 후 요청한 member 정보
+    Member member =
+        jwtTokenValidator.validateTokenAndGetMember(
+            jwtTokenValidator.extractTokenFromHeader(request));
 
     Exchange exchange =
         Exchange.builder()
-            .member(Member.builder().id(request.getMemberId()).build())
-            .title(request.getTitle())
-            .price(request.getPrice())
+            .member(member)
+            .title(exchangeAddRequestDto.getTitle())
+            .price(exchangeAddRequestDto.getPrice())
             .regularPrice(123123123) // todo: Alan api 연결
-            .content(request.getContent())
+            .content(exchangeAddRequestDto.getContent())
             .status(SalesStatus.SALE)
             .build();
 
@@ -106,42 +123,78 @@ public class ExchangeService {
   /** 게시글 수청 요청 응답 DTO 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력 */
   @Transactional
   public ExchangeResponseDto modifyExchange(
-      Long id, ExchangeModifyRequestDto request, List<MultipartFile> images) {
+      HttpServletRequest request,
+      Long id,
+      ExchangeModifyRequestDto exchangeModifyRequestDto,
+      List<MultipartFile> images) {
+
+    // token 유효성 검사 후 요청한 member 정보
+    Member member =
+        jwtTokenValidator.validateTokenAndGetMember(
+            jwtTokenValidator.extractTokenFromHeader(request));
 
     Exchange exchange =
         exchangeRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
 
-    List<ExchangeImage> imagesCopy = new ArrayList<>(exchange.getImages());
-    for (ExchangeImage image : imagesCopy) {
-      exchange.removeImage(image);
-    }
-
-    Exchange updateExchange =
-        exchange.toBuilder()
-            .title(request.getTitle())
-            .price(request.getPrice())
-            .content(request.getContent())
-            .updatedAt(new Timestamp(System.currentTimeMillis()))
-            .status(request.getStatus())
-            .build();
-
-    if (!images.isEmpty()) {
-      for (MultipartFile image : images) {
-        ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, updateExchange);
-        updateExchange.addImage(exchangeImage);
+    try {
+      if (!member.equals(exchange.getMember())) {
+        throw new AccessDeniedException("Warning: Another user attempted to modify the post.");
       }
-    }
 
-    return ExchangeResponseDto.fromExchange(exchangeRepository.save(updateExchange));
+      List<ExchangeImage> imagesCopy = new ArrayList<>(exchange.getImages());
+      for (ExchangeImage image : imagesCopy) {
+        exchange.removeImage(image);
+      }
+
+      Exchange updateExchange =
+          exchange.toBuilder()
+              .title(exchangeModifyRequestDto.getTitle())
+              .price(exchangeModifyRequestDto.getPrice())
+              .content(exchangeModifyRequestDto.getContent())
+              .updatedAt(new Timestamp(System.currentTimeMillis()))
+              .status(exchangeModifyRequestDto.getStatus())
+              .build();
+
+      if (!images.isEmpty()) {
+        for (MultipartFile image : images) {
+          ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, updateExchange);
+          updateExchange.addImage(exchangeImage);
+        }
+      }
+
+      return ExchangeResponseDto.fromExchange(exchangeRepository.save(updateExchange));
+    } catch (AccessDeniedException e) {
+      log.error("{} [{} -> {}]", e.getMessage(), member.getEmail(), exchange.getTitle());
+      throw new AuthenticationFailedException(
+          "Warning: Access denied. You do not have permission to modify the post.");
+    }
   }
 
   /** 게시글 삭제 요청 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력 */
   @Transactional
-  public void deleteExchange(Long id) {
+  public void deleteExchange(HttpServletRequest request, Long id) {
+
+    // token 유효성 검사 후 요청한 member 정보
+    Member member =
+        jwtTokenValidator.validateTokenAndGetMember(
+            jwtTokenValidator.extractTokenFromHeader(request));
+
     Exchange exchange =
         exchangeRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
-    Exchange deletedExchange =
-        exchange.toBuilder().deletedAt(new Timestamp(System.currentTimeMillis())).build();
-    exchangeRepository.save(deletedExchange);
+
+    try {
+      if (!member.equals(exchange.getMember())) {
+        throw new AccessDeniedException("Warning: Another user has attempted to delete the post.");
+      }
+
+      Exchange deletedExchange =
+          exchange.toBuilder().deletedAt(new Timestamp(System.currentTimeMillis())).build();
+      exchangeRepository.save(deletedExchange);
+
+    } catch (AccessDeniedException e) {
+      log.error("{} [{} -> {}]", e.getMessage(), member.getEmail(), exchange.getTitle());
+      throw new AuthenticationFailedException(
+          "Warning: Access denied. You do not have permission to delete the post.");
+    }
   }
 }
