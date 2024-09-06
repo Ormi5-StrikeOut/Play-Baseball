@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.review.Review;
@@ -32,9 +33,6 @@ public class Exchange {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member writer;
 
-    @OneToOne(mappedBy = "exchange", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private Review review;
-
     @Column(name = "title", length = 200, nullable = false)
     private String title;
 
@@ -50,6 +48,10 @@ public class Exchange {
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SalesStatus status;
+
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
 
@@ -58,6 +60,9 @@ public class Exchange {
 
     @Column(name = "deleted_at")
     private Timestamp deletedAt;
+
+    @OneToOne(mappedBy = "exchange", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Review review;
 
     @OneToMany(
             mappedBy = "exchange",
