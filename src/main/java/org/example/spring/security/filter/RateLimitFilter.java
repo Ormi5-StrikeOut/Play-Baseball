@@ -10,6 +10,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.service.RateLimiterService;
+import org.example.spring.security.utils.AuthUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -21,11 +22,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimiterService rateLimiter;
     private final JwtTokenValidator jwtTokenValidator;
+    private final AuthUtils authUtils;
     private final ObjectMapper objectMapper;
 
-    public RateLimitFilter(RateLimiterService rateLimiter, JwtTokenValidator jwtTokenValidator, ObjectMapper objectMapper) {
+    public RateLimitFilter(RateLimiterService rateLimiter, JwtTokenValidator jwtTokenValidator, AuthUtils authUtils, ObjectMapper objectMapper) {
         this.rateLimiter = rateLimiter;
         this.jwtTokenValidator = jwtTokenValidator;
+        this.authUtils = authUtils;
         this.objectMapper = objectMapper;
     }
 
@@ -33,7 +36,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
         String token = jwtTokenValidator.extractTokenFromHeader(request);
-        String ip = getClientIpAddress(request);
+        String ip = authUtils.getClientIpAddress(request);
         String userAgent = request.getHeader("User-Agent");
 
         if (rateLimiter.tryConsume(token, ip, userAgent)) {
@@ -54,15 +57,5 @@ public class RateLimitFilter extends OncePerRequestFilter {
         );
 
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-    }
-
-    private String getClientIpAddress(HttpServletRequest request) {
-        String xForwardedForHeader = request.getHeader("X-Forwarded-For");
-        if (xForwardedForHeader != null && !xForwardedForHeader.isEmpty()) {
-            return xForwardedForHeader.split(",")[0].trim();
-        }
-
-        String remoteAddr = request.getRemoteAddr();
-        return "0:0:0:0:0:0:0:1".equals(remoteAddr) ? "127.0.0.1" : remoteAddr;
     }
 }

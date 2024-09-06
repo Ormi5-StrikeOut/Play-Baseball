@@ -1,6 +1,7 @@
 package org.example.spring.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -55,9 +57,26 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponseDto.success("회원 목록 조회 성공", members));
     }
 
+    /**
+     * JWT 토큰에서 추출된 회원의 정보를 조회합니다.
+     *
+     * @param request HttpServletRequest
+     * @return MemberResponseDto
+     */
     @GetMapping("/my")
     public ResponseEntity<ApiResponseDto<MemberResponseDto>> getMyMember(HttpServletRequest request) {
         MemberResponseDto myMember = memberService.getMyMember(request);
         return ResponseEntity.ok(ApiResponseDto.success("회원 조회 성공:", myMember));
+    }
+
+    /**
+     * JWT 토큰에서 추출된 회원의 탈퇴(soft delete)
+     *
+     * @param request HttpServletRequest
+     */
+    @PutMapping("/my/resign")
+    public ResponseEntity<ApiResponseDto<Void>> deleteMember(HttpServletRequest request, HttpServletResponse response) {
+        memberService.deleteMember(request, response);
+        return ResponseEntity.ok(ApiResponseDto.success("회원 삭제 성공", null));
     }
 }

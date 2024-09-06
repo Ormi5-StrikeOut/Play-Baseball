@@ -1,11 +1,13 @@
-package org.example.spring.security.service;
+package org.example.spring.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.dto.LoginRequestDto;
 import org.example.spring.domain.member.dto.LoginResponseDto;
+import org.example.spring.exception.AccountDeletedException;
 import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.exception.InvalidCredentialsException;
 import org.example.spring.exception.ResourceNotFoundException;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
@@ -32,15 +35,6 @@ public class AuthService {
     private final JwtTokenValidator jwtTokenValidator;
     private final CookieService cookieService;
     private final MemberRepository memberRepository;
-
-    public AuthService(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, JwtTokenValidator jwtTokenValidator,
-        CookieService cookieService, MemberRepository memberRepository) {
-        this.authenticationManager = authenticationManager;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.jwtTokenValidator = jwtTokenValidator;
-        this.cookieService = cookieService;
-        this.memberRepository = memberRepository;
-    }
 
     /**
      * 사용자 로그인을 수행하고 JWT 토큰을 생성합니다.
@@ -52,6 +46,12 @@ public class AuthService {
     public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
         try {
             log.info("Attempting login for user: {}", loginRequestDto.email());
+
+            if (!jwtTokenValidator.isAccountActive(loginRequestDto.email())) {
+                log.warn("Login attempt for deleted account: {}", loginRequestDto.email());
+                throw new AccountDeletedException("This account has been deleted.");
+            }
+
             Authentication authentication = authenticateUser(loginRequestDto);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -63,6 +63,8 @@ public class AuthService {
 
             log.info("User logged in successfully: {}", loginRequestDto.email());
             return createLoginResponse(authentication);
+        } catch (AccountDeletedException e) {
+            throw e;
         } catch (BadCredentialsException e) {
             log.warn("Login failed for user {}: Bad credentials", loginRequestDto.email());
             throw new InvalidCredentialsException("Invalid email or password");
@@ -80,9 +82,18 @@ public class AuthService {
      */
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String token = jwtTokenValidator.extractTokenFromHeader(request);
-        jwtTokenValidator.addToBlacklist(token);
+        if (token != null) {
+            jwtTokenValidator.addToBlacklist(token);
+            log.debug("Token added to blacklist: {}", token);
+        } else {
+            log.warn("No token found in request during logout");
+        }
         cookieService.removeRefreshTokenCookie(response);
-        SecurityContextHolder.clearContext();
+
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+
         log.info("User logged out successfully");
     }
 

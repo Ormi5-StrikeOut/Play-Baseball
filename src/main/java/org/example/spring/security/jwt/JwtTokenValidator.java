@@ -6,10 +6,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
+import org.example.spring.exception.AccountDeletedException;
 import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
@@ -21,8 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
- * JWT 토큰의 유효성을 검사하고 관련 정보를 추출하는 클래스입니다.
- * 이 클래스는 토큰의 검증, 사용자 정보 추출, 블랙리스트 관리 등의 기능을 제공합니다.
+ * JWT 토큰의 유효성을 검사하고 관련 정보를 추출하는 클래스입니다. 이 클래스는 토큰의 검증, 사용자 정보 추출, 블랙리스트 관리 등의 기능을 제공합니다.
  */
 @Component
 @Slf4j
@@ -30,12 +31,15 @@ public class JwtTokenValidator {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
+    private final CookieService cookieService;
     private final MemberRepository memberRepository;
     private final Cache<String, Date> tokenBlacklist;
 
-    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService, MemberRepository memberRepository) {
+    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService, CookieService cookieService,
+        MemberRepository memberRepository) {
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
+        this.cookieService = cookieService;
         this.memberRepository = memberRepository;
         this.tokenBlacklist = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofDays(1)) // 토큰을 블랙리스트에 추가한 후 1일 후에 자동으로 제거
@@ -44,8 +48,96 @@ public class JwtTokenValidator {
     }
 
     /**
-     * JWT 토큰의 유효성을 검증합니다.
-     * 토큰이 블랙리스트에 없고, 만료되지 않았으며, 사용자 정보와 일치하는지 확인합니다.
+     * 계정을 비활성화하고 관련 토큰을 무효화합니다.
+     *
+     * @param request  HTTP 요청
+     * @param response HTTP 응답
+     */
+    public void deactivateAccount(HttpServletRequest request, HttpServletResponse response) {
+        String token = extractTokenFromHeader(request);
+        String email = extractUsername(token);
+
+        log.info("Deactivating account for user: {}", email);
+
+        // 1. 사용자 계정 비활성화
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
+        member.updateDeletedAt();
+        memberRepository.save(member);
+
+        // 2. 현재 사용 중인 토큰 무효화
+        addToBlacklist(token);
+
+        // 3. 리프레시 토큰 제거
+        cookieService.removeRefreshTokenCookie(response);
+
+        log.info("Account deactivated successfully for user: {}", email);
+    }
+
+    /**
+     * 계정이 활성 상태인지 확인합니다.
+     *
+     * @param email 확인할 사용자의 이메일
+     * @return 계정이 활성 상태이면 true, 그렇지 않으면 false
+     */
+    public boolean isAccountActive(String email) {
+        return memberRepository.findByEmail(email)
+            .map(member -> member.getDeletedAt() == null)
+            .orElse(false);
+    }
+
+    /**
+     * 액세스토큰과 리프레시토큰을 비교합니다
+     *
+     * @param accessToken  검증할 JWT access token
+     * @param refreshToken 검증할 JWT refresh token
+     * @return 유효하면 ture, 그렇지 않으면 false
+     */
+    public boolean validateAccessAndRefreshTokenConsistency(String accessToken, String refreshToken) {
+        try {
+            if (accessToken == null || refreshToken == null) {
+                return false;
+            }
+
+            Claims accessClaims;
+            try {
+                accessClaims = extractAllClaims(accessToken);
+            } catch (InvalidTokenException e) {
+                log.warn("Access token is invalid: {}", e.getMessage());
+                return false;
+            }
+
+            Claims refreshClaims;
+            try {
+                refreshClaims = extractAllClaims(refreshToken);
+            } catch (InvalidTokenException e) {
+                log.warn("Refresh token is invalid: {}", e.getMessage());
+                return false;
+            }
+
+            // 1. 사용자 이름(subject) 일치 확인
+            if (!accessClaims.getSubject().equals(refreshClaims.getSubject())) {
+                log.warn("Username mismatch between access token and refresh token");
+                return false;
+            }
+
+            // 2. 토큰 발행 시간(iat) 비교
+            Date accessIssuedAt = accessClaims.getIssuedAt();
+            Date refreshIssuedAt = refreshClaims.getIssuedAt();
+            if (accessIssuedAt.before(refreshIssuedAt)) {
+                log.warn("Access token was issued before refresh token");
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Error validating token consistency: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * JWT 토큰의 유효성을 검증합니다. 토큰이 블랙리스트에 없고, 만료되지 않았으며, 사용자 정보와 일치하는지 확인합니다.
      *
      * @param token 검증할 JWT 토큰
      * @return 토큰이 유효하면 true, 그렇지 않으면 false
@@ -61,9 +153,13 @@ public class JwtTokenValidator {
 
             String username = claims.getSubject();
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            boolean isValid = username.equals(userDetails.getUsername());
-            log.debug("Token validation result for user {}: {}", username, isValid);
-            return isValid;
+            if (!username.equals(userDetails.getUsername())) {
+                log.debug("Token username doesn't match UserDetails");
+                return false;
+            }
+
+            log.debug("Token validation result for user: {}", username);
+            return true;
         } catch (Exception e) {
             log.debug("Token validation failed: {}", e.getMessage());
             return false;
@@ -169,13 +265,20 @@ public class JwtTokenValidator {
      * @return 토큰에 해당하는 Member 객체
      * @throws ResourceNotFoundException 멤버를 찾을 수 없는 경우
      */
-    private Member getMemberFromToken(String token) {
+    public Member getMemberFromToken(String token) {
         String email = extractUsername(token);
-        return memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email)
             .orElseThrow(() -> {
                 log.error("Member not found for email: {}", email);
                 return new ResourceNotFoundException("Member", "email", email);
             });
+
+        if (member.getDeletedAt() != null) {
+            log.warn("Attempt to access with deleted account: {}", email);
+            throw new AccountDeletedException("This account has been deleted");
+        }
+
+        return member;
     }
 
     /**
@@ -183,7 +286,7 @@ public class JwtTokenValidator {
      *
      * @param token JWT 토큰
      * @return 검증된 토큰에 해당하는 Member 객체
-     * @throws InvalidTokenException 토큰이 유효하지 않은 경우
+     * @throws InvalidTokenException     토큰이 유효하지 않은 경우
      * @throws ResourceNotFoundException 멤버를 찾을 수 없는 경우
      */
     public Member validateTokenAndGetMember(String token) {
