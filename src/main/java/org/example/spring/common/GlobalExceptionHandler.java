@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
         if (ex.getCause() instanceof InvalidFormatException cause) {
             if (cause.getTargetType() != null && cause.getTargetType().isEnum()) {
                 errorMessage = String.format("'%s' 필드에 잘못된 값이 전달되었습니다. '%s' 중 하나의 값을 선택해주세요.",
-                    cause.getPath().get(0).getFieldName(),
+                    cause.getPath().getFirst().getFieldName(),
                     Arrays.asList(cause.getTargetType().getEnumConstants()));
             }
         }
