@@ -9,7 +9,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import java.sql.Timestamp;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,15 +44,11 @@ public class ExchangeImage {
     @CreationTimestamp
     private Timestamp createdAt;
 
-    public ExchangeImage(String url){
-        this.url = url;
-    }
-
-    public void associateExchange(Exchange exchange){
+    public void associateExchange(Exchange exchange) {
         this.exchange = exchange;
     }
 
-    public void disassociateExchange(){
+    public void disassociateExchange() {
         this.exchange = null;
     }
 }
