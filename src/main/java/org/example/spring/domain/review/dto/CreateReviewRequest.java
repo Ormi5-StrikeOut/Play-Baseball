@@ -15,7 +15,6 @@ import org.example.spring.domain.review.Review;
 @AllArgsConstructor
 public class CreateReviewRequest {
     private Long exchangeId;
-    private Long writerId;
     private String content;
     private int rate;
     private boolean isSecret;

@@ -1,5 +1,6 @@
 package org.example.spring.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.example.spring.repository.ExchangeRepository;
 import org.example.spring.repository.MemberRepository;
 import org.example.spring.repository.ReviewImageRepository;
 import org.example.spring.repository.ReviewRepository;
+import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * ReviewService는 리뷰 관련 비즈니스 로직을 처리하는 서비스 클래스입니다.
  * 이 클래스는 리뷰의 생성, 수정, 조회 및 리뷰 이미지 관리 기능을 제공합니다.
+ * JWT 토큰을 통한 사용자 인증을 포함하고 있습니다.
  */
 @Service
 @Transactional(readOnly = true)
@@ -36,24 +39,38 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final FileUploadService fileUploadService;
+    private final JwtTokenValidator jwtTokenValidator;
+
+    /**
+     * HTTP 요청으로부터 인증된 사용자 정보를 추출합니다.
+     *
+     * @param request           HTTP 요청 객체
+     * @return                  인증된 Member 객체
+     * @throws RuntimeException 토큰이 유효하지 않거나 사용자를 찾을 수 없는 경우
+     */
+    private Member getAuthenticatedMember(HttpServletRequest request) {
+        String token = jwtTokenValidator.extractTokenFromHeader(request);
+        return jwtTokenValidator.validateTokenAndGetMember(token);
+    }
 
     /**
      * 새로운 리뷰를 등록합니다.
      *
-     * @param member                    리뷰를 작성하는 회원
+     * @param request                   HTTP 요청 객체 (인증된 사용자 정보 추출용)
      * @param createReviewRequest       새로운 리뷰 등록 요청 데이터
-     * @param images                    리뷰에 첨부할 이미지 파일 목록
+     * @param images                    리뷰에 첨부할 이미지 파일 목록 (최대 5개)
      * @return                          생성된 리뷰 엔티티
      * @throws IOException              파일 업로드 중 I/O 오류가 발생한 경우
-     * @throws RuntimeException         교환 정보나 작성자 정보를 찾을 수 없는 경우
-     * @throws IllegalArgumentException 이미지 개수가 최대 허용 개수를 초과한 경우
+     * @throws RuntimeException         교환 정보를 찾을 수 없는 경우
+     * @throws IllegalArgumentException 이미지 개수가 최대 허용 개수(5개)를 초과한 경우
      */
     @Transactional
-    public Review addReview(Member member, CreateReviewRequest createReviewRequest, List<MultipartFile> images) throws IOException {
-        Exchange exchange = exchangeRepository.findById(createReviewRequest.getExchangeId()).orElseThrow(() -> new RuntimeException());
-        Member writer = memberRepository.findById(createReviewRequest.getWriterId()).orElseThrow(() -> new RuntimeException());
+    public Review addReview(HttpServletRequest request, CreateReviewRequest createReviewRequest, List<MultipartFile> images) throws IOException {
+        Member member = getAuthenticatedMember(request);
 
-        Review review = createReviewRequest.toEntity(exchange, writer);
+        Exchange exchange = exchangeRepository.findById(createReviewRequest.getExchangeId()).orElseThrow(() -> new RuntimeException());
+
+        Review review = createReviewRequest.toEntity(exchange, member);
         Review savedReview = reviewRepository.save(review);
 
         if(images != null && !images.isEmpty()) {
@@ -80,19 +97,26 @@ public class ReviewService {
      * 특정 리뷰의 내용을 수정합니다.
      *
      * @param reviewId                  수정할 리뷰의 ID
-     * @param member                    리뷰를 수정하는 회원
-     * @param request                   리뷰 수정 요청 데이터
+     * @param request                   HTTP 요청 객체 (인증된 사용자 정보 추출용)
+     * @param modifyReviewRequest       리뷰 수정 요청 데이터
      * @param images                    추가할 새로운 이미지 파일 목록
      * @throws IOException              파일 업로드 중 I/O 오류가 발생한 경우
      * @throws RuntimeException         리뷰를 찾을 수 없는 경우
-     * @throws IllegalArgumentException 이미지 개수가 최대 허용 개수를 초과한 경우
+     * @throws IllegalArgumentException 이미지 개수가 최대 허용 개수(5개)를 초과한 경우
+     * @throws SecurityException        리뷰 작성자와 현재 인증된 사용자가 일치하지 않는 경우
      */
     @Transactional
-    public void modifyReview(Long reviewId, Member member, ModifyReviewRequest request, List<MultipartFile> images) throws IOException {
+    public void modifyReview(Long reviewId, HttpServletRequest request, ModifyReviewRequest modifyReviewRequest, List<MultipartFile> images) throws IOException {
+        Member member = getAuthenticatedMember(request);
+
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new RuntimeException());
 
-        if(request != null) {
-            String content = request.getContent();
+        if (!review.getWriter().getId().equals(member.getId())) {
+            throw new SecurityException("리뷰 작성자 정보와 일치하지 않은 사용자입니다..");
+        }
+
+        if(modifyReviewRequest != null) {
+            String content = modifyReviewRequest.getContent();
             if(content != null) {
                 review.modifyContent(content);
             }
@@ -121,25 +145,35 @@ public class ReviewService {
     /**
      * 현재 로그인한 회원이 작성한 리뷰 목록을 페이징 처리하여 조회합니다.
      *
-     * @param member   리뷰를 조회할 회원
+     * @param request  HTTP 요청 객체 (인증된 사용자 정보 추출용)
      * @param pageable 페이징 정보
      * @return         회원의 리뷰 목록 (GetMyReviewsResponse의 Page 객체)
      */
-    public Page<GetMyReviewsResponse> getMyReviews(Member member, Pageable pageable) {
+    public Page<GetMyReviewsResponse> getMyReviews(HttpServletRequest request, Pageable pageable) {
+        Member member = getAuthenticatedMember(request);
         return reviewRepository.findByWriter_Id(member.getId(), pageable).map(GetMyReviewsResponse::from);
     }
 
     /**
      * 특정 리뷰의 이미지를 삭제합니다.
      *
-     * @param reviewId          이미지가 속한 리뷰의 ID
-     * @param imageId           삭제할 이미지의 ID
-     * @throws IOException      파일 삭제 중 I/O 오류가 발생한 경우
-     * @throws RuntimeException 이미지를 찾을 수 없는 경우
+     * @param reviewId           이미지가 속한 리뷰의 ID
+     * @param imageId            삭제할 이미지의 ID
+     * @param request            HTTP 요청 객체 (인증된 사용자 정보 추출용)
+     * @throws IOException       파일 삭제 중 I/O 오류가 발생한 경우
+     * @throws RuntimeException  이미지나 리뷰를 찾을 수 없는 경우
+     * @throws SecurityException 리뷰 작성자와 현재 인증된 사용자가 일치하지 않는 경우
      */
     @Transactional
-    public void deleteReviewImage(Long reviewId, Long imageId) throws IOException {
+    public void deleteReviewImage(Long reviewId, Long imageId, HttpServletRequest request) throws IOException {
+        Member member = getAuthenticatedMember(request);
+
         ReviewImage image = reviewImageRepository.findById(imageId).orElseThrow(() -> new RuntimeException("Image not found"));
+        Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
+
+        if (!review.getWriter().getId().equals(member.getId())) {
+            throw new SecurityException("리뷰 작성자 정보와 일치하지 않은 사용자입니다.");
+        }
 
         fileUploadService.deleteFile(image.getUrl());
         reviewImageRepository.delete(image);

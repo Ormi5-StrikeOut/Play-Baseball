@@ -38,7 +38,7 @@ public class Review {
 
     @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Member writer; // 작성자 id
+    private Member writer;
 
     @Column(name = "content", length = 300, nullable = false)
     private String content;
