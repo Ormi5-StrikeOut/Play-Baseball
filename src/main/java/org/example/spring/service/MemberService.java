@@ -2,6 +2,8 @@ package org.example.spring.service;
 
 import static org.example.spring.domain.member.dto.MemberResponseDto.toDto;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -11,13 +13,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
+import org.example.spring.domain.member.dto.MemberEmailVerifiedResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
 import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.domain.member.dto.MemberRoleModifyRequestDto;
+import org.example.spring.exception.EmailAlreadyVerifiedException;
+import org.example.spring.exception.EmailVerificationTokenExpiredException;
+import org.example.spring.exception.InvalidTokenException;
+import org.example.spring.exception.MemberNotFoundException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
+import org.example.spring.security.service.EmailService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +47,90 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenValidator jwtValidator;
+    private final EmailService emailService;
+
+
+    /**
+     * 새로운 회원을 등록합니다.
+     *
+     * @param memberJoinRequestDto 회원 가입 정보를 담은 DTO
+     * @return 등록된 회원 MemberResponseDto
+     */
+    public MemberResponseDto registerMember(MemberJoinRequestDto memberJoinRequestDto) {
+        checkDuplicates(memberJoinRequestDto);
+
+        String hashedPassword = passwordEncoder.encode(memberJoinRequestDto.getPassword());
+
+        Member member = MemberJoinRequestDto.toEntity(memberJoinRequestDto, hashedPassword);
+
+        Member saveMember = memberRepository.save(member);
+
+        String token = emailService.generateEmailVerificationToken(member.getEmail());
+        emailService.sendVerificationEmail(member.getEmail(), token);
+
+        return toDto(saveMember);
+    }
+
+
+    /**
+     * 이메일 인증 토큰을 검증하고 해당 회원의 이메일 인증 상태를 업데이트합니다.
+     *
+     * @param token 이메일 인증 토큰
+     */
+    public MemberEmailVerifiedResponseDto verifyEmail(String token) {
+        try {
+            log.debug("get email verify token: {}", token);
+            String email = jwtValidator.extractUsername(token);
+            Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
+
+            if (member.isEmailVerified()) {
+                throw new EmailAlreadyVerifiedException("이미 인증된 이메일입니다.");
+            }
+
+            member.updateEmailVerified(true);
+            memberRepository.save(member);
+            return MemberEmailVerifiedResponseDto.builder().email(member.getEmail()).build();
+
+        } catch (ExpiredJwtException e) {
+            throw new EmailVerificationTokenExpiredException("이메일 인증 토큰이 만료되었습니다.");
+        } catch (JwtException e) {
+            throw new InvalidTokenException("유효하지 않은 토큰입니다.");
+        }
+    }
+
+    public void resendVerificationEmail(String email) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new MemberNotFoundException("Member not found"));
+
+        if (member.isEmailVerified()) {
+            throw new EmailAlreadyVerifiedException("Email already verified");
+        }
+
+        String token = emailService.generateEmailVerificationToken(email);
+        emailService.sendVerificationEmail(email, token);
+    }
+
+
+    private void checkDuplicates(MemberJoinRequestDto memberJoinRequestDto) {
+        List<String> errorMessages = new ArrayList<>();
+
+        if (memberRepository.existsByEmail(memberJoinRequestDto.getEmail())) {
+            errorMessages.add(MemberField.EMAIL.description + ": " + memberJoinRequestDto.getEmail());
+        }
+
+        if (memberRepository.existsByNickname(memberJoinRequestDto.getNickname())) {
+            errorMessages.add(MemberField.NICKNAME.description + ": " + memberJoinRequestDto.getNickname());
+        }
+
+        if (memberRepository.existsByPhoneNumber(memberJoinRequestDto.getPhoneNumber())) {
+            errorMessages.add(MemberField.PHONE_NUMBER.description + ": " + memberJoinRequestDto.getPhoneNumber());
+        }
+
+        if (!errorMessages.isEmpty()) {
+            throw new IllegalArgumentException("이미 존재하는 " + String.join(", ", errorMessages) + "입니다.");
+        }
+    }
 
     /**
      * 페이징 처리된 전체 회원 목록을 조회합니다.
@@ -76,47 +168,9 @@ public class MemberService {
     }
 
     /**
-     * 새로운 회원을 등록합니다.
-     *
-     * @param memberJoinRequestDto 회원 가입 정보를 담은 DTO
-     * @return 등록된 회원 MemberResponseDto
-     */
-    public MemberResponseDto registerMember(MemberJoinRequestDto memberJoinRequestDto) {
-        checkDuplicates(memberJoinRequestDto);
-
-        String hashedPassword = passwordEncoder.encode(memberJoinRequestDto.getPassword());
-
-        Member member = MemberJoinRequestDto.toEntity(memberJoinRequestDto, hashedPassword);
-
-        Member saveMember = memberRepository.save(member);
-
-        return toDto(saveMember);
-    }
-
-    private void checkDuplicates(MemberJoinRequestDto memberJoinRequestDto) {
-        List<String> errorMessages = new ArrayList<>();
-
-        if (memberRepository.existsByEmail(memberJoinRequestDto.getEmail())) {
-            errorMessages.add(MemberField.EMAIL.description + ": " + memberJoinRequestDto.getEmail());
-        }
-
-        if (memberRepository.existsByNickname(memberJoinRequestDto.getNickname())) {
-            errorMessages.add(MemberField.NICKNAME.description + ": " + memberJoinRequestDto.getNickname());
-        }
-
-        if (memberRepository.existsByPhoneNumber(memberJoinRequestDto.getPhoneNumber())) {
-            errorMessages.add(MemberField.PHONE_NUMBER.description + ": " + memberJoinRequestDto.getPhoneNumber());
-        }
-
-        if (!errorMessages.isEmpty()) {
-            throw new IllegalArgumentException("이미 존재하는 " + String.join(", ", errorMessages) + "입니다.");
-        }
-    }
-
-    /**
      * 요청온 Request 에서 추출한 email 을 가지고 있는 회원을 modify 합니다.
      *
-     * @param request 요청
+     * @param request                요청
      * @param memberModifyRequestDto 회원 정보 수정 요청 Dto
      * @return 수정된 회원 응답 Dto
      */
@@ -135,9 +189,10 @@ public class MemberService {
 
     /**
      * admin 권한을 가지고 있으면 회원의 권한을 수정할 수 있습니다.
-     * @param memberId 수정할 회원 ID
+     *
+     * @param memberId                   수정할 회원 ID
      * @param memberRoleModifyRequestDto 변경할 권한 요청
-     * @param request HttpServletRequest
+     * @param request                    HttpServletRequest
      * @return 권한이 변경된 회원 Dto
      */
     public MemberResponseDto modifyMemberRole(Long memberId, MemberRoleModifyRequestDto memberRoleModifyRequestDto, HttpServletRequest request) {
