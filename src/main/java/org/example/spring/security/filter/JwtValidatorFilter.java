@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.example.spring.security.jwt.CookieService;
+import org.example.spring.security.service.CookieService;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.service.JwtAuthenticationService;
 import org.springframework.security.core.Authentication;
@@ -28,7 +28,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join"
+        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/members/verify-email", "/favicon.ico"
     );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
