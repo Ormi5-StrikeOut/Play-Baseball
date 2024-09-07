@@ -1,5 +1,3 @@
-
-
 spring:
   application:
     name: Play_Baseball
@@ -46,11 +44,10 @@ spring:
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+      mail.smtp.debug: true
+      mail.smtp.connectiontimeout: 1000 #1초
+      mail.starttls.enable: true
+      mail.smtp.auth: true
 
 logging:
   level:
