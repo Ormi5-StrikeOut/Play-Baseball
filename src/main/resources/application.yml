@@ -40,6 +40,18 @@ spring:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 logging:
   level:
     root: DEBUG
@@ -56,6 +68,8 @@ jwt:
   expiration: ${JWT_EXPIRATION}  # 24시간
   refresh-token:
     expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
+  email-verification:
+    expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
 
 server:
   forward-headers-strategy: native
