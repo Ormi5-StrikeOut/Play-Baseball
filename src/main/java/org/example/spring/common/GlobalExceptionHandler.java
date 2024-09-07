@@ -1,6 +1,7 @@
 package org.example.spring.common;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.exception.AccountBannedException;
@@ -10,6 +11,7 @@ import org.example.spring.exception.InvalidTokenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -69,6 +71,14 @@ public class GlobalExceptionHandler {
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponseDto.error(errorMessage));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+        log.warn("access denied: {}", ex.getMessage());
+        String errorMessage = "'" + request.getRequestURI() + "' 경로에 대한 접근 권한이 없습니다.";
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(ApiResponseDto.error(errorMessage));
     }
 }

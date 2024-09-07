@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.Instant;
 import lombok.AccessLevel;
@@ -93,5 +94,9 @@ public class Member {
 
     public void updateDeletedAt() {
         this.deletedAt = Timestamp.from(Instant.now());
+    }
+
+    public void updateRole(@NotNull(message = "권한 정보는 필수입니다.") MemberRole role) {
+        this.role = role;
     }
 }

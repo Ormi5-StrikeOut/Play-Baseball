@@ -10,9 +10,11 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
+import org.example.spring.domain.member.MemberRole;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
 import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
+import org.example.spring.domain.member.dto.MemberRoleModifyRequestDto;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +71,6 @@ public class MemberService {
      *
      * @param request HttpServletRequest
      */
-    @Transactional
     public void deleteMember(HttpServletRequest request, HttpServletResponse response) {
         jwtValidator.deactivateAccount(request, response);
     }
@@ -129,6 +131,32 @@ public class MemberService {
         String token = jwtValidator.extractTokenFromHeader(request);
         String email = jwtValidator.extractUsername(token);
         return memberRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
+    }
+
+    /**
+     * admin 권한을 가지고 있으면 회원의 권한을 수정할 수 있습니다.
+     * @param memberId 수정할 회원 ID
+     * @param memberRoleModifyRequestDto 변경할 권한 요청
+     * @param request HttpServletRequest
+     * @return 권한이 변경된 회원 Dto
+     */
+    public MemberResponseDto modifyMemberRole(Long memberId, MemberRoleModifyRequestDto memberRoleModifyRequestDto, HttpServletRequest request) {
+        // 요청을 보낸 관리자 정보 확인
+        Member admin = getMemberByToken(request);
+        if (!admin.getRole().equals(MemberRole.ADMIN)) {
+            throw new AccessDeniedException("권한이 없습니다.");
+        }
+
+        // 수정할 회원 정보 조회
+        Member member = memberRepository.findById(memberId)
+            .orElseThrow(() -> new ResourceNotFoundException("Member", "id", memberId));
+
+        // 권한 정보 업데이트
+        member.updateRole(memberRoleModifyRequestDto.getRole());
+
+        // 수정된 회원 정보 저장
+        Member modifiedMember = memberRepository.save(member);
+        return MemberResponseDto.toDto(modifiedMember);
     }
 
     @Getter
