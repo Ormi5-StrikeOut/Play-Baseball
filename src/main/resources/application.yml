@@ -34,6 +34,10 @@ spring:
       name: ${SECURITY_USER_NAME}
       password: ${SECURITY_USER_PASSWORD}
 
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT}
@@ -44,10 +48,6 @@ spring:
       mail.smtp.connectiontimeout: 1000 #1초
       mail.starttls.enable: true
       mail.smtp.auth: true
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
 
 logging:
   level:
