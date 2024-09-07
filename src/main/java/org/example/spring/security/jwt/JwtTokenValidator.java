@@ -16,6 +16,7 @@ import org.example.spring.exception.AccountDeletedException;
 import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
+import org.example.spring.security.service.CookieService;
 import org.example.spring.security.utils.JwtUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

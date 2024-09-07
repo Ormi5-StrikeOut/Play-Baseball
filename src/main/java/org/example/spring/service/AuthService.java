@@ -12,7 +12,7 @@ import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.exception.InvalidCredentialsException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
-import org.example.spring.security.jwt.CookieService;
+import org.example.spring.security.service.CookieService;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.security.authentication.AuthenticationManager;

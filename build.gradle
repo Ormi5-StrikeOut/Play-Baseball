@@ -31,6 +31,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '3.2.5'
 
     // In-Memory-Cache
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
@@ -62,7 +63,7 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
 }
 

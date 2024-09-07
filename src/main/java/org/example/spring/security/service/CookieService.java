@@ -1,8 +1,9 @@
-package org.example.spring.security.jwt;
+package org.example.spring.security.service;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.spring.security.jwt.JwtTokenProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;

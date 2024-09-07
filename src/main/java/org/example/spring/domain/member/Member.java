@@ -99,4 +99,8 @@ public class Member {
     public void updateRole(@NotNull(message = "권한 정보는 필수입니다.") MemberRole role) {
         this.role = role;
     }
+
+    public void updateEmailVerified(boolean isVerified) {
+        this.emailVerified = isVerified;
+    }
 }

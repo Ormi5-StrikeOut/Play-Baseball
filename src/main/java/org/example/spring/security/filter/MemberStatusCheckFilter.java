@@ -34,9 +34,10 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
-        // 로그인 요청의 경우 별도 처리
-        if ("/api/auth/login".equals(path) || response.isCommitted()) {
+        // 공개 엔드포인트 처리
+        if (isPublicEndpoint(path, method)|| response.isCommitted()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -55,6 +56,18 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
                     if (member.getRole() == MemberRole.BANNED) {
                         handleBannedUser(request, response, filterChain, member);
                         return;
+                    }
+
+                    if (!member.isEmailVerified() && isEmailVerificationRequired(path, method)) {
+                        // 이메일 인증이 필요한 엔드포인트 목록
+                        List<String> emailVerificationRequiredEndpoints = Arrays.asList(
+                            "/api/exchanges", "/api/reviews", "/api/messages"
+                        );
+
+                        if (emailVerificationRequiredEndpoints.stream().anyMatch(path::startsWith)) {
+                            handleUnverifiedEmail(response);
+                            return;
+                        }
                     }
                 }
             } catch (AccountDeletedException e) {
@@ -90,6 +103,25 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
     private void handleDeletedUser(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.getWriter().write("This account has been deleted.");
+    }
+
+    private void handleUnverifiedEmail(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.getWriter().write("Email verification required to access this resource.");
+    }
+
+    private boolean isPublicEndpoint(String path, String method) {
+        return "/api/auth/login".equals(path)
+            || path.startsWith("/api/members/verify-email")
+            || ("/api/exchanges".equals(path) && "GET".equalsIgnoreCase(method))
+            || ("/api/reviews".equals(path) && "GET".equalsIgnoreCase(method))
+            || path.startsWith("/api/exchanges/five");
+    }
+
+    private boolean isEmailVerificationRequired(String path, String method) {
+        return (path.startsWith("/api/exchanges") && !"GET".equalsIgnoreCase(method))
+            || (path.startsWith("/api/reviews") && !"GET".equalsIgnoreCase(method))
+            || path.startsWith("/api/messages");
     }
 }
 
