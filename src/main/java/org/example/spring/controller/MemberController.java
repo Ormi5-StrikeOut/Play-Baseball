@@ -9,7 +9,6 @@ import org.example.spring.domain.member.dto.MemberJoinRequestDto;
 import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.domain.member.dto.MemberRoleModifyRequestDto;
-import org.example.spring.domain.member.dto.ResendVerificationRequest;
 import org.example.spring.service.MemberService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -128,8 +127,8 @@ public class MemberController {
     }
 
     @PostMapping("/resend-verification-email")
-    public ResponseEntity<ApiResponseDto<Void>> resendVerificationEmail(@RequestBody ResendVerificationRequest request) {
-        memberService.resendVerificationEmail(request.email());
+    public ResponseEntity<ApiResponseDto<Void>> resendVerificationEmail(@RequestParam String email) {
+        memberService.resendVerificationEmail(email);
         return ResponseEntity.ok(ApiResponseDto.success("Verification email resent", null));
 
     }
