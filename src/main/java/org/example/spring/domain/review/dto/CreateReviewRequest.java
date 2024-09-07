@@ -24,8 +24,8 @@ public class CreateReviewRequest {
      * CreateReviewRequest를 Review 엔티티로 변환합니다.
      *
      * @param exchange 리뷰와 연관된 Exchange 엔티티
-     * @param member 리뷰 작성자 Member 엔티티
-     * @return 변환된 Review 엔티티
+     * @param member   리뷰 작성자 Member 엔티티
+     * @return         변환된 Review 엔티티
      */
     public Review toEntity(Exchange exchange, Member member) {
         return Review.builder()

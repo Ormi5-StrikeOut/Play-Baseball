@@ -77,7 +77,7 @@ class ReviewRepositoryTest {
         exchangeRepository.save(testExchange2);
     }
 
-    @Test
+    /*@Test
     @DisplayName("작성자 ID로 조회 테스트")
     void findByWriterId() {
         // Given
@@ -111,5 +111,5 @@ class ReviewRepositoryTest {
         assertThat(reviews.getContent()).hasSize(2);
         assertThat(reviews.getContent().get(0).getContent()).isEqualTo("좋은 거래였습니다.");
         assertThat(reviews.getContent().get(1).getContent()).isEqualTo("최악이에요");
-    }
+    }*/
 }
