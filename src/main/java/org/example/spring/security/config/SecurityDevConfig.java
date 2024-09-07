@@ -62,7 +62,7 @@ public class SecurityDevConfig {
                 // 비회원 공개 엔드포인트
                 .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs/swagger-config", "/favicon.ico").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/members/verify-email", "/api/members/resend-verification-email").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/members/verify-email").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
 
@@ -78,7 +78,7 @@ public class SecurityDevConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/members/verify-role/**").access(hasRoleAndEmailVerified(MemberRole.ADMIN))
 
                 // 인증된 사용자 엔드포인트 (이메일 인증 불필요)
-                .requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my").authenticated()
+                .requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my", "/api/members/resend-verification-email").authenticated()
                 .requestMatchers("/api/exchange-likes/**").authenticated()
 
                 // 기타 모든 요청

@@ -80,7 +80,7 @@ public class SecurityConfig {
 
 
                 // 인증된 사용자 엔드포인트 (이메일 인증 불필요)
-                .requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my").authenticated()
+                .requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my", "/api/members/resend-verification-email").authenticated()
                 .requestMatchers("/api/exchange-likes/**").authenticated()
 
                 // 기타 모든 요청
