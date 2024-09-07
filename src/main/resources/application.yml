@@ -68,8 +68,8 @@ jwt:
   email-verification:
     expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
 
-server:
-  forward-headers-strategy: native
-  tomcat:
-    remote-ip-header: X-Forwarded-For
-    protocol-header: X-Forwarded-Proto
+#server:
+#  forward-headers-strategy: native
+#  tomcat:
+#    remote-ip-header: X-Forwarded-For
+#    protocol-header: X-Forwarded-Proto
