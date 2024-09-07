@@ -26,7 +26,7 @@ public class EmailService {
         message.setTo(email);
         message.setSubject("이메일 인증");
         message.setText("다음 링크를 클릭하여 이메일을 인증하세요: " +
-            "http://localhost:8080/api/members/verify-email?token=" + token);
+            "https://api.ioshane.com/api/members/verify-email?token=" + token);
         mailSender.send(message);
     }
 
