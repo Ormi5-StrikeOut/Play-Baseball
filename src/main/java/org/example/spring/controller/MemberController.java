@@ -4,10 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.common.ApiResponseDto;
+import org.example.spring.domain.member.dto.MemberEmailVerifiedResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
 import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.domain.member.dto.MemberRoleModifyRequestDto;
+import org.example.spring.domain.member.dto.ResendVerificationRequest;
 import org.example.spring.service.MemberService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -98,9 +100,10 @@ public class MemberController {
 
     /**
      * admin 권한을 가지고 있으면 회원의 권한을 수정할 수 있습니다.
-     * @param memberId 수정할 회원 ID
+     *
+     * @param memberId                   수정할 회원 ID
      * @param memberRoleModifyRequestDto 변경할 권한 요청
-     * @param request HttpServletRequest
+     * @param request                    HttpServletRequest
      * @return 권한이 변경된 회원 Dto
      */
     @PatchMapping("verify-role/{memberId}")
@@ -110,5 +113,24 @@ public class MemberController {
         HttpServletRequest request) {
         MemberResponseDto modifiedMember = memberService.modifyMemberRole(memberId, memberRoleModifyRequestDto, request);
         return ResponseEntity.ok(ApiResponseDto.success("회원 권한 수정 성공", modifiedMember));
+    }
+
+    /**
+     * 이메일 인증 링크를 클릭했을 때 처리하는 엔드포인트입니다.
+     *
+     * @param token 이메일 인증 토큰
+     * @return 이메일 인증 결과
+     */
+    @GetMapping("/verify-email")
+    public ResponseEntity<ApiResponseDto<MemberEmailVerifiedResponseDto>> verifyEmail(@RequestParam String token) {
+        MemberEmailVerifiedResponseDto memberEmailVerifiedResponseDto = memberService.verifyEmail(token);
+        return ResponseEntity.ok(ApiResponseDto.success("이메일 인증이 완료되었습니다.", memberEmailVerifiedResponseDto));
+    }
+
+    @PostMapping("/resend-verification-email")
+    public ResponseEntity<ApiResponseDto<Void>> resendVerificationEmail(@RequestBody ResendVerificationRequest request) {
+        memberService.resendVerificationEmail(request.email());
+        return ResponseEntity.ok(ApiResponseDto.success("Verification email resent", null));
+
     }
 }
