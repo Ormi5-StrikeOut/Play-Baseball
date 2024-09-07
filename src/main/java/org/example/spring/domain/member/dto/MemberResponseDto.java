@@ -28,6 +28,7 @@ public class MemberResponseDto {
     private Timestamp updatedAt;
     private Timestamp lastLoginDate;
     private Timestamp deletedAt;
+    private boolean emailVerified;
 
     public static MemberResponseDto toDto(Member member) {
         return MemberResponseDto.builder()
@@ -39,6 +40,7 @@ public class MemberResponseDto {
             .updatedAt(member.getUpdatedAt())
             .lastLoginDate(member.getLastLoginDate())
             .deletedAt(member.getDeletedAt())
+            .emailVerified(member.isEmailVerified())
             .build();
     }
 }
