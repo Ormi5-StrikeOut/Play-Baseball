@@ -6,14 +6,18 @@ import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.exception.AccountBannedException;
 import org.example.spring.exception.AccountDeletedException;
+import org.example.spring.exception.EmailAlreadyVerifiedException;
+import org.example.spring.exception.EmailVerificationTokenExpiredException;
 import org.example.spring.exception.InvalidCredentialsException;
 import org.example.spring.exception.InvalidTokenException;
+import org.example.spring.exception.MemberNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -80,5 +84,31 @@ public class GlobalExceptionHandler {
         String errorMessage = "'" + request.getRequestURI() + "' 경로에 대한 접근 권한이 없습니다.";
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(ApiResponseDto.error(errorMessage));
+    }
+
+    @ExceptionHandler(EmailVerificationTokenExpiredException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleExpiredTokenException(EmailVerificationTokenExpiredException e) {
+        return ResponseEntity.status(HttpStatus.GONE).body(ApiResponseDto.error("이메일 인증 토큰이 만료되었습니다. 새로운 인증 이메일을 요청해주세요."));
+    }
+
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleMemberNotFoundException(MemberNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponseDto.error("Member not found"));
+    }
+
+    @ExceptionHandler(EmailAlreadyVerifiedException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleEmailAlreadyVerifiedException(EmailAlreadyVerifiedException e) {
+        return ResponseEntity.badRequest().body(ApiResponseDto.error("이미 인증된 이메일입니다."));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleNoResourceFoundException(NoResourceFoundException ex) {
+        if (ex.getResourcePath().contains("favicon.ico")) {
+            // favicon.ico 요청에 대해 204 No Content 응답
+            return ResponseEntity.noContent().build();
+        }
+        // 다른 리소스에 대한 처리
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ApiResponseDto.error("요청한 리소스를 찾을 수 없습니다."));
     }
 }
