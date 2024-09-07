@@ -10,6 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
+      SPRING_PROFILES_ACTIVE: prod
       RDS_HOST: ${{ secrets.RDS_HOST }}
       RDS_PORT: ${{ secrets.RDS_PORT }}
       RDS_NAME: ${{ secrets.RDS_NAME }}
