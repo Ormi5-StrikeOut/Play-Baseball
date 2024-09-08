@@ -58,5 +58,5 @@ jobs:
               pkill java
               sleep 5
             fi
-            nohup java -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &"
+            nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &"
           rm -f private_key.pem
