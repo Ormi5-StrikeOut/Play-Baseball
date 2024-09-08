@@ -42,12 +42,18 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         String token = jwtTokenValidator.extractTokenFromHeader(request);
+        Member member = jwtTokenValidator.getMemberFromToken(token);
+
+        if (member.getRole() == MemberRole.ADMIN) {
+            filterChain.doFilter(request, response);
+            log.debug("Admin pass this filter");
+            return;
+        }
+
         if (token != null) {
             try {
                 if (jwtTokenValidator.validateToken(token)) {
-                    Member member = jwtTokenValidator.getMemberFromToken(token);
                     log.debug("Member: {}, Role: {}, EmailVerified: {}", member.getEmail(), member.getRole(), member.isEmailVerified());
 
                     if (member.getDeletedAt() != null) {
@@ -115,6 +121,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
 
     private boolean isPublicEndpoint(String path, String method) {
         return "/api/auth/login".equals(path)
+            || "/api/members/join".equals(path)
             || path.startsWith("/api/members/verify-email")
             || ("/api/exchanges".equals(path) && "GET".equalsIgnoreCase(method))
             || ("/api/reviews".equals(path) && "GET".equalsIgnoreCase(method))
