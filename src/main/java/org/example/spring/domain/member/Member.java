@@ -79,8 +79,6 @@ public class Member {
     private MemberRole role;
 
     public void updateFrom(MemberModifyRequestDto dto) {
-        this.email = dto.getEmail();
-        this.password = dto.getPassword();
         this.nickname = dto.getNickname();
         this.name = dto.getName();
         this.phoneNumber = dto.getPhoneNumber();
@@ -102,5 +100,9 @@ public class Member {
 
     public void updateEmailVerified(boolean isVerified) {
         this.emailVerified = isVerified;
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 }
