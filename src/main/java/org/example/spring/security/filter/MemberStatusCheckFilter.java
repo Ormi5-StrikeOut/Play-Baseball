@@ -35,18 +35,26 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         String method = request.getMethod();
+        log.debug("Processing request: {} {}", method, path);
 
         // 공개 엔드포인트 처리
         if (isPublicEndpoint(path, method)|| response.isCommitted()) {
             filterChain.doFilter(request, response);
             return;
         }
-
         String token = jwtTokenValidator.extractTokenFromHeader(request);
+        Member member = jwtTokenValidator.getMemberFromToken(token);
+
+        if (member.getRole() == MemberRole.ADMIN) {
+            filterChain.doFilter(request, response);
+            log.debug("Admin pass this filter");
+            return;
+        }
+
         if (token != null) {
             try {
                 if (jwtTokenValidator.validateToken(token)) {
-                    Member member = jwtTokenValidator.getMemberFromToken(token);
+                    log.debug("Member: {}, Role: {}, EmailVerified: {}", member.getEmail(), member.getRole(), member.isEmailVerified());
 
                     if (member.getDeletedAt() != null) {
                         handleDeletedUser(response);
@@ -69,6 +77,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
                             return;
                         }
                     }
+                    log.debug("Member passed all checks in MemberStatusCheckFilter");
                 }
             } catch (AccountDeletedException e) {
                 handleDeletedUser(response);
@@ -112,6 +121,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
 
     private boolean isPublicEndpoint(String path, String method) {
         return "/api/auth/login".equals(path)
+            || "/api/members/join".equals(path)
             || path.startsWith("/api/members/verify-email")
             || ("/api/exchanges".equals(path) && "GET".equalsIgnoreCase(method))
             || ("/api/reviews".equals(path) && "GET".equalsIgnoreCase(method))

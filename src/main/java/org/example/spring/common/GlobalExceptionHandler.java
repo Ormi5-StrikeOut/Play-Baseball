@@ -1,11 +1,11 @@
 package org.example.spring.common;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.exception.AccountBannedException;
 import org.example.spring.exception.AccountDeletedException;
+import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.exception.EmailAlreadyVerifiedException;
 import org.example.spring.exception.EmailVerificationTokenExpiredException;
 import org.example.spring.exception.InvalidCredentialsException;
@@ -14,9 +14,9 @@ import org.example.spring.exception.MemberNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
@@ -78,14 +78,6 @@ public class GlobalExceptionHandler {
             .body(ApiResponseDto.error(errorMessage));
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponseDto<Void>> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
-        log.debug("access denied: {}", ex.getMessage());
-        String errorMessage = "'" + request.getRequestURI() + "' 경로에 대한 접근 권한이 없습니다.";
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body(ApiResponseDto.error(errorMessage));
-    }
-
     @ExceptionHandler(EmailVerificationTokenExpiredException.class)
     public ResponseEntity<ApiResponseDto<Void>> handleExpiredTokenException(EmailVerificationTokenExpiredException e) {
         log.debug("email verify token is expired: {}", e.getMessage());
@@ -113,5 +105,19 @@ public class GlobalExceptionHandler {
         // 다른 리소스에 대한 처리
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(ApiResponseDto.error("요청한 리소스를 찾을 수 없습니다."));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleMultipartException(MultipartException ex) {
+        log.error("Multipart request processing failed", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponseDto.error("파일 업로드 처리 중 오류가 발생했습니다."));
+    }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleAuthenticationFailedException(AuthenticationFailedException ex) {
+        log.error("Authentication Failed: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponseDto.error("인증에 실패 했습니다."));
     }
 }
