@@ -1,4 +1,7 @@
 spring:
+  config:
+    import: optional:file:/home/ubuntu/.env
+
   application:
     name: Play_Baseball
 
