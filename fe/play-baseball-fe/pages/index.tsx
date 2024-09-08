@@ -104,8 +104,8 @@ const MainPage: React.FC = () => {
 
       <Grid container spacing={3}>
         {items.map((item) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-            <Link href={`/exchange/${item.id}`} passHref>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={item.url}>
+            <Link href={`${item.url}`} passHref>
               <Card
                 sx={{
                   height: "100%",
