@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.spring.security.service.CookieService;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.service.JwtAuthenticationService;
+import org.example.spring.security.service.TokenBlacklistService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 
     private final CookieService cookieService;
     private final JwtAuthenticationService jwtAuthenticationService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
@@ -32,9 +34,11 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
+        TokenBlacklistService tokenBlacklistService,
         JwtTokenValidator jwtTokenValidator) {
         this.cookieService = cookieService;
         this.jwtAuthenticationService = jwtAuthenticationService;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.jwtTokenValidator = jwtTokenValidator;
     }
 
@@ -56,7 +60,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
             String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
             String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
 
-            if (accessToken != null && jwtTokenValidator.isTokenBlacklisted(accessToken)) {
+            if (accessToken != null && tokenBlacklistService.isTokenBlacklisted(accessToken)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Token has been invalidated. Please log in again.");
                 return;

@@ -25,6 +25,7 @@ import org.example.spring.exception.MemberNotFoundException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
+import org.example.spring.security.service.AccountManagementService;
 import org.example.spring.security.service.EmailService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MemberService {
 
+    private final AccountManagementService accountManagementService;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenValidator jwtValidator;
@@ -70,7 +72,6 @@ public class MemberService {
 
         return toDto(saveMember);
     }
-
 
     /**
      * 이메일 인증 토큰을 검증하고 해당 회원의 이메일 인증 상태를 업데이트합니다.
@@ -164,7 +165,7 @@ public class MemberService {
      * @param request HttpServletRequest
      */
     public void deleteMember(HttpServletRequest request, HttpServletResponse response) {
-        jwtValidator.deactivateAccount(request, response);
+        accountManagementService.deactivateAccount(request, response);
     }
 
     /**
