@@ -1,5 +1,6 @@
 package org.example.spring.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.file.AccessDeniedException;
 import java.sql.Timestamp;
@@ -93,7 +94,7 @@ public class ExchangeService {
   public Page<ExchangeResponseDto> getAllExchanges(int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
-        .findByDeletedAtIsNull(pageable)
+        .findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
         .map(ExchangeResponseDto::fromExchange);
   }
 
@@ -110,7 +111,7 @@ public class ExchangeService {
   public Page<ExchangeResponseDto> getUserExchanges(Long memberId, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
-        .findByMemberIdAndDeletedAtIsNull(memberId, pageable)
+        .findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(memberId, pageable)
         .map(ExchangeResponseDto::fromExchange);
   }
 
@@ -118,7 +119,7 @@ public class ExchangeService {
   public Page<ExchangeResponseDto> getExchangesByTitleContaining(String title, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
-        .findByTitleContainingAndDeletedAtIsNull(title, pageable)
+        .findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(title, pageable)
         .map(ExchangeResponseDto::fromExchange);
   }
 
@@ -198,5 +199,19 @@ public class ExchangeService {
       throw new AuthenticationFailedException(
           "Warning: Access denied. You do not have permission to delete the post.");
     }
+  }
+
+  /**
+   * 게시물 단건 조회에 사용합니다.
+   *
+   * @param id 게시물 id
+   * @return 게시물이 있고 삭제처리가 되어있지 않은 경우 게시물 정보를 반환합니다.
+   */
+  @Transactional
+  public ExchangeResponseDto getExchangeDetail(Long id) {
+    return ExchangeResponseDto.fromExchange(
+        exchangeRepository
+            .findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new EntityNotFoundException("작성된 글이 아니거나 삭제되었습니다.")));
   }
 }

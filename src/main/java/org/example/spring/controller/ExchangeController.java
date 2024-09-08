@@ -131,4 +131,18 @@ public class ExchangeController {
     return ResponseEntity.status(HttpStatus.OK)
         .body(ApiResponseDto.success("회원의 게시물 조회 성공", responses));
   }
+
+  /**
+   * 특정 게시물 1개를 조회합니다.
+   *
+   * @param id 게시물 id
+   * @return 게시물 id와 일치하는 게시물 정보
+   */
+  @GetMapping("/{id}")
+  public ResponseEntity<ApiResponseDto<ExchangeResponseDto>> getExchangeDetail(
+      @PathVariable Long id) {
+    ExchangeResponseDto response = exchangeService.getExchangeDetail(id);
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(ApiResponseDto.success("회원의 게시물 조회 성공", response));
+  }
 }
