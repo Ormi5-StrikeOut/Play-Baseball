@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import java.time.Duration;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -28,7 +29,8 @@ public class TokenBlacklistService {
     public void addToBlacklist(String token, Date expirationDate) {
         if (expirationDate.after(new Date())) {
             tokenBlacklist.put(token, expirationDate);
-            log.info("Token added to blacklist. Expires at: {}", expirationDate);
+            log.debug("Token added to blacklist. Expires at: {}", expirationDate);
+            log.debug("Blacklist count: {} ", tokenBlacklist.estimatedSize());
         } else {
             log.warn("Attempted to blacklist an already expired token");
         }
@@ -47,22 +49,4 @@ public class TokenBlacklistService {
         return isBlacklisted;
     }
 
-    /**
-     * 만료된 토큰들을 블랙리스트에서 제거합니다.
-     * 이 메서드는 주기적으로 실행되어야 합니다.
-     */
-    public void removeExpiredTokens() {
-        tokenBlacklist.cleanUp();
-        log.info("Expired tokens removed from blacklist");
-    }
-
-    /**
-     * 특정 토큰을 블랙리스트에서 제거합니다.
-     *
-     * @param token 제거할 토큰
-     */
-    public void removeFromBlacklist(String token) {
-        tokenBlacklist.invalidate(token);
-        log.info("Token removed from blacklist: {}", token);
-    }
 }
