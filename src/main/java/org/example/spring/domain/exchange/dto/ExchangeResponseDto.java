@@ -21,9 +21,9 @@ public class ExchangeResponseDto {
   private final int regularPrice;
   private final String content;
   private final int viewCount;
-  private SalesStatus status;
-  private Timestamp updatedAt;
-  private List<ExchangeImageResponseDto> images;
+  private final SalesStatus status;
+  private final Timestamp updatedAt;
+  private final List<ExchangeImageResponseDto> images;
 
   public static ExchangeResponseDto fromExchange(Exchange exchange) {
     // 이미지가 없을 경우 기본 이미지 url 변환

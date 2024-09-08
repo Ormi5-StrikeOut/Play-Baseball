@@ -8,11 +8,11 @@ import org.example.spring.domain.exchange.Exchange;
 @Getter
 @Builder
 public class ExchangeNavigationResponseDto {
-  private String title;
-  private int price;
-  private String url;
-  private String imageUrl;
-  private Timestamp updatedAt;
+  private final String title;
+  private final int price;
+  private final String url;
+  private final String imageUrl;
+  private final Timestamp updatedAt;
 
   public static ExchangeNavigationResponseDto fromExchange(Exchange exchange) {
     String imageUrl = "";
