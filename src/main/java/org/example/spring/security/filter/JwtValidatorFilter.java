@@ -106,7 +106,9 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             log.error("Authentication error: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authentication failed: " + e.getMessage());
+            if (!response.isCommitted()) {
+                response.getWriter().write("Authentication failed: " + e.getMessage());
+            }
         }
     }
 
