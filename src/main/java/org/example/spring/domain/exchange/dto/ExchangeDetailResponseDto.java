@@ -37,7 +37,10 @@ public class ExchangeDetailResponseDto {
         .images(this.images);
   }
 
-  public static ExchangeDetailResponseDto fromExchange(Exchange exchange) {
+  public static ExchangeDetailResponseDto fromExchange(
+      Exchange exchange,
+      List<ExchangeNavigationResponseDto> recentExchangesByMember,
+      boolean isWriter) {
     List<ExchangeImageResponseDto> images = new ArrayList<>();
     if (!exchange.getImages().isEmpty()) {
       images =
@@ -55,6 +58,9 @@ public class ExchangeDetailResponseDto {
         .status(exchange.getStatus())
         .updatedAt(exchange.getUpdatedAt())
         .images(images)
+        .writer(exchange.getMember().getNickname())
+        .recentExchangesByMember(recentExchangesByMember)
+        .isWriter(isWriter)
         .build();
   }
 }
