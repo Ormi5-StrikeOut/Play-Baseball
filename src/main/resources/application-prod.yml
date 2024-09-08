@@ -71,6 +71,9 @@ jwt:
   email-verification:
     expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
 
+file:
+  upload-dir: src/main/resources/static/uploads
+
 app:
   base-url: https://api.ioshane.com
 
