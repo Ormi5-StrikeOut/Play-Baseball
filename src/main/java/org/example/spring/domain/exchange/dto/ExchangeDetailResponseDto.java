@@ -10,12 +10,9 @@ import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.exchangeImage.dto.ExchangeImageResponseDto;
 
-/** 게시글 관련 요청을 보낸 후 응답을 받을 때 사용하는 Dto 관련 요청 목록: 생성, 조회, 수정 */
 @Getter
 @Builder
-public class ExchangeResponseDto {
-  private final Long id;
-  private final Long memberId;
+public class ExchangeDetailResponseDto {
   private final String title;
   private final int price;
   private final int regularPrice;
@@ -25,7 +22,7 @@ public class ExchangeResponseDto {
   private Timestamp updatedAt;
   private List<ExchangeImageResponseDto> images;
 
-  public static ExchangeResponseDto fromExchange(Exchange exchange) {
+  public static ExchangeDetailResponseDto fromExchange(Exchange exchange) {
     // 이미지가 없을 경우 기본 이미지 url 변환
     String defaultImageUrl =
         "http://localhost:8080/uploads/c2ba53a3-c5d2-458d-beea-584384ad88c1_ad.jpg";
@@ -40,9 +37,7 @@ public class ExchangeResponseDto {
       images = List.of(ExchangeImageResponseDto.builder().url(defaultImageUrl).build());
     }
 
-    return ExchangeResponseDto.builder()
-        .id(exchange.getId())
-        .memberId(exchange.getMember().getId())
+    return ExchangeDetailResponseDto.builder()
         .title(exchange.getTitle())
         .price(exchange.getPrice())
         .regularPrice(exchange.getRegularPrice())

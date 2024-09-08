@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
+import org.example.spring.domain.exchange.dto.ExchangeDetailResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.exception.InvalidTokenException;
@@ -143,9 +144,9 @@ public class ExchangeController {
    * @return 게시물 id와 일치하는 게시물 정보
    */
   @GetMapping("/{id}")
-  public ResponseEntity<ApiResponseDto<ExchangeResponseDto>> getExchangeDetail(
+  public ResponseEntity<ApiResponseDto<ExchangeDetailResponseDto>> getExchangeDetail(
       @PathVariable Long id) {
-    ExchangeResponseDto response = exchangeService.getExchangeDetail(id);
+    ExchangeDetailResponseDto response = exchangeService.getExchangeDetail(id);
     return ResponseEntity.status(HttpStatus.OK)
         .body(ApiResponseDto.success("회원의 게시물 조회 성공", response));
   }
