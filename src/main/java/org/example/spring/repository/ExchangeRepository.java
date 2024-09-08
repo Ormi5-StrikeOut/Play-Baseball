@@ -10,14 +10,16 @@ import org.springframework.stereotype.Repository;
 /** DeletedAt이 null인 게시물을 대상으로 글을 가져옵니다. 게시물 삭제는 Soft Delete를 사용합니다. */
 @Repository
 public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
-  Page<Exchange> findByDeletedAtIsNull(Pageable pageable);
+  Page<Exchange> findByDeletedAtIsNullOrderByCreatedAtDesc(Pageable pageable);
 
   // 검색 키워드에 포함되어 있는 게시글 목록 조회
-  Page<Exchange> findByTitleContainingAndDeletedAtIsNull(String title, Pageable pageable);
+  Page<Exchange> findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(
+      String title, Pageable pageable);
 
   // 최근 5개의 게시글 조회
   List<Exchange> findTop5ByDeletedAtIsNullOrderByCreatedAtDesc();
 
   // 특정 회원이 작성한 게시글 조회
-  Page<Exchange> findByMemberIdAndDeletedAtIsNull(Long memberId, Pageable pageable);
+  Page<Exchange> findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(
+      Long memberId, Pageable pageable);
 }
