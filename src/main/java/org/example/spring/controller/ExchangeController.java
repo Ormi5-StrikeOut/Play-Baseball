@@ -31,9 +31,10 @@ public class ExchangeController {
   /**
    * 중고거래 게시물을 추가합니다.
    *
+   * @param request 회원 여부 확인용 http request
    * @param exchangeAddRequestDto 게시글 추가 요청 자료 DTO
    * @param images 게시글에 포함된 이미지
-   * @return 생성된 게시물 응답 DTO
+   * @return 처리 결과에 따른 응답을 반환합니다.
    */
   @PostMapping
   public ResponseEntity<ApiResponseDto<ExchangeResponseDto>> addExchange(
@@ -55,9 +56,11 @@ public class ExchangeController {
   /**
    * 기존에 작성되어 있던 중고거래 게시물 내용을 수정합니다.
    *
+   * @param request 수정 권한 확인용 http request
    * @param id DB에 등록된 수정할 게시글 id
-   * @param request 게시글 수정 요청 자료 DTO
-   * @return 수정된 게시물 응답 DTO
+   * @param exchangeModifyRequestDto 수정할 게시물 내용
+   * @param images 수정할 게시물 이미지
+   * @return 처리 결과에 따른 응답을 반환합니다.
    */
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponseDto<ExchangeResponseDto>> modifyExchange(
@@ -80,6 +83,7 @@ public class ExchangeController {
   /**
    * 기존에 작성되어 있던 중고거래 게시물을 삭제합니다. 삭제는 Soft delete 방식으로 이루어지며, DB에 등록된 deleted_at 내용에 값을 추가합니다.
    *
+   * @param request 삭제 처리 권한 확인용 http request
    * @param id DB에 등록된 삭제할 게시글 id
    * @return 응답에 상태에 따른 ResponseDto
    */
@@ -138,15 +142,16 @@ public class ExchangeController {
   }
 
   /**
-   * 특정 게시물 1개를 조회합니다.
+   * 특정 게시물 1개 및 작성자 여부를 조회합니다.
    *
+   * @param request 작성자 여부 조회
    * @param id 게시물 id
-   * @return 게시물 id와 일치하는 게시물 정보
+   * @return 게시물 id와 일치하는 게시물 정보와 작성자 여부
    */
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponseDto<ExchangeDetailResponseDto>> getExchangeDetail(
-      @PathVariable Long id) {
-    ExchangeDetailResponseDto response = exchangeService.getExchangeDetail(id);
+      HttpServletRequest request, @PathVariable Long id) {
+    ExchangeDetailResponseDto response = exchangeService.getExchangeDetail(request, id);
     return ResponseEntity.status(HttpStatus.OK)
         .body(ApiResponseDto.success("회원의 게시물 조회 성공", response));
   }

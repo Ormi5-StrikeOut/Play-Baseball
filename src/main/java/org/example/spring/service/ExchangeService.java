@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
+import org.example.spring.domain.exchange.dto.ExchangeDetailResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
@@ -234,14 +235,39 @@ public class ExchangeService {
   /**
    * id에 해당하는 게시물 1개를 조회합니다.
    *
+   * @param request 요청이 들어온 http 정보로 요청한 자가 게시글을 작성한 본인인지 판단 여부를 위해 사용
    * @param id 게시물 id
-   * @return 게시물이 있고 삭제처리가 되어있지 않은 경우 게시물 정보를 반환합니다.
+   * @return 게시물이 있고 삭제처리가 되어있지 않은 경우 게시물 정보와 작성자 여부를 반환합니다.
    */
   @Transactional
-  public ExchangeResponseDto getExchangeDetail(Long id) {
-    return ExchangeResponseDto.fromExchange(
+  public ExchangeDetailResponseDto getExchangeDetail(HttpServletRequest request, Long id) {
+
+    return ExchangeDetailResponseDto.fromExchange(
+            exchangeRepository
+                .findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new EntityNotFoundException("작성된 글이 아니거나 삭제되었습니다.")))
+        .toBuilder()
+        .isWriter(isWriter(request, id))
+        .build();
+  }
+
+  /**
+   * 게시물 상세 조회 영역에서 작성자가 본인 글을 조회했는지 판단합니다.
+   *
+   * @param request 요청한 자의 정보
+   * @param id 대상 글 id
+   * @return 본인이 작성한 글로 판단될 경우 true를 반환합니다.
+   */
+  private boolean isWriter(HttpServletRequest request, Long id) {
+    Member member =
+        jwtTokenValidator.validateTokenAndGetMember(
+            jwtTokenValidator.extractTokenFromHeader(request));
+
+    Exchange exchange =
         exchangeRepository
             .findByIdAndDeletedAtIsNull(id)
-            .orElseThrow(() -> new EntityNotFoundException("작성된 글이 아니거나 삭제되었습니다.")));
+            .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
+
+    return member.equals(exchange.getMember());
   }
 }
