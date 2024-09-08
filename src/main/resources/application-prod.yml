@@ -68,6 +68,9 @@ jwt:
   email-verification:
     expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
 
+app:
+  base-url: https://api.ioshane.com
+
 #server:
 #  forward-headers-strategy: native
 #  tomcat:
