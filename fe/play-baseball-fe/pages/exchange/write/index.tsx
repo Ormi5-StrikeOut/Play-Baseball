@@ -1,41 +1,27 @@
 import React, { useState } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Typography,
-} from "@mui/material";
+import { useRouter } from "next/router";
+import { Box, TextField, Button, Typography } from "@mui/material";
 import Image from "next/image";
-import { SelectChangeEvent } from "@mui/material/Select";
+import axios from "axios";
+import { EXCHANGE_ADD } from "@/constants/endpoints";
 
 const PostCreationForm = () => {
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
-  const [mainImageIndex, setMainImageIndex] = useState<number | null>(null);
+  const router = useRouter();
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
-  };
-
-  const handleCategoryChange = (event: SelectChangeEvent<string>) => {
-    setCategory(event.target.value);
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPrice(event.target.value);
   };
 
-  const handleDescriptionChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setDescription(event.target.value);
+  const handleContentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setContent(event.target.value);
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,26 +31,58 @@ const PostCreationForm = () => {
     }
   };
 
-  const handleImageClick = (index: number) => {
-    setMainImageIndex(index);
-  };
-
   const handleImageDelete = (index: number) => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-    if (mainImageIndex === index) {
-      setMainImageIndex(null);
-    }
   };
 
-  const handleSubmit = () => {
-    console.log({
+  const handleSubmit = async () => {
+    const formData = new FormData();
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("Authorization")
+        : null;
+    const jsonData = {
       title,
-      category,
       price,
-      description,
-      images,
-      mainImageIndex,
+      content,
+    };
+    formData.append(
+      "exchangeRequestDto",
+      new Blob([JSON.stringify(jsonData)], { type: "application/json" })
+    );
+
+    images.forEach((image) => {
+      formData.append("images", image);
     });
+
+    try {
+      const response = await axios.post(EXCHANGE_ADD, formData, {
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      });
+      router.push({
+        pathname: "/result",
+        query: {
+          isSuccess: "true",
+          message: `글이 정상적으로 작성되었습니다. ${title}`,
+          buttonText: "작성한 글 확인하기",
+          buttonAction: `/exchanges/${response.data.id}`,
+        },
+      });
+    } catch (error) {
+      router.push({
+        pathname: "/result",
+        query: {
+          isSuccess: "false",
+          message: `통신 오류가 발생했습니다: ${error}`,
+          buttonText: "다시 시도하기",
+          buttonAction: "/",
+        },
+      });
+    }
   };
 
   return (
@@ -80,26 +98,13 @@ const PostCreationForm = () => {
     >
       <Typography variant="h5">상품 등록</Typography>
       <TextField label="제목" value={title} onChange={handleTitleChange} />
-      <FormControl>
-        <InputLabel id="category-label">카테고리</InputLabel>
-        <Select
-          labelId="category-label"
-          value={category}
-          onChange={handleCategoryChange}
-        >
-          <MenuItem value="전자기기">전자기기</MenuItem>
-          <MenuItem value="가구">가구</MenuItem>
-          <MenuItem value="의류">의류</MenuItem>
-          {/* 필요한 카테고리 추가 */}
-        </Select>
-      </FormControl>
       <TextField label="가격" value={price} onChange={handlePriceChange} />
       <TextField
         label="설명"
         multiline
         rows={4}
-        value={description}
-        onChange={handleDescriptionChange}
+        value={content}
+        onChange={handleContentChange}
       />
 
       <Box>
@@ -119,24 +124,7 @@ const PostCreationForm = () => {
                 alt={`상품 이미지 ${index + 1}`}
                 layout="fill"
                 objectFit="cover"
-                onClick={() => handleImageClick(index)}
-                style={{
-                  border: mainImageIndex === index ? "2px solid blue" : "none",
-                }}
               />
-              {mainImageIndex === index && (
-                <Typography
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    backgroundColor: "white",
-                    padding: "2px 4px",
-                  }}
-                >
-                  대표이미지
-                </Typography>
-              )}
               <Button
                 variant="contained"
                 color="secondary"
