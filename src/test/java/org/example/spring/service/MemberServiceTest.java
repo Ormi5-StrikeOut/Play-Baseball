@@ -97,7 +97,7 @@ class MemberServiceTest {
         when(memberRepository.existsByEmail(anyString())).thenReturn(false);
         when(memberRepository.existsByNickname(anyString())).thenReturn(false);
         when(memberRepository.existsByPhoneNumber(anyString())).thenReturn(false);
-        when(emailService.generateEmailVerificationToken(anyString())).thenReturn("verificationToken");
+        when(emailService.generateEmailToken(anyString())).thenReturn("verificationToken");
 
         when(memberRepository.save(any(Member.class))).thenReturn(savedMember);
 
@@ -115,7 +115,7 @@ class MemberServiceTest {
         verify(memberRepository).existsByEmail(validMemberDto.getEmail());
         verify(memberRepository).existsByNickname(validMemberDto.getNickname());
         verify(memberRepository).existsByPhoneNumber(validMemberDto.getPhoneNumber());
-        verify(emailService).generateEmailVerificationToken(validMemberDto.getEmail());
+        verify(emailService).generateEmailToken(validMemberDto.getEmail());
         verify(emailService).sendVerificationEmail(validMemberDto.getEmail(), "verificationToken");
     }
 

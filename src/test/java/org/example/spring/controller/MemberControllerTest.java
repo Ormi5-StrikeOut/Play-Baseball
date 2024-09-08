@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collections;
+import java.util.Objects;
 import org.example.spring.common.ApiResponseDto;
 import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.MemberRole;
@@ -33,7 +34,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
 
 @ExtendWith(MockitoExtension.class)
 class MemberControllerTest {
@@ -67,7 +67,7 @@ class MemberControllerTest {
         ResponseEntity<ApiResponseDto<MemberResponseDto>> response = memberController.registerMember(requestDto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("회원가입에 성공했습니다.", response.getBody().getMessage());
+        assertEquals("회원가입에 성공했습니다.", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals(responseDto, response.getBody().getData());
         verify(memberService, times(1)).registerMember(any(MemberJoinRequestDto.class));
     }
@@ -80,7 +80,7 @@ class MemberControllerTest {
         ResponseEntity<ApiResponseDto<Page<MemberResponseDto>>> response = memberController.getAllMembers(0, 10);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("회원 목록 조회 성공", response.getBody().getMessage());
+        assertEquals("회원 목록 조회 성공", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals(page, response.getBody().getData());
     }
 
@@ -98,7 +98,7 @@ class MemberControllerTest {
         ResponseEntity<ApiResponseDto<MemberResponseDto>> response = memberController.getMyMember(mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("회원 조회 성공:", response.getBody().getMessage());
+        assertEquals("회원 조회 성공:", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals(responseDto, response.getBody().getData());
     }
 
@@ -111,7 +111,7 @@ class MemberControllerTest {
         ResponseEntity<ApiResponseDto<Void>> result = memberController.deleteMember(request, response);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertEquals("회원 삭제 성공", result.getBody().getMessage());
+        assertEquals("회원 삭제 성공", Objects.requireNonNull(result.getBody()).getMessage());
         assertNull(result.getBody().getData());
         verify(memberService, times(1)).deleteMember(any(HttpServletRequest.class), any(HttpServletResponse.class));
     }
@@ -137,7 +137,7 @@ class MemberControllerTest {
         ResponseEntity<ApiResponseDto<MemberResponseDto>> response = memberController.modifyMember(mock(HttpServletRequest.class), requestDto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("회원 정보 수정 성공:", response.getBody().getMessage());
+        assertEquals("회원 정보 수정 성공:", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals(responseDto, response.getBody().getData());
     }
 
@@ -160,7 +160,7 @@ class MemberControllerTest {
             mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("회원 권한 수정 성공", response.getBody().getMessage());
+        assertEquals("회원 권한 수정 성공", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals(responseDto, response.getBody().getData());
     }
 
@@ -175,19 +175,19 @@ class MemberControllerTest {
         ResponseEntity<ApiResponseDto<MemberEmailVerifiedResponseDto>> response = memberController.verifyEmail("token");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("이메일 인증이 완료되었습니다.", response.getBody().getMessage());
+        assertEquals("이메일 인증이 완료되었습니다.", Objects.requireNonNull(response.getBody()).getMessage());
         assertEquals(responseDto, response.getBody().getData());
     }
 
     @Test
     void resendVerificationEmail_Success() {
-        doNothing().when(memberService).resendVerificationEmail(anyString());
+        doNothing().when(memberService).resendVerificationEmail(any(HttpServletRequest.class));
 
-        ResponseEntity<ApiResponseDto<Void>> response = memberController.resendVerificationEmail("test@example.com");
+        ResponseEntity<ApiResponseDto<Void>> response = memberController.resendVerificationEmail(mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Verification email resent", response.getBody().getMessage());
+        assertEquals("인증 이메일 재발송이 완료되었습니다.", Objects.requireNonNull(response.getBody()).getMessage());
         assertNull(response.getBody().getData());
-        verify(memberService, times(1)).resendVerificationEmail("test@example.com");
+        verify(memberService, times(1)).resendVerificationEmail(any(HttpServletRequest.class));
     }
 }
