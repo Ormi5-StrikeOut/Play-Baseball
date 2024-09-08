@@ -25,6 +25,7 @@ import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
+import org.example.spring.security.service.AccountManagementService;
 import org.example.spring.security.service.EmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,6 +52,8 @@ class MemberServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtTokenValidator jwtValidator;
+    @Mock
+    private AccountManagementService accountManagementService;
     @Mock
     private EmailService emailService;
     @InjectMocks
@@ -213,13 +216,13 @@ class MemberServiceTest {
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 
         doThrow(new ResourceNotFoundException("Member", "email", "unknown@email.com"))
-            .when(jwtValidator).deactivateAccount(request, response);
+            .when(accountManagementService).deactivateAccount(request, response);
 
         // When & Then
         assertThrows(ResourceNotFoundException.class, () -> memberService.deleteMember(request, response));
 
         // Verify
-        verify(jwtValidator).deactivateAccount(request, response);
+        verify(accountManagementService).deactivateAccount(request, response);
     }
 
     @Test
