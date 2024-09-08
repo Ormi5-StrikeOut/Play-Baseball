@@ -6,6 +6,9 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -31,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -166,6 +170,16 @@ public class MemberService {
      */
     public void deleteMember(HttpServletRequest request, HttpServletResponse response) {
         accountManagementService.deactivateAccount(request, response);
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행
+    public void deleteExpiredAccounts() {
+        Timestamp expirationThreshold = Timestamp.from(Instant.now().minus(Duration.ofDays(3)));
+        List<Member> expiredAccounts = memberRepository.findByDeletedAtBeforeAndDeletedAtIsNotNull(expirationThreshold);
+
+        memberRepository.deleteAll(expiredAccounts);
+
+        log.info("Expired accounts deleted: {}", expiredAccounts.size());
     }
 
     /**
