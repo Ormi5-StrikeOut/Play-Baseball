@@ -13,6 +13,7 @@ import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeDetailResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
+import org.example.spring.domain.exchange.dto.ExchangeNavigationResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
@@ -94,11 +95,11 @@ public class ExchangeService {
    * @return 게시글 목록을 page와 size에 따라 반환
    */
   @Transactional(readOnly = true)
-  public Page<ExchangeResponseDto> getAllExchanges(int page, int size) {
+  public Page<ExchangeNavigationResponseDto> getAllExchanges(int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
-        .map(ExchangeResponseDto::fromExchange);
+        .map(ExchangeNavigationResponseDto::fromExchange);
   }
 
   /**
@@ -107,9 +108,9 @@ public class ExchangeService {
    * @return 삭제 처리하지 않은 최근 개시물 5개를 반환
    */
   @Transactional(readOnly = true)
-  public List<ExchangeResponseDto> getLatestFiveExchanges() {
+  public List<ExchangeNavigationResponseDto> getLatestFiveExchanges() {
     return exchangeRepository.findTop5ByDeletedAtIsNullOrderByCreatedAtDesc().stream()
-        .map(ExchangeResponseDto::fromExchange)
+        .map(ExchangeNavigationResponseDto::fromExchange)
         .collect(Collectors.toList());
   }
 
@@ -122,19 +123,47 @@ public class ExchangeService {
    * @return 게시글 목록을 page와 size에 따라 반환
    */
   @Transactional(readOnly = true)
-  public Page<ExchangeResponseDto> getUserExchanges(Long memberId, int page, int size) {
+  public Page<ExchangeNavigationResponseDto> getUserExchanges(Long memberId, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(memberId, pageable)
-        .map(ExchangeResponseDto::fromExchange);
+        .map(ExchangeNavigationResponseDto::fromExchange);
   }
 
+  /**
+   * 제목을 포함하고 있는 삭제되지 않은 게시물 모두 조회합니다.
+   *
+   * @param title 검색에 포함할 제목 키워드
+   * @param page 게시물이 포함된 페이지
+   * @param size 한 번에 렌더링할 게시물 개수
+   * @return 제목이 키워드에 포함되어있는 게시물 목록을 page와 size에 따라 반환
+   */
   @Transactional
-  public Page<ExchangeResponseDto> getExchangesByTitleContaining(String title, int page, int size) {
+  public Page<ExchangeNavigationResponseDto> getExchangesByTitleContaining(
+      String title, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(title, pageable)
-        .map(ExchangeResponseDto::fromExchange);
+        .map(ExchangeNavigationResponseDto::fromExchange);
+  }
+
+  /**
+   * id에 해당하는 게시물 1개를 상세 조회합니다.
+   *
+   * @param request 요청이 들어온 http 정보로 요청한 자가 게시글을 작성한 본인인지 판단 여부를 위해 사용
+   * @param id 게시물 id
+   * @return 게시물이 있고 삭제처리가 되어있지 않은 경우 게시물 정보와 작성자 여부를 반환합니다.
+   */
+  @Transactional
+  public ExchangeDetailResponseDto getExchangeDetail(HttpServletRequest request, Long id) {
+
+    return ExchangeDetailResponseDto.fromExchange(
+            exchangeRepository
+                .findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new EntityNotFoundException("작성된 글이 아니거나 삭제되었습니다.")))
+        .toBuilder()
+        .isWriter(isWriter(request, id))
+        .build();
   }
 
   /**
@@ -230,25 +259,6 @@ public class ExchangeService {
       throw new AuthenticationFailedException(
           "Warning: Access denied. You do not have permission to delete the post.");
     }
-  }
-
-  /**
-   * id에 해당하는 게시물 1개를 조회합니다.
-   *
-   * @param request 요청이 들어온 http 정보로 요청한 자가 게시글을 작성한 본인인지 판단 여부를 위해 사용
-   * @param id 게시물 id
-   * @return 게시물이 있고 삭제처리가 되어있지 않은 경우 게시물 정보와 작성자 여부를 반환합니다.
-   */
-  @Transactional
-  public ExchangeDetailResponseDto getExchangeDetail(HttpServletRequest request, Long id) {
-
-    return ExchangeDetailResponseDto.fromExchange(
-            exchangeRepository
-                .findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new EntityNotFoundException("작성된 글이 아니거나 삭제되었습니다.")))
-        .toBuilder()
-        .isWriter(isWriter(request, id))
-        .build();
   }
 
   /**
