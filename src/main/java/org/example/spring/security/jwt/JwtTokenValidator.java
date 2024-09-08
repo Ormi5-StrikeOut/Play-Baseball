@@ -1,14 +1,10 @@
 package org.example.spring.security.jwt;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.time.Duration;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
@@ -16,7 +12,7 @@ import org.example.spring.exception.AccountDeletedException;
 import org.example.spring.exception.InvalidTokenException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
-import org.example.spring.security.service.CookieService;
+import org.example.spring.security.service.TokenBlacklistService;
 import org.example.spring.security.utils.JwtUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -33,47 +29,16 @@ public class JwtTokenValidator {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
-    private final CookieService cookieService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final MemberRepository memberRepository;
-    private final Cache<String, Date> tokenBlacklist;
 
-    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService, CookieService cookieService,
+
+    public JwtTokenValidator(JwtUtils jwtUtils, UserDetailsService userDetailsService, TokenBlacklistService tokenBlacklistService,
         MemberRepository memberRepository) {
         this.jwtUtils = jwtUtils;
         this.userDetailsService = userDetailsService;
-        this.cookieService = cookieService;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.memberRepository = memberRepository;
-        this.tokenBlacklist = Caffeine.newBuilder()
-            .expireAfterWrite(Duration.ofDays(1)) // 토큰을 블랙리스트에 추가한 후 1일 후에 자동으로 제거
-            .maximumSize(10_000)
-            .build();
-    }
-
-    /**
-     * 계정을 비활성화하고 관련 토큰을 무효화합니다.
-     *
-     * @param request  HTTP 요청
-     * @param response HTTP 응답
-     */
-    public void deactivateAccount(HttpServletRequest request, HttpServletResponse response) {
-        String token = extractTokenFromHeader(request);
-        String email = extractUsername(token);
-
-        log.info("Deactivating account for user: {}", email);
-
-        // 1. 사용자 계정 비활성화
-        Member member = memberRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
-        member.updateDeletedAt();
-        memberRepository.save(member);
-
-        // 2. 현재 사용 중인 토큰 무효화
-        addToBlacklist(token);
-
-        // 3. 리프레시 토큰 제거
-        cookieService.removeRefreshTokenCookie(response);
-
-        log.info("Account deactivated successfully for user: {}", email);
     }
 
     /**
@@ -86,6 +51,30 @@ public class JwtTokenValidator {
         return memberRepository.findByEmail(email)
             .map(member -> member.getDeletedAt() == null)
             .orElse(false);
+    }
+
+    /**
+     * JWT 토큰의 유효성을 검증합니다. 토큰이 블랙리스트에 없고, 만료되지 않았으며, 사용자 정보와 일치하는지 확인합니다.
+     *
+     * @param token 검증할 JWT 토큰
+     * @return 토큰이 유효하면 true, 그렇지 않으면 false
+     */
+    public boolean validateToken(String token) {
+        if (tokenBlacklistService.isTokenBlacklisted(token)) {
+            log.debug("Token is blacklisted");
+            return false;
+        }
+
+        try {
+            Claims claims = extractAllClaims(token);
+            return !claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            log.debug("Token has expired");
+            throw e;
+        } catch (Exception e) {
+            log.debug("Token validation failed: {}", e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -125,30 +114,6 @@ public class JwtTokenValidator {
             throw e;
         } catch (Exception e) {
             log.error("Error validating token consistency: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * JWT 토큰의 유효성을 검증합니다. 토큰이 블랙리스트에 없고, 만료되지 않았으며, 사용자 정보와 일치하는지 확인합니다.
-     *
-     * @param token 검증할 JWT 토큰
-     * @return 토큰이 유효하면 true, 그렇지 않으면 false
-     */
-    public boolean validateToken(String token) {
-        if (isTokenBlacklisted(token)) {
-            log.debug("Token is blacklisted");
-            return false;
-        }
-
-        try {
-            Claims claims = extractAllClaims(token);
-            return !claims.getExpiration().before(new Date());
-        } catch (ExpiredJwtException e) {
-            log.debug("Token has expired");
-            throw e;
-        } catch (Exception e) {
-            log.debug("Token validation failed: {}", e.getMessage());
             return false;
         }
     }
@@ -196,34 +161,29 @@ public class JwtTokenValidator {
     }
 
     /**
-     * 토큰이 블랙리스트에 있는지 확인합니다.
+     * JWT 토큰에서 토큰 만료일을 추출합니다.
      *
-     * @param token 확인할 토큰
-     * @return 블랙리스트에 있으면 true, 그렇지 않으면 false
+     * @param token JWT 토큰
+     * @return 토큰 만료일
      */
-    public boolean isTokenBlacklisted(String token) {
-        Date expirationDate = tokenBlacklist.getIfPresent(token);
-        log.debug("Checking if token is blacklisted. Expiration date: {}", expirationDate);
-        return expirationDate != null;
-    }
-
-    /**
-     * 토큰을 블랙리스트에 추가합니다.
-     *
-     * @param token 블랙리스트에 추가할 토큰
-     */
-    public void addToBlacklist(String token) {
+    public Date getTokenExpiration(String token) {
         try {
-            Claims claims = extractAllClaims(token);
-            Date expirationDate = claims.getExpiration();
-            if (expirationDate.after(new Date())) {
-                tokenBlacklist.put(token, expirationDate);
-                log.info("Token added to blacklist. Expires at: {}", expirationDate);
+            return extractAllClaims(token).getExpiration();
+        } catch (ExpiredJwtException e) {
+            if (e.getClaims() != null) {
+                Date expiration = e.getClaims().getExpiration();
+                if (expiration != null) {
+                    return expiration;
+                }
             }
-        } catch (InvalidTokenException e) {
-            log.warn("Attempted to blacklist an invalid token: {}", e.getMessage());
+            log.warn("No valid expiration date found in expired token");
+            return null;
+        } catch (Exception e) {
+            log.error("Error extracting expiration date from token: {}", e.getMessage());
+            return null;
         }
     }
+
 
     /**
      * 요청 헤더에서 토큰을 추출합니다.
