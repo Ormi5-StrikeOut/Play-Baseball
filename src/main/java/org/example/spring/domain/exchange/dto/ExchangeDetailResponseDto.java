@@ -21,6 +21,19 @@ public class ExchangeDetailResponseDto {
   private SalesStatus status;
   private Timestamp updatedAt;
   private List<ExchangeImageResponseDto> images;
+  private boolean isWriter;
+
+  public ExchangeDetailResponseDtoBuilder toBuilder() {
+    return ExchangeDetailResponseDto.builder()
+        .title(this.title)
+        .price(this.price)
+        .regularPrice(this.regularPrice)
+        .content(this.content)
+        .viewCount(this.viewCount)
+        .status(this.status)
+        .updatedAt(this.updatedAt)
+        .images(this.images);
+  }
 
   public static ExchangeDetailResponseDto fromExchange(Exchange exchange) {
     List<ExchangeImageResponseDto> images = new ArrayList<>();
