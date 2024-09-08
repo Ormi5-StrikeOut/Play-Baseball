@@ -44,8 +44,11 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         String message = (accessDeniedException != null && accessDeniedException.getMessage() != null) ? accessDeniedException.getMessage() : "Authentication Failed";
         String path = request.getRequestURI();
 
-        assert accessDeniedException != null;
-        log.debug("Access Denied Error: {}", accessDeniedException.getMessage());
+        if (accessDeniedException != null) {
+            log.debug("Access Denied Error: {}", accessDeniedException.getMessage());
+        } else {
+            log.debug("Access Denied but no exception message.");
+        }
         log.debug("Requested URL: {}", request.getRequestURL());
         log.debug("User Principal: {}", request.getUserPrincipal());
 
