@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.domain.member.Member;
+import org.example.spring.domain.member.MemberRole;
 import org.example.spring.repository.MemberRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -46,7 +47,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // 이메일 인증된 사용자에게 추가 권한 부여
         if (member.isEmailVerified()) {
-            authorities.add(new SimpleGrantedAuthority("VERIFIED_USER"));
+            authorities.add(new SimpleGrantedAuthority(MemberRole.VERIFIED_USER.name()));
         }
 
         return new User(member.getEmail(), member.getPassword(), authorities);
