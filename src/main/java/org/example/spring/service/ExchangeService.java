@@ -43,11 +43,12 @@ public class ExchangeService {
   }
 
   /**
-   * 게시글 추가 로직을 수행합니다. 상세 내용 추가 예정
+   * 게시물을 추가합니다.
    *
-   * @param exchangeAddRequestDto
-   * @param images
-   * @return
+   * @param request 요청이 들어온 http 정보로 요청한 자의 정보와 권한을 검사하기 위해 사용. 비회원은 게시물을 발행할 수 없습니다.
+   * @param exchangeAddRequestDto 작성할 글 정보
+   * @param images 작성할 글에 해당하는 이미지 정보
+   * @return 작성이 정상적으로 진행될 경우 글의 정보를 반환합니다.
    */
   @Transactional
   public ExchangeResponseDto addExchange(
@@ -85,10 +86,11 @@ public class ExchangeService {
   }
 
   /**
-   * 작성된 모든 게시글 대상으로 페이지별로 조회
+   * 모든 게시글 중 삭제하지 않은 글 목록을 조회합니다.
    *
-   * @param page 불러올 페이지를 작성
-   * @return pageable에 해당하는 페이지의 게시글을 리턴합니다.
+   * @param page 게시물이 포함된 페이지
+   * @param size 한 번에 렌더링할 게시물 개수
+   * @return 게시글 목록을 page와 size에 따라 반환
    */
   @Transactional(readOnly = true)
   public Page<ExchangeResponseDto> getAllExchanges(int page, int size) {
@@ -98,7 +100,11 @@ public class ExchangeService {
         .map(ExchangeResponseDto::fromExchange);
   }
 
-  /** 최근 5개 게시글 조회 */
+  /**
+   * 가장 최근에 올라온 글 중 삭제하지 않은 글 5개를 조회합니다.
+   *
+   * @return 삭제 처리하지 않은 최근 개시물 5개를 반환
+   */
   @Transactional(readOnly = true)
   public List<ExchangeResponseDto> getLatestFiveExchanges() {
     return exchangeRepository.findTop5ByDeletedAtIsNullOrderByCreatedAtDesc().stream()
@@ -106,7 +112,14 @@ public class ExchangeService {
         .collect(Collectors.toList());
   }
 
-  /** 특정회원 판매 게시글 조회 */
+  /**
+   * 특정 회원이 작성한 게시글 중 삭제하지 않은 글 목록을 조회합니다.
+   *
+   * @param memberId 대상 회원 id
+   * @param page 게시물이 포함된 페이지
+   * @param size 한 번에 렌더링할 게시물 개수
+   * @return 게시글 목록을 page와 size에 따라 반환
+   */
   @Transactional(readOnly = true)
   public Page<ExchangeResponseDto> getUserExchanges(Long memberId, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
@@ -123,7 +136,15 @@ public class ExchangeService {
         .map(ExchangeResponseDto::fromExchange);
   }
 
-  /** 게시글 수청 요청 응답 DTO 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력 */
+  /**
+   * 게시물을 수정합니다. 삭제처리된 글은 수정할 수 없습니다.
+   *
+   * @param request 요청이 들어온 http 정보로 요청한 자의 정보와 권한을 검사하기 위해 사용. 작성자가 아니라면 수정이 불가능합니다.
+   * @param id 글 id
+   * @param exchangeModifyRequestDto 수정할 글의 정보
+   * @param images 글에 첨부할 이미지
+   * @return 수정이 정상적으로 진행될 경우 수정된 글의 정보를 반환합니다.
+   */
   @Transactional
   public ExchangeResponseDto modifyExchange(
       HttpServletRequest request,
@@ -137,7 +158,9 @@ public class ExchangeService {
             jwtTokenValidator.extractTokenFromHeader(request));
 
     Exchange exchange =
-        exchangeRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
+        exchangeRepository
+            .findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
 
     try {
       if (!member.equals(exchange.getMember())) {
@@ -173,7 +196,12 @@ public class ExchangeService {
     }
   }
 
-  /** 게시글 삭제 요청 게시글을 찾을 수 없는경우 게시글을 찾을수 없습니다. 출력 */
+  /**
+   * 게시물을 삭제합니다. 이미 삭제 처리된 글은 처리하지 않습니다.
+   *
+   * @param request 요청이 들어온 http 정보로 요청한 자의 정보와 권한을 검사하기 위해 사용. 작성자가 아니라면 삭제가 불가능합니다.
+   * @param id 삭제 게시물 대상 id
+   */
   @Transactional
   public void deleteExchange(HttpServletRequest request, Long id) {
 
@@ -183,7 +211,9 @@ public class ExchangeService {
             jwtTokenValidator.extractTokenFromHeader(request));
 
     Exchange exchange =
-        exchangeRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
+        exchangeRepository
+            .findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
 
     try {
       if (!member.equals(exchange.getMember())) {
@@ -202,7 +232,7 @@ public class ExchangeService {
   }
 
   /**
-   * 게시물 단건 조회에 사용합니다.
+   * id에 해당하는 게시물 1개를 조회합니다.
    *
    * @param id 게시물 id
    * @return 게시물이 있고 삭제처리가 되어있지 않은 경우 게시물 정보를 반환합니다.

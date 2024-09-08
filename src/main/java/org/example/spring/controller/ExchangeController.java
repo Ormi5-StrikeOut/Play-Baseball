@@ -80,7 +80,7 @@ public class ExchangeController {
    * 기존에 작성되어 있던 중고거래 게시물을 삭제합니다. 삭제는 Soft delete 방식으로 이루어지며, DB에 등록된 deleted_at 내용에 값을 추가합니다.
    *
    * @param id DB에 등록된 삭제할 게시글 id
-   * @return 삭제된 게시물 응답 DTO
+   * @return 응답에 상태에 따른 ResponseDto
    */
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponseDto<Void>> deleteExchange(
@@ -91,9 +91,11 @@ public class ExchangeController {
   }
 
   /**
-   * 작성되어 있는 모든 게시물을 조회합니다.
+   * 작성된 글 중 삭제처리되지 않은 모든 글 목록을 조회합니다.
    *
-   * @return 작성되어 있는 모든 게시물
+   * @param page 게시물이 포함된 페이지
+   * @param size 한 번에 렌더링할 게시물 개수
+   * @return 게시글 목록을 page와 size에 따라 반환
    */
   @GetMapping
   public ResponseEntity<ApiResponseDto<Page<ExchangeResponseDto>>> getAllExchanges(
@@ -117,10 +119,12 @@ public class ExchangeController {
   }
 
   /**
-   * 특정 회원이 작성한 게시물을 조회합니다.
+   * 특정 회원이 작성한 게시물 목록을 조회합니다.
    *
-   * @param memberId 특정 회원 id
-   * @return memberId와 일치하는 게시글 목록
+   * @param memberId 대상 회원 id
+   * @param page 게시물이 포함된 페이지
+   * @param size 한 번에 렌더링할 게시물 개수
+   * @return memberId와 일치하는 게시글 목록을 page와 size에 따라 반환
    */
   @GetMapping("/{memberId}")
   public ResponseEntity<ApiResponseDto<Page<ExchangeResponseDto>>> getMyExchanges(
