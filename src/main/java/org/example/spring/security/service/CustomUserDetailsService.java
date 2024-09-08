@@ -39,9 +39,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Member member = memberRepository.findByEmail(username)
             .orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾지 못했습니다: " + username));
+
         List<GrantedAuthority> authorities = Stream.of(member.getRole())
             .map(role -> new SimpleGrantedAuthority(role.name())).collect(
                 Collectors.toList());
+
+        // 이메일 인증된 사용자에게 추가 권한 부여
+        if (member.isEmailVerified()) {
+            authorities.add(new SimpleGrantedAuthority("VERIFIED_USER"));
+        }
+
         return new User(member.getEmail(), member.getPassword(), authorities);
     }
 }
