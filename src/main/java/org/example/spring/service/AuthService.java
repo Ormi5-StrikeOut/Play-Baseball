@@ -2,6 +2,7 @@ package org.example.spring.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
@@ -15,6 +16,7 @@ import org.example.spring.repository.MemberRepository;
 import org.example.spring.security.service.CookieService;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
+import org.example.spring.security.service.TokenBlacklistService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,6 +35,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtTokenValidator jwtTokenValidator;
+    private final TokenBlacklistService tokenBlacklistService;
     private final CookieService cookieService;
     private final MemberRepository memberRepository;
 
@@ -83,7 +86,8 @@ public class AuthService {
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String token = jwtTokenValidator.extractTokenFromHeader(request);
         if (token != null) {
-            jwtTokenValidator.addToBlacklist(token);
+            Date tokenExpiration = jwtTokenValidator.getTokenExpiration(token);
+            tokenBlacklistService.addToBlacklist(token, tokenExpiration);
             log.debug("Token added to blacklist: {}", token);
         } else {
             log.warn("No token found in request during logout");
