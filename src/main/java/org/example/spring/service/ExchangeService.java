@@ -157,12 +157,24 @@ public class ExchangeService {
   @Transactional
   public ExchangeDetailResponseDto getExchangeDetail(HttpServletRequest request, Long id) {
 
+    Exchange exchange =
+        exchangeRepository
+            .findByIdAndDeletedAtIsNull(id)
+            .orElseThrow(() -> new EntityNotFoundException("작성된 글이 아니거나 삭제되었습니다."));
+
+    Pageable pageable = PageRequest.of(0, 3);
+    List<ExchangeNavigationResponseDto> recentExchangesByMember =
+        exchangeRepository
+            .findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(
+                exchange.getMember().getId(), pageable)
+            .map(ExchangeNavigationResponseDto::fromExchange)
+            .getContent();
+
+    boolean isWriter = isWriter(request, id);
+
     return ExchangeDetailResponseDto.fromExchange(
-            exchangeRepository
-                .findByIdAndDeletedAtIsNull(id)
-                .orElseThrow(() -> new EntityNotFoundException("작성된 글이 아니거나 삭제되었습니다.")))
+            exchange, recentExchangesByMember, isWriter)
         .toBuilder()
-        .isWriter(isWriter(request, id))
         .build();
   }
 
