@@ -83,7 +83,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
                 log.debug("Authentication successful without token refresh");
             } catch (ExpiredJwtException e) {
                 log.debug("ExpiredJwtException caught, attempting to refresh token");
-                authentication = jwtAuthenticationService.refreshAccessToken(refreshToken, accessToken, request, response);
+                authentication = jwtAuthenticationService.refreshAccessToken(refreshToken, request, response);
                 tokenRefreshed = true;
                 log.debug("Token refreshed successfully, tokenRefreshed set to true");
             }
