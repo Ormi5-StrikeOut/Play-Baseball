@@ -65,8 +65,6 @@ class MemberServiceTest {
 
     private String encodedPassword;
 
-    private HttpServletRequest request;
-
     @BeforeEach
     void setUp() {
         validMemberDto = MemberJoinRequestDto.builder()
