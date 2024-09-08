@@ -145,4 +145,22 @@ public class ExchangeController {
     return ResponseEntity.status(HttpStatus.OK)
         .body(ApiResponseDto.success("회원의 게시물 조회 성공", response));
   }
+
+  /**
+   * 제목에 대한 검색 기능입니다. 제목이 키워드에 포함되어있는 게시물 목록을 조회합니다.
+   *
+   * @param keyword 검색에 사용할 키워드.
+   * @param page 게시물이 포함된 페이지
+   * @param size 한 번에 렌더링할 게시물 개수
+   * @return 제목이 키워드에 포함되어있는 게시물 목록을 page와 size에 따라 반환
+   */
+  @GetMapping("/search")
+  public ResponseEntity<ApiResponseDto<Page<ExchangeResponseDto>>> getExchangesByTitleContaining(
+      @RequestParam(required = false, defaultValue = "") String keyword,
+      @RequestParam(required = false, defaultValue = PAGE_DEFAULT) int page,
+      @RequestParam(required = false, defaultValue = PAGE_SIZE_DEFAULT) int size) {
+    Page<ExchangeResponseDto> responses =
+        exchangeService.getExchangesByTitleContaining(keyword, page, size);
+    return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDto.success("검색 성공", responses));
+  }
 }
