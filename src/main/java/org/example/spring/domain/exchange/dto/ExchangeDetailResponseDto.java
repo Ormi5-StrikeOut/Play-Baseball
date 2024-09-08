@@ -23,18 +23,12 @@ public class ExchangeDetailResponseDto {
   private List<ExchangeImageResponseDto> images;
 
   public static ExchangeDetailResponseDto fromExchange(Exchange exchange) {
-    // 이미지가 없을 경우 기본 이미지 url 변환
-    String defaultImageUrl =
-        "http://localhost:8080/uploads/c2ba53a3-c5d2-458d-beea-584384ad88c1_ad.jpg";
-
     List<ExchangeImageResponseDto> images = new ArrayList<>();
     if (!exchange.getImages().isEmpty()) {
       images =
           exchange.getImages().stream()
               .map(ExchangeImageResponseDto::fromImage)
               .collect(Collectors.toList());
-    } else {
-      images = List.of(ExchangeImageResponseDto.builder().url(defaultImageUrl).build());
     }
 
     return ExchangeDetailResponseDto.builder()
