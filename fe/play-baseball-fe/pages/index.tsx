@@ -12,7 +12,7 @@ import Link from "next/link";
 import SearchBar from "../components/SearchBar";
 import axios from "axios";
 import { EXCHANGE } from "@/constants/endpoints";
-import debounce from "lodash/debounce"; // lodash를 올바르게 import
+import debounce from "lodash/debounce";
 
 interface Item {
   id: number;
