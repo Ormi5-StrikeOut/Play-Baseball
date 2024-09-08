@@ -48,7 +48,8 @@ public class AuthService {
      */
     public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
         try {
-            log.info("Attempting login for user: {}", loginRequestDto.email());
+            log.debug("Attempting login for user: {}", loginRequestDto.email());
+            log.debug("Attempting login for user: {}", loginRequestDto.password());
 
             if (!jwtTokenValidator.isAccountActive(loginRequestDto.email())) {
                 log.warn("Login attempt for deleted account: {}", loginRequestDto.email());
@@ -64,15 +65,15 @@ public class AuthService {
             setTokensInResponse(response, accessToken, refreshToken);
             updateMemberLastLoginDate(loginRequestDto.email());
 
-            log.info("User logged in successfully: {}", loginRequestDto.email());
+            log.debug("User logged in successfully: {}", loginRequestDto.email());
             return createLoginResponse(authentication);
         } catch (AccountDeletedException e) {
             throw e;
         } catch (BadCredentialsException e) {
-            log.warn("Login failed for user {}: Bad credentials", loginRequestDto.email());
+            log.debug("Login failed for user {}: Bad credentials", loginRequestDto.email());
             throw new InvalidCredentialsException("Invalid email or password");
         } catch (Exception e) {
-            log.error("Login failed for user {}: {}", loginRequestDto.email(), e.getMessage());
+            log.debug("Login failed for user {}: {}", loginRequestDto.email(), e.getMessage());
             throw new AuthenticationFailedException("Authentication failed. Please try again.");
         }
     }
@@ -90,7 +91,7 @@ public class AuthService {
             tokenBlacklistService.addToBlacklist(token, tokenExpiration);
             log.debug("Token added to blacklist: {}", token);
         } else {
-            log.warn("No token found in request during logout");
+            log.debug("No token found in request during logout");
         }
         cookieService.removeRefreshTokenCookie(response);
 
@@ -98,7 +99,7 @@ public class AuthService {
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Expires", "0");
 
-        log.info("User logged out successfully");
+        log.debug("User logged out successfully");
     }
 
 
