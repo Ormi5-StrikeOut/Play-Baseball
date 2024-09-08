@@ -52,8 +52,9 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/playBaseballServer-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/$EC2_USER/playBaseballServer.jar
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
+          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/playBaseballServer-0.0.1-SNAPSHOT.jar ubuntu@$EC2_HOST:/home/ubuntu/playBaseballServer.jar
+          scp -i private_key.pem -o StrictHostKeyChecking=no .env ubuntu@$EC2_HOST:/home/ubuntu/.env
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST "
             if pgrep java; then
               pkill java
               sleep 5
