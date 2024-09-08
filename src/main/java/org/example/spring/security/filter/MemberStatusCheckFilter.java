@@ -35,6 +35,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         String method = request.getMethod();
+        log.debug("Processing request: {} {}", method, path);
 
         // 공개 엔드포인트 처리
         if (isPublicEndpoint(path, method)|| response.isCommitted()) {
@@ -47,6 +48,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
             try {
                 if (jwtTokenValidator.validateToken(token)) {
                     Member member = jwtTokenValidator.getMemberFromToken(token);
+                    log.debug("Member: {}, Role: {}, EmailVerified: {}", member.getEmail(), member.getRole(), member.isEmailVerified());
 
                     if (member.getDeletedAt() != null) {
                         handleDeletedUser(response);
@@ -69,6 +71,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
                             return;
                         }
                     }
+                    log.debug("Member passed all checks in MemberStatusCheckFilter");
                 }
             } catch (AccountDeletedException e) {
                 handleDeletedUser(response);
