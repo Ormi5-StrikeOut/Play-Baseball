@@ -15,10 +15,11 @@ import { EXCHANGE } from "@/constants/endpoints";
 import debounce from "lodash/debounce";
 
 interface Item {
-  id: number;
   title: string;
   price: number;
+  url: string;
   imageUrl: string;
+  updatedAt: string;
 }
 
 const MainPage: React.FC = () => {
@@ -37,10 +38,11 @@ const MainPage: React.FC = () => {
     try {
       const response = await axios.get(`${EXCHANGE}?page=${pageNumber}`);
       const newItems = response.data.data.content.map((item: any) => ({
-        id: item.id,
         title: item.title,
         price: item.price,
-        imageUrl: item.images[0]?.url,
+        url: item.url,
+        imageUrl: item.imageUrl,
+        updatedAt: item.updatedAt,
       }));
       setItems((prevItems) => [...prevItems, ...newItems]);
       setHasMore(!response.data.data.last);
