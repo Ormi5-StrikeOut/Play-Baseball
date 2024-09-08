@@ -17,6 +17,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
@@ -113,5 +114,12 @@ public class GlobalExceptionHandler {
         // 다른 리소스에 대한 처리
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(ApiResponseDto.error("요청한 리소스를 찾을 수 없습니다."));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiResponseDto<Void>> handleMultipartException(MultipartException ex) {
+        log.error("Multipart request processing failed", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponseDto.error("파일 업로드 처리 중 오류가 발생했습니다."));
     }
 }
