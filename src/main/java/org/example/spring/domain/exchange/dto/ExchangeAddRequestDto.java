@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ExchangeAddRequestDto {
-  private final String title;
-  private final int price;
-  private final String content;
+	private final String title;
+	private final int price;
+	private final String content;
 }
