@@ -16,10 +16,11 @@ import SearchIcon from "@mui/icons-material/Search";
 import Link from "next/link";
 import axios from "axios";
 import { MEMBER_LOGOUT, SERVER_URL } from "@/constants/endpoints";
+import SearchBar from "./SearchBar";
+import Wrapper from "./Wrapper";
 
-const Header = () => {
+const Header: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const router = useRouter();
 
   useEffect(() => {
@@ -72,42 +73,14 @@ const Header = () => {
       });
   };
 
-  const handleSearch = () => {
-    if (searchQuery.trim() !== "") {
+  const handleSearch = (input: string) => {
       // 검색 API 호출 로직을 여기에 추가하세요.
-      console.log(`Searching for: ${searchQuery}`);
-      // router.push(`/search?query=${searchQuery}`);
-    }
-  };
-
-  // 엔터 키 처리 함수
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
+  }
 
   return (
-    <AppBar
-      position="static"
-      elevation={0}
-      sx={{ bgcolor: "#F5F5F5", height: "clamp(80px, 8vh, 130px)" }}
-    >
-      <Container
-        maxWidth="lg"
-        sx={{
-          height: "100%",
-          mx: "auto",
-          px: { xs: 2, sm: 3, md: 5 }, // 작은 화면에서는 패딩을 좀 더 줌
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <Wrapper>
         <Toolbar
           sx={{
-            width: "100%",
-            maxWidth: { xs: "100%", sm: "100%", md: "100%" }, // 반응형으로 넓이 조정
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -138,23 +111,7 @@ const Header = () => {
               mx: 2, // 간격 조정
             }}
           >
-            <TextField
-              variant="outlined"
-              placeholder="검색어를 입력하세요"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleKeyDown} // 엔터키 처리
-              sx={{ width: "100%", bgcolor: "#F9F9F9" }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={handleSearch}>
-                      <SearchIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+            <SearchBar onSearch={handleSearch}></SearchBar>
           </Box>
 
           <Box sx={{ display: "flex", gap: 2 }}>
@@ -182,15 +139,14 @@ const Header = () => {
                 채팅하기
               </Button>
             </Link>
-            <Link href="/profile" passHref>
+            <Link href="/my" passHref>
               <Button sx={{ color: "#000", fontFamily: "Pretendard" }}>
                 마이페이지
               </Button>
             </Link>
           </Box>
         </Toolbar>
-      </Container>
-    </AppBar>
+      </Wrapper>
   );
 };
 

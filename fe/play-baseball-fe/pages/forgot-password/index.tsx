@@ -6,6 +6,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import FormControl from "@mui/material/FormControl";
 import Link from "@mui/material/Link";
+import Wrapper from '../../components/Wrapper'
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -18,49 +19,51 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h5" gutterBottom>
-          비밀번호 찾기
-        </Typography>
-        <Typography variant="body1" align="center" gutterBottom>
-          가입한 이메일을 입력해 주세요.
-          <br />
-          이메일을 통해 비밀번호 변경 링크가 전송됩니다.
-        </Typography>
-
-        <FormControl fullWidth margin="normal">
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            value={email}
-            onChange={handleEmailChange}
-          />
-        </FormControl>
-
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={handleResetPassword}
+    <Wrapper>
+      <Container maxWidth="sm">
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
         >
-          변경 링크 전송하기
-        </Button>
+          <Typography variant="h5" gutterBottom>
+            비밀번호 찾기
+          </Typography>
+          <Typography variant="body1" align="center" gutterBottom>
+            가입한 이메일을 입력해 주세요.
+            <br />
+            이메일을 통해 비밀번호 변경 링크가 전송됩니다.
+          </Typography>
 
-        <Box mt={2} display="flex" justifyContent="center" alignItems="center">
-          <Link href="/login" variant="body2" sx={{ mx: 2 }}>
-            로그인 페이지로 이동하기
-          </Link>
+          <FormControl fullWidth margin="normal">
+            <TextField
+              label="Email"
+              variant="outlined"
+              fullWidth
+              value={email}
+              onChange={handleEmailChange}
+            />
+          </FormControl>
+
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleResetPassword}
+          >
+            변경 링크 전송하기
+          </Button>
+
+          <Box mt={2} display="flex" justifyContent="center" alignItems="center">
+            <Link href="/login" variant="body2" sx={{ mx: 2 }}>
+              로그인 페이지로 이동하기
+            </Link>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </Wrapper>
   );
 };
 
