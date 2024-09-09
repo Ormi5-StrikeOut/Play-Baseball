@@ -32,6 +32,11 @@ interface RecentExchange {
   updatedAt: string;
 }
 
+interface ApiResponse<T> {
+  message: string;
+  data: T;
+}
+
 interface ExchangeDetailResponseDto {
   title: string;
   price: number;
@@ -64,15 +69,14 @@ const ItemDetail: React.FC = () => {
     const fetchExchangeData = async () => {
       if (!id) return; // id가 없는 경우 일찍 반환
       try {
-        const response = await axios.get<ExchangeDetailResponseDto>(
-          `${EXCHANGE}/${id}`,
-          {
-            headers: {
-              Authorization: token,
-            },
-            withCredentials: true,
-          }
-        );
+        const response = await axios.get<
+          ApiResponse<ExchangeDetailResponseDto>
+        >(`${EXCHANGE}/${id}`, {
+          headers: {
+            Authorization: token,
+          },
+          withCredentials: true,
+        });
         console.log(response);
         setExchangeData(response.data.data);
       } catch (error) {
