@@ -1,5 +1,6 @@
 package org.example.spring.repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import org.example.spring.domain.exchange.Exchange;
 import org.springframework.data.domain.Page;
@@ -20,4 +21,7 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
 
   // 특정 회원이 작성한 게시글 조회
   Page<Exchange> findByMemberIdAndDeletedAtIsNull(Long memberId, Pageable pageable);
+
+  // reviewedAt 필드가 주어진 두 Timestamp 사이에 있는 Exchange를 조회
+  List<Exchange> findByReviewedAtBetween(Timestamp startTimestamp, Timestamp endTimestamp);
 }

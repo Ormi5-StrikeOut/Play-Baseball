@@ -73,6 +73,9 @@ public class ReviewService {
         Review review = createReviewRequest.toEntity(exchange, member);
         Review savedReview = reviewRepository.save(review);
 
+        exchange.markAsReviewed();
+        exchangeRepository.save(exchange);
+
         if(images != null && !images.isEmpty()) {
             if(images.size() > MAX_IMAGES) {
                 throw new IllegalArgumentException("리뷰 이미지는 최대 " + MAX_IMAGES + "장까지 등록 가능합니다.");

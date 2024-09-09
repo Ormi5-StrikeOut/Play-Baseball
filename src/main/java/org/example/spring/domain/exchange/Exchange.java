@@ -68,6 +68,13 @@ public class Exchange {
   @OneToMany(mappedBy = "exchange", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ExchangeImage> images = new ArrayList<>();
 
+  @Column(name = "reviewed_at")
+  private Timestamp reviewedAt;
+
+  public void markAsReviewed() {
+    this.reviewedAt = new Timestamp(System.currentTimeMillis());
+  }
+
   public void addImage(ExchangeImage image) {
     if (images == null) {
       images = new ArrayList<>();

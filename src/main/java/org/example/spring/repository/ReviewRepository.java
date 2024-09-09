@@ -20,4 +20,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * @return         특정 회원의 리뷰 목록 (페이지 단위)
      */
     Page<Review> findByWriter_Id(Long writerId, Pageable pageable);
+
+    /**
+     * 주어진 Exchange의 ID로 해당 리뷰를 찾습니다.
+     *
+     * @param exchangeId 리뷰가 작성된 Exchange의 ID
+     * @return           해당 Exchange의 리뷰 엔티티
+     */
+    Review findByExchange_Id(Long exchangeId);
 }
