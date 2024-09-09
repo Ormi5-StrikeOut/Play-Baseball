@@ -124,8 +124,11 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getServletPath();
+		String method = request.getMethod();
 		boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith)
 			|| path.equals("/")
+			|| ("/api/exchanges".equals(path) && "GET".equalsIgnoreCase(method))
+			|| ("/api/reviews".equals(path) && "GET".equalsIgnoreCase(method))
 			|| path.equals("/favicon.ico");
 		log.debug("Should skip filter for path {}: {}", path, shouldSkip);
 		return shouldSkip;
