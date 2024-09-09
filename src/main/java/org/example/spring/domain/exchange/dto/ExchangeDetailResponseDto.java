@@ -11,6 +11,7 @@ import org.example.spring.domain.exchangeImage.dto.ExchangeImageResponseDto;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.example.spring.domain.reviewOverview.ReviewOverview;
 
 @Getter
 @Builder
@@ -26,9 +27,11 @@ public class ExchangeDetailResponseDto {
 	private final String writer;
 	private final List<ExchangeNavigationResponseDto> recentExchangesByMember;
 	private final String isWriter;
+	private final long reviewCount;
+	private final double average;
 
 	public static ExchangeDetailResponseDto fromExchange(Exchange exchange,
-		List<ExchangeNavigationResponseDto> recentExchangesByMember, boolean isWriter) {
+		List<ExchangeNavigationResponseDto> recentExchangesByMember, boolean isWriter, long reviewCount, double average) {
 		List<ExchangeImageResponseDto> images = new ArrayList<>();
 		if (!exchange.getImages().isEmpty()) {
 			images = exchange.getImages()
@@ -49,6 +52,8 @@ public class ExchangeDetailResponseDto {
 			.writer(exchange.getMember().getNickname())
 			.recentExchangesByMember(recentExchangesByMember)
 			.isWriter(isWriter ? "TRUE" : "FALSE")
+			.reviewCount(reviewCount)
+			.average(average)
 			.build();
 	}
 }
