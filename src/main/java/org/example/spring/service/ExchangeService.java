@@ -16,6 +16,7 @@ import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
 import org.example.spring.exception.AuthenticationFailedException;
+import org.example.spring.repository.ExchangeImageRepository;
 import org.example.spring.repository.ExchangeRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,13 +41,18 @@ public class ExchangeService {
 	private final String EXCHANGE = "/exchange";
 
 	private final ExchangeRepository exchangeRepository;
+	private final ExchangeImageRepository exchangeImageRepository;
 	private final ExchangeImageService exchangeImageService;
+	private final S3Service s3Service;
 	private final JwtTokenValidator jwtTokenValidator;
 
-	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageService exchangeImageService,
-		JwtTokenValidator jwtTokenValidator) {
+	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
+		ExchangeImageService exchangeImageService,
+		JwtTokenValidator jwtTokenValidator, S3Service s3Service) {
 		this.exchangeRepository = exchangeRepository;
+		this.exchangeImageRepository = exchangeImageRepository;
 		this.exchangeImageService = exchangeImageService;
+		this.s3Service = s3Service;
 		this.jwtTokenValidator = jwtTokenValidator;
 	}
 
@@ -78,8 +84,19 @@ public class ExchangeService {
 
 		if (!images.isEmpty()) {
 			for (MultipartFile image : images) {
-				ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, exchange);
-				exchange.addImage(exchangeImage);
+				try {
+					String fileUrl = s3Service.uploadFile(image);
+					ExchangeImage exchangeImage = ExchangeImage.builder()
+						.url(fileUrl)
+						.exchange(exchange)
+						.build();
+
+					exchange.addImage(exchangeImage);
+					exchangeImageRepository.save(exchangeImage);
+				} catch (Exception e) {
+					log.error("이미지 업로드 중 오류 발생: {}", e.getMessage());
+					throw new RuntimeException("Image upload failed");
+				}
 			}
 		}
 
