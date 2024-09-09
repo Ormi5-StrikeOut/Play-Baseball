@@ -77,6 +77,19 @@ file:
 app:
   base-url: https://api.ioshane.com
   fe-url: https://ioshane.com
+  resource-url: https://resource.ioshane.com
+
+cloud:
+  aws:
+    s3:
+      bucket: ${S3_NAME}
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: ${S3_KEY}
+      secretKey: ${S3_SECRET}
+
+
 
 #server:
 #  forward-headers-strategy: native

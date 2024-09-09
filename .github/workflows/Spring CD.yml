@@ -53,6 +53,10 @@ jobs:
           echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> .env
           echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
           echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+          echo "S3_NAME=${{ secrets.S3_NAME }}" >> .env
+          echo "S3_KEY=${{ secrets.S3_KEY }}" >> .env
+          echo "S3_SECRET=${{ secrets.S3_SECRET }}" >> .env
+          
 
       - name: Deploy to EC2
         env:
