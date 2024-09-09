@@ -71,5 +71,7 @@ jobs:
               pkill java
               sleep 5
             fi
+            source /home/ubuntu/.env
             nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &
+          EOF
           rm -f private_key.pem
