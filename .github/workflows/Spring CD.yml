@@ -71,7 +71,10 @@ jobs:
               pkill java
               sleep 5
             fi
-            source /home/ubuntu/.env
+            export \$(cat /home/ubuntu/.env | xargs)
             nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &
+          # 실행 확인을 위한 로그 출력
+            sleep 20
+            tail -n 50 app.log
           EOF
           rm -f private_key.pem
