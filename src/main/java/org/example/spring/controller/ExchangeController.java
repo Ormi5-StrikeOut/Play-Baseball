@@ -150,7 +150,7 @@ public class ExchangeController {
       HttpServletRequest request,
       @PathVariable Long id,
       @RequestPart("exchangeRequestDto") ExchangeModifyRequestDto exchangeModifyRequestDto,
-      @RequestPart("images") List<MultipartFile> images) {
+      @RequestPart(value = "images", required = false) List<MultipartFile> images) {
 
     try {
       ExchangeResponseDto exchangeResponseDto =

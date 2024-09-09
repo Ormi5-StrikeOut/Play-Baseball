@@ -31,7 +31,7 @@ const EditPostForm = () => {
   const [title, setTitle] = useState<string>("");
   const [price, setPrice] = useState<number>(0);
   const [content, setContent] = useState<string>("");
-  const [status, setStatus] = useState<ExchangeStatus>(ExchangeStatus.SALE); // Enum 사용
+  const [status, setStatus] = useState<ExchangeStatus>(ExchangeStatus.SALE);
   const [images, setImages] = useState<(File | ImageData)[]>([]); // 기존 URL 이미지와 파일을 함께 저장
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -41,6 +41,7 @@ const EditPostForm = () => {
       ? localStorage.getItem("Authorization")
       : null;
 
+  // 게시물 데이터를 불러오는 useEffect
   useEffect(() => {
     if (id) {
       const fetchPostData = async () => {
@@ -52,18 +53,17 @@ const EditPostForm = () => {
             withCredentials: true,
           });
 
-          // 받아온 데이터 구조 분해 할당
           const { title, price, content, status, images } = response.data.data;
 
           setTitle(title);
           setPrice(price);
           setContent(content);
-          setStatus(status as ExchangeStatus); // Enum으로 캐스팅
-          setImages(images);
+          setStatus(status as ExchangeStatus);
+          setImages(images); // 서버로부터 받은 이미지들 (ImageData 형식)
         } catch (error) {
           console.error("Error fetching post data:", error);
         }
-        setLoading(true);
+        setLoading(false);
       };
       fetchPostData();
     }
@@ -85,17 +85,20 @@ const EditPostForm = () => {
     setStatus(event.target.value as ExchangeStatus);
   };
 
+  // 새 이미지를 추가하는 함수
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const newImages = Array.from(event.target.files);
-      setImages((prevImages) => [...prevImages, ...newImages]);
+      const newImages = Array.from(event.target.files); // 새로 선택된 파일들을 배열로 변환
+      setImages((prevImages) => [...prevImages, ...newImages]); // 기존 이미지와 새 이미지를 합침
     }
   };
 
+  // 이미지를 삭제하는 함수
   const handleImageDelete = (index: number) => {
-    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index)); // 해당 인덱스의 이미지 삭제
   };
 
+  // 서버로 폼 데이터를 전송하는 함수
   const handleSubmit = async () => {
     const formData = new FormData();
     const jsonData = {
@@ -105,15 +108,16 @@ const EditPostForm = () => {
       status,
     };
 
+    // 폼 데이터에 JSON 데이터 추가
     formData.append(
       "exchangeRequestDto",
       new Blob([JSON.stringify(jsonData)], { type: "application/json" })
     );
 
+    // 이미지 파일만 formData에 추가 (기존 URL 이미지는 제외)
     images.forEach((image) => {
-      // 파일과 기존 URL 이미지를 분리하여 처리
-      if (typeof image !== "string" && !(image as ImageData).url) {
-        formData.append("images", image);
+      if (image instanceof File) {
+        formData.append("images", image); // 새로 추가된 파일만 전송
       }
     });
 
@@ -148,7 +152,7 @@ const EditPostForm = () => {
     }
   };
 
-  if (!loading) {
+  if (loading) {
     return (
       <Wrapper>
         <Container maxWidth="lg" style={{ marginTop: "20px" }}>
@@ -198,13 +202,21 @@ const EditPostForm = () => {
               key={index}
               sx={{ position: "relative", width: 100, height: 100 }}
             >
-              <Image
-                src={image.url}
-                alt={`기존 이미지 ${index + 1}`}
-                layout="fill"
-                objectFit="cover"
-              />
-
+              {image instanceof File ? (
+                <Image
+                  src={URL.createObjectURL(image)} // 새로 업로드한 이미지 미리보기
+                  alt={`새 이미지 ${index + 1}`}
+                  layout="fill"
+                  objectFit="cover"
+                />
+              ) : (
+                <Image
+                  src={image.url} // 서버에서 가져온 기존 이미지
+                  alt={`기존 이미지 ${index + 1}`}
+                  layout="fill"
+                  objectFit="cover"
+                />
+              )}
               <Button
                 variant="contained"
                 color="secondary"
