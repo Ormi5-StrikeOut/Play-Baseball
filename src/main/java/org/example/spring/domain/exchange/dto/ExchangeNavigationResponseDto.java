@@ -14,7 +14,8 @@ public class ExchangeNavigationResponseDto {
   private final String imageUrl;
   private final Timestamp updatedAt;
 
-  public static ExchangeNavigationResponseDto fromExchange(Exchange exchange) {
+  public static ExchangeNavigationResponseDto fromExchange(
+      Exchange exchange, String frontendBaseUrl) {
     String imageUrl = "";
     if (!exchange.getImages().isEmpty()) {
       imageUrl = exchange.getImages().getFirst().getUrl();
@@ -23,7 +24,7 @@ public class ExchangeNavigationResponseDto {
     return ExchangeNavigationResponseDto.builder()
         .title(exchange.getTitle())
         .price(exchange.getPrice())
-        .url("https://www.ioshane.com/exchange/" + exchange.getId())
+        .url(frontendBaseUrl + exchange.getId())
         .imageUrl(imageUrl)
         .updatedAt(exchange.getUpdatedAt())
         .build();
