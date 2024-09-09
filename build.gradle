@@ -31,13 +31,18 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '3.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-mail:3.2.5'
+
+    // HTTP Client
+    implementation ('org.apache.httpcomponents:httpclient:4.5.14') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
 
     // In-Memory-Cache
-    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
     // Bucket4j
-    implementation group: 'com.bucket4j', name: 'bucket4j-core', version: '8.7.0'
+    implementation 'com.bucket4j:bucket4j-core:8.7.0'
 
     // JWT Dependencies
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -46,6 +51,11 @@ dependencies {
 
     // Database
     runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // Cloud Storage
+    implementation ('com.cloudinary:cloudinary-http44:1.39.0') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
 
     // Lombok
     compileOnly 'org.projectlombok:lombok'
@@ -60,6 +70,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // API Documentation
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 }
 
