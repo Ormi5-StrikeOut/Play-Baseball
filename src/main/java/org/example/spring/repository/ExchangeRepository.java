@@ -1,5 +1,6 @@
 package org.example.spring.repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +29,9 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
 
 	// 특정 회원이 작성한 게시글 조회
 	Page<Exchange> findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long memberId, Pageable pageable);
+
+  // reviewedAt 필드가 주어진 두 Timestamp 사이에 있는 Exchange를 조회
+  List<Exchange> findByReviewedAtBetween(Timestamp startTimestamp, Timestamp endTimestamp);
 
 	@Query("SELECT e FROM Exchange e WHERE e.id = :id AND e.deletedAt IS NULL")
 	@EntityGraph(attributePaths = {"member"})

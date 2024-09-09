@@ -23,7 +23,6 @@ import org.example.spring.domain.member.Member;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReviewOverview {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_overview_id")
@@ -34,8 +33,23 @@ public class ReviewOverview {
     private Member member;
 
     @Column(name = "count")
-    private int count;
+    private long count;
 
     @Column(name = "average")
     private double average;
+
+    public void updateReviewStats(long newCount, double newAverage) {
+        long oldCount = this.count;
+        double oldAverage = this.average;
+
+        long totalCount = oldCount + newCount;
+
+        double oldTotalRating = oldAverage * oldCount;
+        double newTotalRating = newAverage * newCount;
+
+        double totalRating = oldTotalRating + newTotalRating;
+
+        this.average = totalRating / totalCount;
+        this.count = totalCount;
+    }
 }
