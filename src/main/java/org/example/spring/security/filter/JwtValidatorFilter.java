@@ -30,7 +30,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/api/members/verify-email", "/api/members/reset-password", "/api/members/request-password-reset", "/favicon.ico"
+        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/api/members/verify-email", "/api/members/reset-password", "/api/members/request-password-reset"
     );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
@@ -121,7 +121,9 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith) || path.equals("/");
+        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith)
+            || path.equals("/")
+            || path.equals("/favicon.ico");
         log.debug("Should skip filter for path {}: {}", path, shouldSkip);
         return shouldSkip;
     }
