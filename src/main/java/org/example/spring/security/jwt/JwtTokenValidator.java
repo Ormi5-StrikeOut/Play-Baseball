@@ -81,47 +81,6 @@ public class JwtTokenValidator {
 	}
 
 	/**
-	 * 액세스토큰과 리프레시토큰을 비교합니다
-	 *
-	 * @param accessToken  검증할 JWT access token
-	 * @param refreshToken 검증할 JWT refresh token
-	 * @return 유효하면 ture, 그렇지 않으면 false
-	 */
-	public boolean validateAccessAndRefreshTokenConsistency(String accessToken, String refreshToken) {
-		try {
-			Claims accessClaims = extractAllClaims(accessToken);
-			Claims refreshClaims = extractAllClaims(refreshToken);
-
-			// 1. 사용자 이름(subject) 일치 확인
-			if (!accessClaims.getSubject().equals(refreshClaims.getSubject())) {
-				log.warn("Username mismatch between access token and refresh token");
-				return false;
-			}
-
-			// 2. 토큰 발행 시간(iat) 비교
-			Date accessIssuedAt = accessClaims.getIssuedAt();
-			Date refreshIssuedAt = refreshClaims.getIssuedAt();
-			if (accessIssuedAt.before(refreshIssuedAt)) {
-				log.warn("Access token was issued before refresh token");
-				return false;
-			}
-
-			// 3. 액세스 토큰 만료 확인
-			if (accessClaims.getExpiration().before(new Date())) {
-				throw new ExpiredJwtException(null, accessClaims, "Access token has expired");
-			}
-
-			return true;
-		} catch (ExpiredJwtException e) {
-			log.debug("Access token has expired");
-			throw e;
-		} catch (Exception e) {
-			log.error("Error validating token consistency: {}", e.getMessage());
-			return false;
-		}
-	}
-
-	/**
 	 * 주어진 토큰에 해당하는 사용자 정보를 반환합니다.
 	 *
 	 * @param token JWT 토큰
