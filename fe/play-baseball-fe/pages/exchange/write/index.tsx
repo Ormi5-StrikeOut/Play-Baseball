@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { Box, TextField, Button, Typography } from "@mui/material";
 import Image from "next/image";
+import { SelectChangeEvent } from "@mui/material/Select";
+import Wrapper from '../../components/Wrapper'
 import axios from "axios";
 import { EXCHANGE_ADD } from "@/constants/endpoints";
 
@@ -86,6 +88,7 @@ const PostCreationForm = () => {
   };
 
   return (
+  <Wrapper>
     <Box
       component="form"
       sx={{
@@ -136,12 +139,12 @@ const PostCreationForm = () => {
             </Box>
           ))}
         </Box>
-      </Box>
 
-      <Button variant="contained" color="primary" onClick={handleSubmit}>
-        작성
-      </Button>
-    </Box>
+        <Button variant="contained" color="primary" onClick={handleSubmit}>
+          작성
+        </Button>
+      </Box>
+    </Wrapper>
   );
 };
 

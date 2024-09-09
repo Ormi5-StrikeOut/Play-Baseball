@@ -1,3 +1,10 @@
+
+import Wrapper from '../../components/Wrapper'
+
 export default function MemberPage() {
-    return <div>Member Page</div>
+    return (
+      <Wrapper>
+        Member Page
+      </Wrapper>
+    );
   }

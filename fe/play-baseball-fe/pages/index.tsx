@@ -9,6 +9,7 @@ import {
   Container,
 } from "@mui/material";
 import Link from "next/link";
+import Wrapper from '../components/Wrapper'
 import SearchBar from "../components/SearchBar";
 import axios from "axios";
 import { EXCHANGE } from "@/constants/endpoints";
@@ -81,6 +82,7 @@ const MainPage: React.FC = () => {
   }, [handleScroll]);
 
   return (
+    <Wrapper>
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <div className="width-[70%]">
         <SearchBar onSearch={handleSearch} />
@@ -142,6 +144,7 @@ const MainPage: React.FC = () => {
         </Box>
       )}
     </Container>
+    </Wrapper>
   );
 };
 

@@ -18,6 +18,7 @@ import {
   Alert,
   Link,
 } from "@mui/material";
+import Wrapper from '../../components/Wrapper'
 
 const SignupPage: React.FC = () => {
   const [formValues, setFormValues] = useState({
@@ -200,173 +201,175 @@ const SignupPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h4" gutterBottom>
-          회원가입
-        </Typography>
-        <Typography variant="body1" align="center" gutterBottom>
-          가입을 환영합니다.
-        </Typography>
-
-        {errors.general && <Alert severity="error">{errors.general}</Alert>}
-
-        <FormControl fullWidth margin="normal" error={errors.name}>
-          <TextField
-            label="이름"
-            variant="outlined"
-            fullWidth
-            name="name"
-            value={formValues.name}
-            onChange={handleInputChange}
-            error={errors.name}
-          />
-        </FormControl>
-
-        <FormControl fullWidth margin="normal" error={errors.email}>
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            name="email"
-            value={formValues.email}
-            onChange={handleInputChange}
-            error={errors.email}
-          />
-        </FormControl>
-
-        <FormControl fullWidth margin="normal" error={errors.password}>
-          <TextField
-            label="비밀번호"
-            type="password"
-            variant="outlined"
-            fullWidth
-            name="password"
-            value={formValues.password}
-            onChange={handleInputChange}
-            error={errors.password}
-            helperText={passwordErrorMessage}
-          />
-        </FormControl>
-
-        <FormControl fullWidth margin="normal" error={errors.confirmPassword}>
-          <TextField
-            label="비밀번호 확인"
-            type="password"
-            variant="outlined"
-            fullWidth
-            name="confirmPassword"
-            value={formValues.confirmPassword}
-            onChange={handleInputChange}
-            error={errors.confirmPassword}
-            helperText={
-              errors.confirmPassword ? "비밀번호가 일치하지 않습니다." : ""
-            }
-          />
-        </FormControl>
-
-        <FormControl fullWidth margin="normal" error={errors.nickname}>
-          <TextField
-            label="Nickname"
-            variant="outlined"
-            fullWidth
-            name="nickname"
-            value={formValues.nickname}
-            onChange={handleInputChange}
-            error={errors.nickname}
-          />
-        </FormControl>
-
-        <FormControl fullWidth margin="normal">
-          <FormHelperText>휴대폰 번호</FormHelperText>
-          <Grid container spacing={2}>
-            <Grid item xs={4}>
-              <TextField
-                label={formValues.phoneFirst ? "" : "010"}
-                variant="outlined"
-                fullWidth
-                name="phoneFirst"
-                value={formValues.phoneFirst}
-                onChange={handleInputChange}
-                error={errors.phoneFirst}
-                InputLabelProps={{
-                  shrink: formValues.phoneFirst ? true : false,
-                }}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                label={formValues.phoneMiddle ? "" : "0000"}
-                variant="outlined"
-                fullWidth
-                name="phoneMiddle"
-                value={formValues.phoneMiddle}
-                onChange={handleInputChange}
-                error={errors.phoneMiddle}
-                InputLabelProps={{
-                  shrink: formValues.phoneMiddle ? true : false,
-                }}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                label={formValues.phoneLast ? "" : "0000"}
-                variant="outlined"
-                fullWidth
-                name="phoneLast"
-                value={formValues.phoneLast}
-                onChange={handleInputChange}
-                error={errors.phoneLast}
-                InputLabelProps={{
-                  shrink: formValues.phoneLast ? true : false,
-                }}
-              />
-            </Grid>
-          </Grid>
-        </FormControl>
-
-        <FormControl fullWidth margin="normal" error={errors.gender}>
-          <InputLabel id="gender-label">성별</InputLabel>
-          <Select
-            labelId="gender-label"
-            name="gender"
-            value={formValues.gender}
-            onChange={handleSelectChange}
-            label="성별"
-            error={errors.gender && formValues.gender !== ""}
-            sx={{
-              border: "none",
-              "&:before": { borderBottom: "none" },
-              "&:after": { borderBottom: "none" },
-            }}
-          >
-            <MenuItem value="MALE">남</MenuItem>
-            <MenuItem value="FEMALE">여</MenuItem>
-            <MenuItem value="NON_BINARY">알 수 없음</MenuItem>
-          </Select>
-        </FormControl>
-
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={handleSubmit}
+    <Wrapper>
+      <Container maxWidth="sm">
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
         >
-          회원가입
-        </Button>
-        <Box mt={2} display="flex" justifyContent="center" alignItems="center">
-          <Link href="/login" variant="body2" sx={{ mx: 2 }}>
-            로그인 페이지로 이동하기
-          </Link>
+          <Typography variant="h4" gutterBottom>
+            회원가입
+          </Typography>
+          <Typography variant="body1" align="center" gutterBottom>
+            가입을 환영합니다.
+          </Typography>
+
+          {errors.general && <Alert severity="error">{errors.general}</Alert>}
+
+          <FormControl fullWidth margin="normal" error={errors.name}>
+            <TextField
+              label="이름"
+              variant="outlined"
+              fullWidth
+              name="name"
+              value={formValues.name}
+              onChange={handleInputChange}
+              error={errors.name}
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal" error={errors.email}>
+            <TextField
+              label="Email"
+              variant="outlined"
+              fullWidth
+              name="email"
+              value={formValues.email}
+              onChange={handleInputChange}
+              error={errors.email}
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal" error={errors.password}>
+            <TextField
+              label="비밀번호"
+              type="password"
+              variant="outlined"
+              fullWidth
+              name="password"
+              value={formValues.password}
+              onChange={handleInputChange}
+              error={errors.password}
+              helperText={passwordErrorMessage}
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal" error={errors.confirmPassword}>
+            <TextField
+              label="비밀번호 확인"
+              type="password"
+              variant="outlined"
+              fullWidth
+              name="confirmPassword"
+              value={formValues.confirmPassword}
+              onChange={handleInputChange}
+              error={errors.confirmPassword}
+              helperText={
+                errors.confirmPassword ? "비밀번호가 일치하지 않습니다." : ""
+              }
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal" error={errors.nickname}>
+            <TextField
+              label="Nickname"
+              variant="outlined"
+              fullWidth
+              name="nickname"
+              value={formValues.nickname}
+              onChange={handleInputChange}
+              error={errors.nickname}
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <FormHelperText>휴대폰 번호</FormHelperText>
+            <Grid container spacing={2}>
+              <Grid item xs={4}>
+                <TextField
+                  label={formValues.phoneFirst ? "" : "010"}
+                  variant="outlined"
+                  fullWidth
+                  name="phoneFirst"
+                  value={formValues.phoneFirst}
+                  onChange={handleInputChange}
+                  error={errors.phoneFirst}
+                  InputLabelProps={{
+                    shrink: formValues.phoneFirst ? true : false,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  label={formValues.phoneMiddle ? "" : "0000"}
+                  variant="outlined"
+                  fullWidth
+                  name="phoneMiddle"
+                  value={formValues.phoneMiddle}
+                  onChange={handleInputChange}
+                  error={errors.phoneMiddle}
+                  InputLabelProps={{
+                    shrink: formValues.phoneMiddle ? true : false,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  label={formValues.phoneLast ? "" : "0000"}
+                  variant="outlined"
+                  fullWidth
+                  name="phoneLast"
+                  value={formValues.phoneLast}
+                  onChange={handleInputChange}
+                  error={errors.phoneLast}
+                  InputLabelProps={{
+                    shrink: formValues.phoneLast ? true : false,
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal" error={errors.gender}>
+            <InputLabel id="gender-label">성별</InputLabel>
+            <Select
+              labelId="gender-label"
+              name="gender"
+              value={formValues.gender}
+              onChange={handleSelectChange}
+              label="성별"
+              error={errors.gender && formValues.gender !== ""}
+              sx={{
+                border: "none",
+                "&:before": { borderBottom: "none" },
+                "&:after": { borderBottom: "none" },
+              }}
+            >
+              <MenuItem value="MALE">남</MenuItem>
+              <MenuItem value="FEMALE">여</MenuItem>
+              <MenuItem value="NON_BINARY">알 수 없음</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleSubmit}
+          >
+            회원가입
+          </Button>
+          <Box mt={2} display="flex" justifyContent="center" alignItems="center">
+            <Link href="/login" variant="body2" sx={{ mx: 2 }}>
+              로그인 페이지로 이동하기
+            </Link>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </Wrapper>
   );
 };
 

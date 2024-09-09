@@ -15,6 +15,7 @@ import {
 import axios from "axios";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import Image from "next/image";
+import Wrapper from '../../components/Wrapper'
 import { useRouter } from "next/router";
 import { EXCHANGE } from "@/constants/endpoints";
 
@@ -120,28 +121,22 @@ const ItemDetail: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" style={{ marginTop: "20px" }}>
-      <Grid container spacing={2}>
-        {/* Gallery */}
-        <Grid item xs={12} md={6}>
-          <Box
-            position="relative"
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            sx={{
-              width: "100%",
-              maxWidth: "100%",
-            }}
-          >
+    <Wrapper>
+      <Container maxWidth="lg" style={{ marginTop: "20px" }}>
+        `<Grid container spacing={2}>
+          {/* Gallery */}
+          <Grid item xs={12} md={6}>
             <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
               position="relative"
-              width="100%"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              sx={{
+                width: "100%",
+                maxWidth: "100%",
+              }}
             >
               <Fade in={hover}>
                 <IconButton
@@ -196,11 +191,41 @@ const ItemDetail: React.FC = () => {
                     cursor: "pointer",
                   }}
                 />
-              ))}
-            </Box>
-          </Box>
-        </Grid>
+                <Fade in={hover}>
+                  <IconButton
+                    onClick={handleNext}
+                    aria-label="next image"
+                    sx={{
+                      position: "absolute",
+                      right: "10px",
+                      zIndex: 1,
+                      backgroundColor: "rgba(255, 255, 255, 0.7)",
+                    }}
+                  >
+                    <ArrowForward />
+                  </IconButton>
+                </Fade>
+              </Box>
 
+              {/* Indicators */}
+              <Box display="flex" justifyContent="center" mt={1}>
+                {itemImages.map((_, index) => (
+                  <Box
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    sx={{
+                      width: "10px",
+                      height: "10px",
+                      margin: "0 5px",
+                      borderRadius: "50%",
+                      backgroundColor: currentIndex === index ? "black" : "gray",
+                      cursor: "pointer",
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </Grid>
         {/* Product Info */}
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ padding: "20px" }}>
@@ -306,6 +331,8 @@ const ItemDetail: React.FC = () => {
                       objectFit="cover"
                       style={{ borderRadius: "4px" }}
                     />
+
+    
                     <Typography
                       variant="caption"
                       display="block"
@@ -363,6 +390,7 @@ const ItemDetail: React.FC = () => {
         </Modal>
       </Grid>
     </Container>
+    </Wrapper>
   );
 };
 
