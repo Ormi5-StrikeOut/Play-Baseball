@@ -35,6 +35,8 @@ public class ExchangeService {
   @Value("${app.fe-url}")
   private String frontendBaseUrl;
 
+  private final String EXCHANGE = "/exchange";
+
   private final ExchangeRepository exchangeRepository;
   private final ExchangeImageService exchangeImageService;
   private final JwtTokenValidator jwtTokenValidator;
@@ -103,7 +105,9 @@ public class ExchangeService {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
-        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl));
+        .map(
+            exchange ->
+                ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
   }
 
   /**
@@ -114,7 +118,9 @@ public class ExchangeService {
   @Transactional(readOnly = true)
   public List<ExchangeNavigationResponseDto> getLatestFiveExchanges() {
     return exchangeRepository.findTop5ByDeletedAtIsNullOrderByCreatedAtDesc().stream()
-        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl))
+        .map(
+            exchange ->
+                ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE))
         .collect(Collectors.toList());
   }
 
@@ -131,7 +137,9 @@ public class ExchangeService {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(memberId, pageable)
-        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl));
+        .map(
+            exchange ->
+                ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
   }
 
   /**
@@ -148,7 +156,9 @@ public class ExchangeService {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(title, pageable)
-        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl));
+        .map(
+            exchange ->
+                ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
   }
 
   /**
@@ -173,14 +183,13 @@ public class ExchangeService {
                 exchange.getMember().getId(), pageable)
             .map(
                 exchangeItem ->
-                    ExchangeNavigationResponseDto.fromExchange(exchangeItem, frontendBaseUrl))
+                    ExchangeNavigationResponseDto.fromExchange(
+                        exchangeItem, frontendBaseUrl + EXCHANGE))
             .getContent();
 
     boolean isWriter = isWriter(request, id);
 
-    return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter)
-        .toBuilder()
-        .build();
+    return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter);
   }
 
   /**

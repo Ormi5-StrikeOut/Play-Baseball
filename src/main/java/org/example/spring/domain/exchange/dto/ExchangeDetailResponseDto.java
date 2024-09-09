@@ -23,19 +23,7 @@ public class ExchangeDetailResponseDto {
   private final List<ExchangeImageResponseDto> images;
   private final String writer;
   private final List<ExchangeNavigationResponseDto> recentExchangesByMember;
-  private final boolean isWriter;
-
-  public ExchangeDetailResponseDtoBuilder toBuilder() {
-    return ExchangeDetailResponseDto.builder()
-        .title(this.title)
-        .price(this.price)
-        .regularPrice(this.regularPrice)
-        .content(this.content)
-        .viewCount(this.viewCount)
-        .status(this.status)
-        .updatedAt(this.updatedAt)
-        .images(this.images);
-  }
+  private final String isWriter;
 
   public static ExchangeDetailResponseDto fromExchange(
       Exchange exchange,
@@ -60,7 +48,7 @@ public class ExchangeDetailResponseDto {
         .images(images)
         .writer(exchange.getMember().getNickname())
         .recentExchangesByMember(recentExchangesByMember)
-        .isWriter(isWriter)
+        .isWriter(isWriter ? "TRUE" : "FALSE")
         .build();
   }
 }

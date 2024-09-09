@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { Box, TextField, Button, Typography } from "@mui/material";
 import Image from "next/image";
-import { SelectChangeEvent } from "@mui/material/Select";
-import Wrapper from '../../components/Wrapper'
+import Wrapper from "../../../components/Wrapper";
 import axios from "axios";
 import { EXCHANGE_ADD } from "@/constants/endpoints";
 
@@ -88,61 +87,62 @@ const PostCreationForm = () => {
   };
 
   return (
-  <Wrapper>
-    <Box
-      component="form"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        maxWidth: 600,
-        margin: "0 auto",
-      }}
-    >
-      <Typography variant="h5">상품 등록</Typography>
-      <TextField label="제목" value={title} onChange={handleTitleChange} />
-      <TextField label="가격" value={price} onChange={handlePriceChange} />
-      <TextField
-        label="설명"
-        multiline
-        rows={4}
-        value={content}
-        onChange={handleContentChange}
-      />
+    <Wrapper>
+      <Box
+        component="form"
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          maxWidth: 600,
+          margin: "0 auto",
+        }}
+      >
+        <Typography variant="h5">상품 등록</Typography>
+        <TextField label="제목" value={title} onChange={handleTitleChange} />
+        <TextField label="가격" value={price} onChange={handlePriceChange} />
+        <TextField
+          label="설명"
+          multiline
+          rows={4}
+          value={content}
+          onChange={handleContentChange}
+        />
 
-      <Box>
-        <Typography>상품 이미지 ({images.length}/12)</Typography>
-        <Button variant="outlined" component="label">
-          이미지 등록
-          <input type="file" hidden multiple onChange={handleImageChange} />
-        </Button>
-        <Box sx={{ display: "flex", gap: 1, marginTop: 2 }}>
-          {images.map((image, index) => (
-            <Box
-              key={index}
-              sx={{ position: "relative", width: 100, height: 100 }}
-            >
-              <Image
-                src={URL.createObjectURL(image)}
-                alt={`상품 이미지 ${index + 1}`}
-                layout="fill"
-                objectFit="cover"
-              />
-              <Button
-                variant="contained"
-                color="secondary"
-                sx={{ position: "absolute", top: 0, right: 0 }}
-                onClick={() => handleImageDelete(index)}
+        <Box>
+          <Typography>상품 이미지 ({images.length}/12)</Typography>
+          <Button variant="outlined" component="label">
+            이미지 등록
+            <input type="file" hidden multiple onChange={handleImageChange} />
+          </Button>
+          <Box sx={{ display: "flex", gap: 1, marginTop: 2 }}>
+            {images.map((image, index) => (
+              <Box
+                key={index}
+                sx={{ position: "relative", width: 100, height: 100 }}
               >
-                X
-              </Button>
-            </Box>
-          ))}
-        </Box>
+                <Image
+                  src={URL.createObjectURL(image)}
+                  alt={`상품 이미지 ${index + 1}`}
+                  layout="fill"
+                  objectFit="cover"
+                />
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  sx={{ position: "absolute", top: 0, right: 0 }}
+                  onClick={() => handleImageDelete(index)}
+                >
+                  X
+                </Button>
+              </Box>
+            ))}
+          </Box>
 
-        <Button variant="contained" color="primary" onClick={handleSubmit}>
-          작성
-        </Button>
+          <Button variant="contained" color="primary" onClick={handleSubmit}>
+            작성
+          </Button>
+        </Box>
       </Box>
     </Wrapper>
   );

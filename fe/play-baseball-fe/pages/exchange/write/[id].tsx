@@ -8,34 +8,62 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Container,
 } from "@mui/material";
 import Image from "next/image";
 import axios from "axios";
+import Wrapper from "../../../components/Wrapper";
 import { EXCHANGE } from "@/constants/endpoints";
 
+// Enum 정의
+enum ExchangeStatus {
+  SALE = "SALE",
+  COMPLETE = "COMPLETE",
+}
+
+// 이미지 타입 정의
+interface ImageData {
+  id: number;
+  url: string;
+}
+
 const EditPostForm = () => {
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [content, setContent] = useState("");
-  const [status, setStatus] = useState("");
-  const [images, setImages] = useState<(File | string)[]>([]);
+  const [title, setTitle] = useState<string>("");
+  const [price, setPrice] = useState<number>(0);
+  const [content, setContent] = useState<string>("");
+  const [status, setStatus] = useState<ExchangeStatus>(ExchangeStatus.SALE);
+  const [images, setImages] = useState<(File | ImageData)[]>([]); // 기존 URL 이미지와 파일을 함께 저장
+  const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const { id } = router.query;
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("Authorization")
+      : null;
 
+  // 게시물 데이터를 불러오는 useEffect
   useEffect(() => {
     if (id) {
       const fetchPostData = async () => {
         try {
-          const response = await axios.get(`/api/exchanges/${id}`);
+          const response = await axios.get(`${EXCHANGE}/${id}`, {
+            headers: {
+              Authorization: token,
+            },
+            withCredentials: true,
+          });
+
           const { title, price, content, status, images } = response.data.data;
+
           setTitle(title);
           setPrice(price);
           setContent(content);
-          setStatus(status);
-          setImages(images);
+          setStatus(status as ExchangeStatus);
+          setImages(images); // 서버로부터 받은 이미지들 (ImageData 형식)
         } catch (error) {
           console.error("Error fetching post data:", error);
         }
+        setLoading(false);
       };
       fetchPostData();
     }
@@ -46,49 +74,50 @@ const EditPostForm = () => {
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPrice(event.target.value);
+    setPrice(parseInt(event.target.value));
   };
 
   const handleContentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setContent(event.target.value);
   };
 
-  const handleStatusChange = (event: SelectChangeEvent<string>) => {
-    setStatus(event.target.value as string);
+  const handleStatusChange = (event: SelectChangeEvent<ExchangeStatus>) => {
+    setStatus(event.target.value as ExchangeStatus);
   };
 
+  // 새 이미지를 추가하는 함수
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const newImages = Array.from(event.target.files);
-      setImages((prevImages) => [...prevImages, ...newImages]);
+      const newImages = Array.from(event.target.files); // 새로 선택된 파일들을 배열로 변환
+      setImages((prevImages) => [...prevImages, ...newImages]); // 기존 이미지와 새 이미지를 합침
     }
   };
 
+  // 이미지를 삭제하는 함수
   const handleImageDelete = (index: number) => {
-    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index)); // 해당 인덱스의 이미지 삭제
   };
 
+  // 서버로 폼 데이터를 전송하는 함수
   const handleSubmit = async () => {
     const formData = new FormData();
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("Authorization")
-        : null;
     const jsonData = {
       title,
       price,
       content,
       status,
     };
+
+    // 폼 데이터에 JSON 데이터 추가
     formData.append(
       "exchangeRequestDto",
       new Blob([JSON.stringify(jsonData)], { type: "application/json" })
     );
 
+    // 이미지 파일만 formData에 추가 (기존 URL 이미지는 제외)
     images.forEach((image) => {
-      // 파일과 기존 URL 이미지를 분리하여 처리
-      if (typeof image !== "string") {
-        formData.append("images", image);
+      if (image instanceof File) {
+        formData.append("images", image); // 새로 추가된 파일만 전송
       }
     });
 
@@ -100,6 +129,7 @@ const EditPostForm = () => {
         },
         withCredentials: true,
       });
+
       router.push({
         pathname: "/result",
         query: {
@@ -121,6 +151,16 @@ const EditPostForm = () => {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <Wrapper>
+        <Container maxWidth="lg" style={{ marginTop: "20px" }}>
+          <Typography variant="h6">Loading...</Typography>
+        </Container>
+      </Wrapper>
+    );
+  }
 
   return (
     <Box
@@ -146,8 +186,8 @@ const EditPostForm = () => {
 
       <Typography>상태</Typography>
       <Select value={status} onChange={handleStatusChange}>
-        <MenuItem value="SALE">판매중</MenuItem>
-        <MenuItem value="COMPLETE">판매완료</MenuItem>
+        <MenuItem value={ExchangeStatus.SALE}>판매중</MenuItem>
+        <MenuItem value={ExchangeStatus.COMPLETE}>판매완료</MenuItem>
       </Select>
 
       <Box>
@@ -162,17 +202,17 @@ const EditPostForm = () => {
               key={index}
               sx={{ position: "relative", width: 100, height: 100 }}
             >
-              {typeof image === "string" ? (
+              {image instanceof File ? (
                 <Image
-                  src={image}
-                  alt={`기존 이미지 ${index + 1}`}
+                  src={URL.createObjectURL(image)} // 새로 업로드한 이미지 미리보기
+                  alt={`새 이미지 ${index + 1}`}
                   layout="fill"
                   objectFit="cover"
                 />
               ) : (
                 <Image
-                  src={URL.createObjectURL(image)}
-                  alt={`새 이미지 ${index + 1}`}
+                  src={image.url} // 서버에서 가져온 기존 이미지
+                  alt={`기존 이미지 ${index + 1}`}
                   layout="fill"
                   objectFit="cover"
                 />
