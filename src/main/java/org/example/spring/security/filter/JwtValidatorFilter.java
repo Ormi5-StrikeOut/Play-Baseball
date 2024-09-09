@@ -121,7 +121,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith) || path.startsWith("/api/members/verify/");
+        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith) || path.equals("/");
         log.debug("Should skip filter for path {}: {}", path, shouldSkip);
         return shouldSkip;
     }
