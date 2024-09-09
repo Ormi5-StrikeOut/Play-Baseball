@@ -121,6 +121,8 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
 
     private boolean isPublicEndpoint(String path, String method) {
         return "/api/auth/login".equals(path)
+            || "/favicon.ico".equals(path)
+            || "/".equals(path)
             || "/api/members/join".equals(path)
             || path.startsWith("/api/members/verify-email")
             || ("/api/exchanges".equals(path) && "GET".equalsIgnoreCase(method))
