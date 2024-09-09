@@ -1,6 +1,6 @@
 import React from "react";
 import { AppProps } from "next/app";
-import Header from "../components/Header";
+import Header from "../components/header";
 import { CssBaseline, Container, GlobalStyles } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 

@@ -14,7 +14,7 @@ const initialUser = {
 const UserProfile: React.FC = () => {
     const [user, setUser] = useState(initialUser);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setUser((prevUser) => ({
             ...prevUser,
@@ -22,7 +22,7 @@ const UserProfile: React.FC = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         // Handle form submission logic here (e.g., send data to server)
         console.log('User Profile Updated:', user);
