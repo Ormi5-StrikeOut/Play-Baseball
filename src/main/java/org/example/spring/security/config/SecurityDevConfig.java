@@ -111,7 +111,7 @@ public class SecurityDevConfig {
         configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
         configuration.setExposedHeaders(List.of("Authorization"));
 
         configuration.setMaxAge(3600L);
