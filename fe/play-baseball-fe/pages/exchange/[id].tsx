@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Box,
@@ -6,42 +6,119 @@ import {
   Divider,
   Button,
   IconButton,
-  Card,
-  CardContent,
   Grid,
   Fade,
   Rating,
   Paper,
+  Modal,
 } from "@mui/material";
+import axios from "axios";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import Image from "next/image";
+import Wrapper from "../../components/Wrapper";
+import { useRouter } from "next/router";
+import { EXCHANGE } from "@/constants/endpoints";
 
-// Temporary data
-const itemImages = [
-  { img: "/exchange/image.jpg", title: "Image 1" },
-  { img: "/exchange/image2.jpg", title: "Image 2" },
-  { img: "/exchange/image3.jpg", title: "Image 3" },
-];
+interface Image {
+  url: string;
+  id: number;
+}
 
-const recommendedItems = [
-  { img: "/exchange/image.jpg", title: "Product 1", price: "10,000원" },
-  { img: "/exchange/image2.jpg", title: "Product 2", price: "15,000원" },
-  { img: "/exchange/image3.jpg", title: "Product 3", price: "20,000원" },
-  { img: "/exchange/image.jpg", title: "Product 4", price: "25,000원" },
-];
+interface RecentExchange {
+  title: string;
+  price: number;
+  url: string;
+  imageUrl: string;
+  updatedAt: string;
+}
+
+interface ApiResponse<T> {
+  message: string;
+  data: T;
+}
+
+interface ExchangeDetailResponseDto {
+  title: string;
+  price: number;
+  regularPrice: number;
+  content: string;
+  viewCount: number;
+  status: "SALE" | "COMPLETE";
+  updatedAt: string;
+  images: Image[];
+  writer: string;
+  recentExchangesByMember: RecentExchange[];
+  isWriter: "TRUE" | "FALSE";
+}
 
 const ItemDetail: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [hover, setHover] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [hover, setHover] = useState<boolean>(false);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [exchangeData, setExchangeData] =
+    useState<ExchangeDetailResponseDto | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter();
+  const { id } = router.query;
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("Authorization")
+      : null;
+
+  useEffect(() => {
+    const fetchExchangeData = async () => {
+      if (!id) return; // id가 없는 경우 일찍 반환
+      try {
+        const response = await axios.get<
+          ApiResponse<ExchangeDetailResponseDto>
+        >(`${EXCHANGE}/${id}`, {
+          headers: {
+            Authorization: token,
+          },
+          withCredentials: true,
+        });
+        console.log(response);
+        setExchangeData(response.data.data);
+      } catch (error) {
+        router.push({
+          pathname: "/result",
+          query: {
+            isSuccess: "false",
+            message: `데이터를 가져오는 중 오류가 발생했습니다: ${
+              (error as Error).message
+            }`,
+            buttonText: "메인으로 돌아가기",
+            buttonAction: `/`,
+          },
+        });
+      }
+    };
+
+    if (id) fetchExchangeData(); // id가 존재할 때만 API 호출
+  }, [id, router, token]);
+
+  useEffect(() => {
+    if (exchangeData) {
+      setLoading(false);
+    }
+  }, [exchangeData]); // exchangeData가 변경될 때마다 실행
 
   const handlePrev = () => {
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + itemImages.length) % itemImages.length
-    );
+    if (exchangeData?.images?.length) {
+      setCurrentIndex(
+        (prevIndex) =>
+          (prevIndex - 1 + exchangeData.images.length) %
+          exchangeData.images.length
+      );
+    }
   };
 
   const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % itemImages.length);
+    if (exchangeData?.images?.length) {
+      setCurrentIndex(
+        (prevIndex) => (prevIndex + 1) % exchangeData.images.length
+      );
+    }
   };
 
   const handleMouseEnter = () => {
@@ -52,214 +129,336 @@ const ItemDetail: React.FC = () => {
     setHover(false);
   };
 
-  return (
-    <Container maxWidth="lg" style={{ marginTop: "20px" }}>
-      <Grid container spacing={2}>
-        {/* Gallery */}
-        <Grid item xs={12} md={6}>
-          <Box
-            position="relative"
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            sx={{
-              width: "100%",
-              maxWidth: "100%",
-            }}
-          >
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              position="relative"
-              width="100%"
-            >
-              <Fade in={hover}>
-                <IconButton
-                  onClick={handlePrev}
-                  aria-label="previous image"
-                  sx={{
-                    position: "absolute",
-                    left: "10px",
-                    zIndex: 1,
-                    backgroundColor: "rgba(255, 255, 255, 0.7)",
-                  }}
-                >
-                  <ArrowBack />
-                </IconButton>
-              </Fade>
-              <Image
-                src={itemImages[currentIndex].img}
-                alt={itemImages[currentIndex].title}
-                layout="responsive"
-                width={700}
-                height={400}
-                objectFit="cover"
-              />
-              <Fade in={hover}>
-                <IconButton
-                  onClick={handleNext}
-                  aria-label="next image"
-                  sx={{
-                    position: "absolute",
-                    right: "10px",
-                    zIndex: 1,
-                    backgroundColor: "rgba(255, 255, 255, 0.7)",
-                  }}
-                >
-                  <ArrowForward />
-                </IconButton>
-              </Fade>
-            </Box>
+  const handleDelete = async () => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("Authorization")
+        : null;
 
-            {/* Indicators */}
-            <Box display="flex" justifyContent="center" mt={1}>
-              {itemImages.map((_, index) => (
-                <Box
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  sx={{
-                    width: "10px",
-                    height: "10px",
-                    margin: "0 5px",
-                    borderRadius: "50%",
-                    backgroundColor: currentIndex === index ? "black" : "gray",
-                    cursor: "pointer",
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        </Grid>
+    try {
+      await axios.delete(`${EXCHANGE}/${id}`, {
+        headers: {
+          Authorization: token,
+        },
+        withCredentials: true,
+      });
+      router.push({
+        pathname: "/result",
+        query: {
+          isSuccess: "true",
+          message: `글이 정상적으로 삭제되었습니다. ${exchangeData?.title}`,
+          buttonText: "메인으로 돌아가기",
+          buttonAction: `/`,
+        },
+      });
+    } catch (error) {
+      router.push({
+        pathname: "/result",
+        query: {
+          isSuccess: "false",
+          message: `통신 오류가 발생했습니다: ${(error as Error).message}`,
+          buttonText: "작성한 글로 돌아가기",
+          buttonAction: `/exchange/${id}`,
+        },
+      });
+    }
+  };
 
-        {/* Product Info */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ padding: "20px" }}>
-            <Typography variant="h5">휴대폰</Typography>
-            <Typography variant="body1">휴대폰-삼성</Typography>
-            <Typography variant="h5" color="primary" sx={{ marginTop: "10px" }}>
-              191,000원
-            </Typography>
-            <Divider sx={{ margin: "20px 0" }} />
-            <Typography variant="body1">주소</Typography>
-            <Typography variant="body1">상태</Typography>
-            <Divider sx={{ margin: "20px 0" }} />
-            <Typography variant="body1">
-              이 상품의 정가는 1,000,000원 입니다.
-            </Typography>
-            <Divider sx={{ margin: "20px 0" }} />
-            <Button variant="contained" fullWidth>
-              채팅하기
-            </Button>
-            <Button variant="contained" fullWidth sx={{ mt: 2 }}>
-              결제하기
-            </Button>
-          </Paper>
-        </Grid>
-
-        {/* Details */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ padding: "20px" }}>
-            <Typography variant="h4">상품 정보</Typography>
-            <Typography color="textSecondary" sx={{ marginTop: "10px" }}>
-              작성일: 2024년 8월 29일
-            </Typography>
-            <Typography color="textSecondary">조회: 123 채팅: 1212</Typography>
-            <Divider sx={{ margin: "20px 0" }} />
-            <Typography variant="body1">
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-              휴대폰 팝니다 <br />
-            </Typography>
-          </Paper>
-        </Grid>
-
-        {/* Seller Info */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ padding: "20px" }}>
-            <Typography variant="h6">판매자 정보</Typography>
-            <Box display="flex" alignItems="center">
-              <Box display="flex" alignItems="center">
-                <Typography variant="h6">닉네임</Typography>
-                <Rating value={4.6} precision={0.1} readOnly />
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  sx={{ marginLeft: "5px" }}
-                >
-                  (123)
-                </Typography>
-              </Box>
-            </Box>
-            <Divider sx={{ margin: "20px 0" }} />
-            <Grid container spacing={1} mt={2}>
-              {recommendedItems.slice(0, 3).map((item, index) => (
-                <Grid item xs={4} key={index}>
-                  <Image
-                    src={item.img}
-                    alt={item.title}
-                    layout="responsive"
-                    width={100}
-                    height={100}
-                    objectFit="cover"
-                    style={{ borderRadius: "4px" }}
-                  />
-                  <Typography variant="caption" display="block" align="center">
-                    {item.title}
-                  </Typography>
-                  <Typography variant="caption" display="block" align="center">
-                    {item.price}
-                  </Typography>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Recommended Products */}
-        <Grid item xs={12} md={12}>
-          <Typography variant="h5" gutterBottom>
-            이런 상품은 어떠세요?
-          </Typography>
+  if (loading || !exchangeData) {
+    return (
+      <Wrapper>
+        <Container maxWidth="lg" style={{ marginTop: "20px" }}>
+          <Typography variant="h6">Loading...</Typography>
+        </Container>
+      </Wrapper>
+    );
+  } else {
+    return (
+      <Wrapper>
+        <Container maxWidth="lg" style={{ marginTop: "20px" }}>
           <Grid container spacing={2}>
-            {recommendedItems.map((item, index) => (
-              <Grid item xs={6} sm={4} key={index}>
-                <Card>
-                  <Image
-                    src={item.img}
-                    alt={item.title}
-                    layout="responsive"
-                    width={100}
-                    height={100}
-                    objectFit="cover"
-                  />
-                  <CardContent>
-                    <Typography variant="body1">{item.title}</Typography>
-                    <Typography variant="body2" color="primary">
-                      {item.price}
+            {/* Gallery */}
+            <Grid item xs={12} md={6}>
+              <Box
+                position="relative"
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                sx={{
+                  width: "100%",
+                  maxWidth: "100%",
+                }}
+              >
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  position="relative"
+                  width="100%"
+                >
+                  <Fade in={hover}>
+                    <IconButton
+                      onClick={handlePrev}
+                      aria-label="previous image"
+                      sx={{
+                        position: "absolute",
+                        left: "10px",
+                        zIndex: 1,
+                        backgroundColor: "rgba(255, 255, 255, 0.7)",
+                      }}
+                    >
+                      <ArrowBack />
+                    </IconButton>
+                  </Fade>
+
+                  {exchangeData?.images?.length > 0 ? (
+                    <Image
+                      src={exchangeData.images[currentIndex]?.url}
+                      alt={exchangeData.images[currentIndex]?.id.toString()}
+                      layout="responsive"
+                      width={700}
+                      height={400}
+                      objectFit="cover"
+                    />
+                  ) : (
+                    <Image
+                      src={"/default-img.jpg"}
+                      alt={"Default image"}
+                      layout="responsive"
+                      width={700}
+                      height={400}
+                      objectFit="cover"
+                    />
+                  )}
+
+                  <Fade in={hover}>
+                    <IconButton
+                      onClick={handleNext}
+                      aria-label="next image"
+                      sx={{
+                        position: "absolute",
+                        right: "10px",
+                        zIndex: 1,
+                        backgroundColor: "rgba(255, 255, 255, 0.7)",
+                      }}
+                    >
+                      <ArrowForward />
+                    </IconButton>
+                  </Fade>
+                </Box>
+
+                {/* Indicators */}
+
+                <Box display="flex" justifyContent="center" mt={1}>
+                  {exchangeData?.images?.length > 0 ? (
+                    exchangeData.images.map((_, index) => (
+                      <Box
+                        key={index}
+                        onClick={() => setCurrentIndex(index)}
+                        sx={{
+                          width: "10px",
+                          height: "10px",
+                          margin: "0 5px",
+                          borderRadius: "50%",
+                          backgroundColor:
+                            currentIndex === index ? "black" : "gray",
+                          cursor: "pointer",
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="textSecondary">
+                      이미지가 없습니다.
                     </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                  )}
+                </Box>
+              </Box>
+            </Grid>
+
+            {/* Product Info */}
+            <Grid item xs={12} md={6}>
+              <Paper elevation={3} sx={{ padding: "20px" }}>
+                <Typography variant="h5">
+                  {exchangeData?.title || "상품 정보"}
+                </Typography>
+                <Typography
+                  variant="h5"
+                  color="primary"
+                  sx={{ marginTop: "10px" }}
+                >
+                  {exchangeData?.price?.toLocaleString() || "0"}원
+                </Typography>
+                <Divider sx={{ margin: "20px 0" }} />
+                <Typography variant="body1">
+                  상태:{" "}
+                  {exchangeData?.status === "SALE" ? "판매중" : "판매완료"}
+                </Typography>
+                <Divider sx={{ margin: "20px 0" }} />
+                <Typography variant="body1">
+                  이 상품의 정가는{" "}
+                  {exchangeData?.regularPrice?.toLocaleString() || "0"}원
+                  입니다.
+                </Typography>
+                <Divider sx={{ margin: "20px 0" }} />
+                <Button variant="contained" fullWidth>
+                  채팅하기
+                </Button>
+                <Button variant="contained" fullWidth sx={{ mt: 2 }}>
+                  결제하기
+                </Button>
+                {exchangeData?.isWriter === "TRUE" && (
+                  <>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      onClick={() => router.push(`/exchange/write/${id}`)}
+                    >
+                      수정하기
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      color="error"
+                      onClick={() => setOpenModal(true)}
+                    >
+                      삭제하기
+                    </Button>
+                  </>
+                )}
+              </Paper>
+            </Grid>
+
+            {/* Details */}
+            <Grid item xs={12} md={6}>
+              <Paper elevation={3} sx={{ padding: "20px" }}>
+                <Typography variant="h4">상품 정보</Typography>
+                <Typography color="textSecondary" sx={{ marginTop: "10px" }}>
+                  작성일:{" "}
+                  {exchangeData?.updatedAt
+                    ? new Date(exchangeData.updatedAt).toLocaleDateString()
+                    : "N/A"}
+                </Typography>
+                <Typography color="textSecondary">
+                  조회: {exchangeData?.viewCount || 0}
+                </Typography>
+                <Divider sx={{ margin: "20px 0" }} />
+                <Typography variant="body1">
+                  {exchangeData?.content || "상품 설명이 없습니다."}
+                </Typography>
+              </Paper>
+            </Grid>
+
+            {/* Seller Info */}
+            <Grid item xs={12} md={6}>
+              <Paper elevation={3} sx={{ padding: "20px" }}>
+                <Typography variant="h6">
+                  {exchangeData?.writer || "판매자 정보"}
+                </Typography>
+                <Box display="flex" alignItems="center">
+                  <Box display="flex" alignItems="center">
+                    <Rating value={4.6} precision={0.1} readOnly />
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      sx={{ marginLeft: "5px" }}
+                    >
+                      (123)
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider sx={{ margin: "20px 0" }} />
+                <Grid container spacing={1} mt={2}>
+                  {exchangeData?.recentExchangesByMember?.length > 0 ? (
+                    exchangeData.recentExchangesByMember.map((item, index) => (
+                      <Grid
+                        item
+                        xs={4}
+                        key={index}
+                        onClick={() => router.push(item.url)}
+                        sx={{
+                          cursor: "pointer",
+                          "&:hover": {
+                            boxShadow: 2,
+                          },
+                        }}
+                      >
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.title}
+                          layout="responsive"
+                          width={100}
+                          height={100}
+                          objectFit="cover"
+                          style={{ borderRadius: "4px" }}
+                        />
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          align="center"
+                        >
+                          {item.title}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          align="center"
+                        >
+                          {item.price.toLocaleString()}원
+                        </Typography>
+                      </Grid>
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="textSecondary">
+                      판매중인 다른 게시물이 없습니다.
+                    </Typography>
+                  )}
+                </Grid>
+              </Paper>
+            </Grid>
+
+            {/* Delete Confirmation Modal */}
+            <Modal open={openModal} onClose={() => setOpenModal(false)}>
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: 400,
+                  bgcolor: "background.paper",
+                  boxShadow: 24,
+                  p: 4,
+                  textAlign: "center",
+                }}
+              >
+                <Typography variant="h6" gutterBottom>
+                  정말 삭제하시겠습니까?
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={handleDelete}
+                >
+                  확인
+                </Button>
+                <Button
+                  variant="outlined"
+                  sx={{ ml: 2 }}
+                  onClick={() => setOpenModal(false)}
+                >
+                  취소
+                </Button>
+              </Box>
+            </Modal>
           </Grid>
-        </Grid>
-      </Grid>
-    </Container>
-  );
+        </Container>
+      </Wrapper>
+    );
+  }
 };
 
 export default ItemDetail;

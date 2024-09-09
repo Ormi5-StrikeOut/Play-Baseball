@@ -16,9 +16,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    console.log(`Searching for: ${searchTerm}`);
     // if (onSearch) {
     //   onSearch(event.target.value);
     // }
+  };
+
+  // 엔터 키 처리 함수
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      onSearch(searchTerm); // Search on enter
+      console.log(`Searching for: ${searchTerm}`);
+      // router.push(`/search?query=${searchQuery}`);
+    }
   };
 
   return (

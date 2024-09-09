@@ -24,16 +24,6 @@ import org.example.spring.domain.member.Member;
 @ToString
 public class MemberModifyRequestDto {
 
-
-    @NotBlank(message = "이메일은 필수 입력 항목입니다.")
-    @Email(message = "유효한 이메일 주소를 입력해주세요.")
-    private String email;
-
-    @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
-        message = "비밀번호는 8자 이상이며, 문자, 숫자, 특수문자를 포함해야 합니다.")
-    private String password;
-
     @NotBlank(message = "닉네임은 필수 입력 항목입니다.")
     @Size(min = 2, max = 20, message = "닉네임은 2자에서 20자 사이여야 합니다.")
     private String nickname;

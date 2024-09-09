@@ -2,12 +2,16 @@ package org.example.spring.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.common.ApiResponseDto;
+import org.example.spring.domain.member.dto.EmailRequestDto;
+import org.example.spring.domain.member.dto.MemberEmailVerifiedResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
 import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.domain.member.dto.MemberRoleModifyRequestDto;
+import org.example.spring.domain.member.dto.PasswordResetRequestDto;
 import org.example.spring.service.MemberService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -39,7 +43,7 @@ public class MemberController {
      * @return 회원 가입 성공 여부 및 생성된 회원 MemberResponseDto
      */
     @PostMapping("/join")
-    public ResponseEntity<ApiResponseDto<MemberResponseDto>> registerMember(@RequestBody MemberJoinRequestDto memberJoinRequestDto) {
+    public ResponseEntity<ApiResponseDto<MemberResponseDto>> registerMember(@Valid @RequestBody MemberJoinRequestDto memberJoinRequestDto) {
         MemberResponseDto savedMember = memberService.registerMember(memberJoinRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponseDto.success("회원가입에 성공했습니다.", savedMember));
@@ -87,28 +91,76 @@ public class MemberController {
     /**
      * 요청온 Request 에서 추출한 email 을 가지고 있는 회원을 modify 합니다.
      *
-     * @param request 요청
+     * @param request HttpServletRequest
      * @return 수정된 회원 응답 Dto
      */
     @PutMapping("/my/modify-member")
-    public ResponseEntity<ApiResponseDto<MemberResponseDto>> modifyMember(HttpServletRequest request, @RequestBody MemberModifyRequestDto member) {
+    public ResponseEntity<ApiResponseDto<MemberResponseDto>> modifyMember(@Valid HttpServletRequest request, @RequestBody MemberModifyRequestDto member) {
         MemberResponseDto modifiedMember = memberService.modifyMember(request, member);
         return ResponseEntity.ok(ApiResponseDto.success("회원 정보 수정 성공:", modifiedMember));
     }
 
     /**
      * admin 권한을 가지고 있으면 회원의 권한을 수정할 수 있습니다.
-     * @param memberId 수정할 회원 ID
+     *
+     * @param memberId                   수정할 회원 ID
      * @param memberRoleModifyRequestDto 변경할 권한 요청
-     * @param request HttpServletRequest
+     * @param request                    HttpServletRequest
      * @return 권한이 변경된 회원 Dto
      */
     @PatchMapping("verify-role/{memberId}")
-    public ResponseEntity<ApiResponseDto<MemberResponseDto>> modifyMemberRole(
+    public ResponseEntity<ApiResponseDto<MemberResponseDto>> modifyMemberRole(@Valid
         @PathVariable Long memberId,
         @RequestBody MemberRoleModifyRequestDto memberRoleModifyRequestDto,
         HttpServletRequest request) {
         MemberResponseDto modifiedMember = memberService.modifyMemberRole(memberId, memberRoleModifyRequestDto, request);
         return ResponseEntity.ok(ApiResponseDto.success("회원 권한 수정 성공", modifiedMember));
+    }
+
+    /**
+     * 이메일 인증 링크를 클릭했을 때 처리하는 엔드포인트입니다.
+     *
+     * @param token 이메일 인증 토큰
+     * @return 이메일 인증 결과
+     */
+    @GetMapping("/verify-email")
+    public ResponseEntity<ApiResponseDto<MemberEmailVerifiedResponseDto>> verifyEmail(@RequestParam String token) {
+        MemberEmailVerifiedResponseDto memberEmailVerifiedResponseDto = memberService.verifyEmail(token);
+        return ResponseEntity.ok(ApiResponseDto.success("이메일 인증이 완료되었습니다.", memberEmailVerifiedResponseDto));
+    }
+
+    /**
+     * 인증 이메일 재발송
+     *
+     * @param request HttpServletRequest
+     * @return 이메일 재발송 결과
+     */
+    @PostMapping("/resend-verification-email")
+    public ResponseEntity<ApiResponseDto<Void>> resendVerificationEmail(HttpServletRequest request) {
+        memberService.resendVerificationEmail(request);
+        return ResponseEntity.ok(ApiResponseDto.success("인증 이메일 재발송이 완료되었습니다.", null));
+
+    }
+
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<ApiResponseDto<Void>> requestPasswordReset(@RequestBody @Valid EmailRequestDto emailRequestDto) {
+        memberService.sendPasswordResetEmail(emailRequestDto.getEmail());
+        return ResponseEntity.ok(ApiResponseDto.success("패스워드 재설정 메일 발송이 완료되었습니다.", null));
+    }
+
+    @GetMapping("/reset-password")
+    public ResponseEntity<ApiResponseDto<Void>> validateResetToken(@RequestParam String token) {
+        boolean isValid = memberService.validateResetToken(token);
+        if (isValid) {
+            return ResponseEntity.ok(ApiResponseDto.success("유효한 토큰입니다.", null));
+        } else {
+            return ResponseEntity.badRequest().body(ApiResponseDto.error("유효하지 않은 토큰입니다."));
+        }
+    }
+
+    @PatchMapping("/reset-password")
+    public ResponseEntity<ApiResponseDto<Void>> resetPassword(@RequestParam String token, @RequestBody @Valid PasswordResetRequestDto passwordResetRequestDto) {
+        memberService.resetPassword(token, passwordResetRequestDto.getNewPassword());
+        return ResponseEntity.ok(ApiResponseDto.success("비밀번호가 성공적으로 재설정되었습니다.", null));
     }
 }

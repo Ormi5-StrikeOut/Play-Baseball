@@ -36,6 +36,11 @@ public class JwtUtils {
     @Value("${jwt.refresh-token.expiration}")
     private Long refreshExpiration;
 
+    @Getter
+    @Value("${jwt.email-verification.expiration}")
+    private Long emailVerifyExpiration;
+
+
     /**
      * JWT 토큰 서명을 위한 키를 생성합니다.
      *

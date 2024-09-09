@@ -2,6 +2,7 @@ package org.example.spring.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.Member;
@@ -12,9 +13,10 @@ import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.exception.InvalidCredentialsException;
 import org.example.spring.exception.ResourceNotFoundException;
 import org.example.spring.repository.MemberRepository;
-import org.example.spring.security.jwt.CookieService;
+import org.example.spring.security.service.CookieService;
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
+import org.example.spring.security.service.TokenBlacklistService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,6 +35,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtTokenValidator jwtTokenValidator;
+    private final TokenBlacklistService tokenBlacklistService;
     private final CookieService cookieService;
     private final MemberRepository memberRepository;
 
@@ -45,7 +48,8 @@ public class AuthService {
      */
     public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
         try {
-            log.info("Attempting login for user: {}", loginRequestDto.email());
+            log.debug("Attempting login for user: {}", loginRequestDto.email());
+            log.debug("Attempting login for user: {}", loginRequestDto.password());
 
             if (!jwtTokenValidator.isAccountActive(loginRequestDto.email())) {
                 log.warn("Login attempt for deleted account: {}", loginRequestDto.email());
@@ -61,15 +65,15 @@ public class AuthService {
             setTokensInResponse(response, accessToken, refreshToken);
             updateMemberLastLoginDate(loginRequestDto.email());
 
-            log.info("User logged in successfully: {}", loginRequestDto.email());
+            log.debug("User logged in successfully: {}", loginRequestDto.email());
             return createLoginResponse(authentication);
         } catch (AccountDeletedException e) {
             throw e;
         } catch (BadCredentialsException e) {
-            log.warn("Login failed for user {}: Bad credentials", loginRequestDto.email());
+            log.debug("Login failed for user {}: Bad credentials", loginRequestDto.email());
             throw new InvalidCredentialsException("Invalid email or password");
         } catch (Exception e) {
-            log.error("Login failed for user {}: {}", loginRequestDto.email(), e.getMessage());
+            log.debug("Login failed for user {}: {}", loginRequestDto.email(), e.getMessage());
             throw new AuthenticationFailedException("Authentication failed. Please try again.");
         }
     }
@@ -83,10 +87,11 @@ public class AuthService {
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String token = jwtTokenValidator.extractTokenFromHeader(request);
         if (token != null) {
-            jwtTokenValidator.addToBlacklist(token);
+            Date tokenExpiration = jwtTokenValidator.getTokenExpiration(token);
+            tokenBlacklistService.addToBlacklist(token, tokenExpiration);
             log.debug("Token added to blacklist: {}", token);
         } else {
-            log.warn("No token found in request during logout");
+            log.debug("No token found in request during logout");
         }
         cookieService.removeRefreshTokenCookie(response);
 
@@ -94,7 +99,7 @@ public class AuthService {
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Expires", "0");
 
-        log.info("User logged out successfully");
+        log.debug("User logged out successfully");
     }
 
 

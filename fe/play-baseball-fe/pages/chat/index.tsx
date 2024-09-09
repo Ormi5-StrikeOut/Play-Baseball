@@ -13,6 +13,7 @@ import {
   ListItemAvatar,
   ButtonBase,
 } from "@mui/material";
+import Wrapper from '../../components/Wrapper'
 
 interface ChatRoom {
   id: string;
@@ -150,162 +151,164 @@ const ChatInterface = () => {
   };
 
   return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        p: 2,
-        maxWidth: "60%",
-        margin: "0 auto",
-        minHeight: "80vh",
-      }}
-    >
-      <Grid container spacing={2} sx={{ height: "955px" }}>
-        {/* 채팅방 목록 */}
-        <Grid item xs={12} md={4} sx={{ height: "100%" }}>
-          <Box
-            sx={{
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              height: "100%",
-              overflowY: "auto",
-            }}
-          >
-            <Typography variant="h6" sx={{ p: 2 }}>
-              닉네임
-            </Typography>
-            <Divider />
-            <List>
-              {chatRooms.map((chatRoom) => (
-                <React.Fragment key={chatRoom.id}>
-                  <ListItem
-                    component={ButtonBase}
-                    onClick={() => handleChatRoomClick(chatRoom)}
-                    sx={{
-                      backgroundColor:
-                        selectedChatRoom?.id === chatRoom.id
-                          ? "#e0f7fa"
-                          : "inherit",
-                    }}
-                  >
-                    {/* <ListItemAvatar>
-                      <Avatar alt={chatRoom.name} src={chatRoom.avatarUrl} />
-                    </ListItemAvatar> */}
-                    <ListItemText
-                      primary={chatRoom.name}
-                      secondary={`${chatRoom.time} — ${chatRoom.lastMessage}`}
-                    />
-                    {chatRoom.unreadCount > 0 && (
-                      <Box sx={{ ml: 1 }}>
-                        {/* <Avatar
-                          sx={{
-                            bgcolor: "red",
-                            width: 20,
-                            height: 20,
-                            fontSize: "0.8rem",
-                          }}
-                        >
-                          {chatRoom.unreadCount}
-                        </Avatar> */}
-                      </Box>
-                    )}
-                  </ListItem>
-                  <Divider />
-                </React.Fragment>
-              ))}
-            </List>
-          </Box>
-        </Grid>
-
-        {/* 선택된 채팅방 대화 내역 */}
-        <Grid item xs={12} md={8} sx={{ height: "100%" }}>
-          {selectedChatRoom ? (
+    <Wrapper>
+      <Box
+        sx={{
+          flexGrow: 1,
+          p: 2,
+          maxWidth: "60%",
+          margin: "0 auto",
+          minHeight: "80vh",
+        }}
+      >
+        <Grid container spacing={2} sx={{ height: "955px" }}>
+          {/* 채팅방 목록 */}
+          <Grid item xs={12} md={4} sx={{ height: "100%" }}>
             <Box
               sx={{
                 border: "1px solid #e0e0e0",
                 borderRadius: "8px",
                 height: "100%",
-                display: "flex",
-                flexDirection: "column",
+                overflowY: "auto",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", p: 2 }}>
-                {/* <Avatar
-                  alt={selectedChatRoom.name}
-                  src={selectedChatRoom.avatarUrl}
-                /> */}
-                <Box sx={{ ml: 2 }}>
-                  <Typography variant="h6">{selectedChatRoom.name}</Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    보통 1시간 이내 응답
-                  </Typography>
-                </Box>
-              </Box>
+              <Typography variant="h6" sx={{ p: 2 }}>
+                닉네임
+              </Typography>
               <Divider />
-              <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
-                {chatMessagesByRoom[selectedChatRoom.id].map((msg) => (
-                  <Box key={msg.id} sx={{ mb: 3 }}>
-                    <Box
+              <List>
+                {chatRooms.map((chatRoom) => (
+                  <React.Fragment key={chatRoom.id}>
+                    <ListItem
+                      component={ButtonBase}
+                      onClick={() => handleChatRoomClick(chatRoom)}
                       sx={{
-                        display: "flex",
-                        justifyContent: msg.isSent ? "flex-end" : "flex-start",
+                        backgroundColor:
+                          selectedChatRoom?.id === chatRoom.id
+                            ? "#e0f7fa"
+                            : "inherit",
                       }}
                     >
-                      <Box
-                        sx={{
-                          backgroundColor: msg.isSent ? "#ffcc80" : "#f0f0f0",
-                          color: "#000",
-                          padding: "8px 12px",
-                          borderRadius: "16px",
-                          maxWidth: "60%",
-                        }}
-                      >
-                        <Typography variant="body1">{msg.message}</Typography>
-                      </Box>
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: "block",
-                        textAlign: msg.isSent ? "right" : "left",
-                        color: "#888",
-                      }}
-                    >
-                      {msg.time}
-                    </Typography>
-                  </Box>
+                      {/* <ListItemAvatar>
+                        <Avatar alt={chatRoom.name} src={chatRoom.avatarUrl} />
+                      </ListItemAvatar> */}
+                      <ListItemText
+                        primary={chatRoom.name}
+                        secondary={`${chatRoom.time} — ${chatRoom.lastMessage}`}
+                      />
+                      {chatRoom.unreadCount > 0 && (
+                        <Box sx={{ ml: 1 }}>
+                          {/* <Avatar
+                            sx={{
+                              bgcolor: "red",
+                              width: 20,
+                              height: 20,
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            {chatRoom.unreadCount}
+                          </Avatar> */}
+                        </Box>
+                      )}
+                    </ListItem>
+                    <Divider />
+                  </React.Fragment>
                 ))}
-              </Box>
+              </List>
+            </Box>
+          </Grid>
+
+          {/* 선택된 채팅방 대화 내역 */}
+          <Grid item xs={12} md={8} sx={{ height: "100%" }}>
+            {selectedChatRoom ? (
               <Box
                 sx={{
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
+                  height: "100%",
                   display: "flex",
-                  alignItems: "center",
-                  borderTop: "1px solid #e0e0e0",
-                  padding: 1,
+                  flexDirection: "column",
                 }}
               >
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder="메시지를 입력하세요..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  sx={{ mr: 1 }}
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleSendMessage}
+                <Box sx={{ display: "flex", alignItems: "center", p: 2 }}>
+                  {/* <Avatar
+                    alt={selectedChatRoom.name}
+                    src={selectedChatRoom.avatarUrl}
+                  /> */}
+                  <Box sx={{ ml: 2 }}>
+                    <Typography variant="h6">{selectedChatRoom.name}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      보통 1시간 이내 응답
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider />
+                <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
+                  {chatMessagesByRoom[selectedChatRoom.id].map((msg) => (
+                    <Box key={msg.id} sx={{ mb: 3 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: msg.isSent ? "flex-end" : "flex-start",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            backgroundColor: msg.isSent ? "#ffcc80" : "#f0f0f0",
+                            color: "#000",
+                            padding: "8px 12px",
+                            borderRadius: "16px",
+                            maxWidth: "60%",
+                          }}
+                        >
+                          <Typography variant="body1">{msg.message}</Typography>
+                        </Box>
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          textAlign: msg.isSent ? "right" : "left",
+                          color: "#888",
+                        }}
+                      >
+                        {msg.time}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    borderTop: "1px solid #e0e0e0",
+                    padding: 1,
+                  }}
                 >
-                  전송
-                </Button>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="메시지를 입력하세요..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    sx={{ mr: 1 }}
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSendMessage}
+                  >
+                    전송
+                  </Button>
+                </Box>
               </Box>
-            </Box>
-          ) : (
-            <Typography variant="body1">대화방을 선택하세요.</Typography>
-          )}
+            ) : (
+              <Typography variant="body1">대화방을 선택하세요.</Typography>
+            )}
+          </Grid>
         </Grid>
-      </Grid>
-    </Box>
+      </Box>
+    </Wrapper>
   );
 };
 

@@ -4,6 +4,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.security.filter.JwtValidatorFilter;
 import org.example.spring.security.filter.MemberStatusCheckFilter;
@@ -14,8 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,13 +32,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @Profile("dev")
+@Slf4j
 public class SecurityDevConfig {
 
     private final JwtValidatorFilter jwtValidatorFilter;
     private final RateLimitFilter rateLimitFilter;
     private final MemberStatusCheckFilter memberStatusCheckFilter;
 
-    public SecurityDevConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter, MemberStatusCheckFilter memberStatusCheckFilter) {
+    public SecurityDevConfig(JwtValidatorFilter jwtValidatorFilter, RateLimitFilter rateLimitFilter,
+        MemberStatusCheckFilter memberStatusCheckFilter) {
         this.jwtValidatorFilter = jwtValidatorFilter;
         this.rateLimitFilter = rateLimitFilter;
         this.memberStatusCheckFilter = memberStatusCheckFilter;
@@ -56,25 +57,27 @@ public class SecurityDevConfig {
             .addFilterAfter(memberStatusCheckFilter, JwtValidatorFilter.class)
             .authorizeHttpRequests(request -> request
                 // 비회원 공개 엔드포인트
-                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs/swagger-config").permitAll()
+                .requestMatchers("/", "/api/auth/login", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs/swagger-config", "/favicon.ico")
+                .permitAll()
+                .requestMatchers("/api/members/reset-password", "/api/members/request-password-reset").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/members/verify/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/members/verify-email").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
 
-                // 사용자 및 관리자 엔드포인트
-                .requestMatchers(HttpMethod.PUT, "/api/members/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers("/api/messages").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
-                .requestMatchers("/api/messages/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                // 사용자 및 관리자 엔드포인트 (이메일 인증 필요)
+                .requestMatchers(HttpMethod.PUT, "/api/members/**").hasAuthority(MemberRole.VERIFIED_USER.name())
+                .requestMatchers(HttpMethod.POST, "/api/exchanges", "/api/reviews").hasAuthority(MemberRole.VERIFIED_USER.name())
+                .requestMatchers(HttpMethod.PUT, "/api/exchanges/**", "/api/reviews/**").hasAuthority(MemberRole.VERIFIED_USER.name())
+                .requestMatchers("/api/messages", "/api/messages/**").hasAuthority(MemberRole.VERIFIED_USER.name())
 
                 // 관리자 전용 엔드포인트
-                .requestMatchers(HttpMethod.GET, "/api/members").hasAuthority(MemberRole.ADMIN.name())
-                .requestMatchers(HttpMethod.PUT, "/api/members/verify-role/**").hasAuthority(MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/members").hasAnyAuthority(MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT, "/api/members/verify-role/**").hasAnyAuthority(MemberRole.ADMIN.name())
 
-                // 인증된 사용자 엔드포인트
-                .requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my").authenticated()
+                // 인증된 사용자 엔드포인트 (이메일 인증 불필요)
+                .requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my", "/api/members/resend-verification-email")
+                .authenticated()
                 .requestMatchers("/api/exchange-likes/**").authenticated()
 
                 // 기타 모든 요청
@@ -121,13 +124,6 @@ public class SecurityDevConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
-
-    @Bean
-    public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl.withDefaultRolePrefix()
-            .role(MemberRole.ADMIN.name()).implies(MemberRole.USER.name())
-            .build();
     }
 
     @Bean

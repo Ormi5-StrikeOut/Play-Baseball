@@ -1,170 +1,193 @@
 package org.example.spring.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Collections;
+import java.util.Objects;
+import org.example.spring.common.ApiResponseDto;
 import org.example.spring.constants.Gender;
-import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
+import org.example.spring.domain.member.dto.MemberEmailVerifiedResponseDto;
 import org.example.spring.domain.member.dto.MemberJoinRequestDto;
+import org.example.spring.domain.member.dto.MemberModifyRequestDto;
 import org.example.spring.domain.member.dto.MemberResponseDto;
+import org.example.spring.domain.member.dto.MemberRoleModifyRequestDto;
 import org.example.spring.service.MemberService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-@SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class MemberControllerTest {
 
-    @Autowired
-    private WebApplicationContext webApplicationContext;
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private MemberService memberService;
 
-    @MockBean
-    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
+    @InjectMocks
+    private MemberController memberController;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private MemberJoinRequestDto memberJoinRequestDto;
-
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-            .addFilter((request, response, chain) -> {
-                response.setCharacterEncoding("UTF-8");
-                chain.doFilter(request, response);
-            }, "/*")
-            .build();
-
-        memberJoinRequestDto = MemberJoinRequestDto.builder()
+    @Test
+    void registerMember_Success() {
+        MemberJoinRequestDto requestDto = MemberJoinRequestDto.builder()
             .email("test@example.com")
-            .password("Password1!")
-            .nickname("testuser")
-            .name("Test User")
+            .password("password")
+            .nickname("nickname")
+            .name("name")
             .phoneNumber("010-1234-5678")
             .gender(Gender.MALE)
             .build();
-    }
 
-    @Test
-    @DisplayName("회원 가입 성공 테스트")
-    void registerMember_Success() throws Exception {
-        Member savedMember = Member.builder()
+        MemberResponseDto responseDto = MemberResponseDto.builder()
             .id(1L)
-            .name(memberJoinRequestDto.getName())
-            .email(memberJoinRequestDto.getEmail())
-            .nickname(memberJoinRequestDto.getNickname())
-            .password(memberJoinRequestDto.getPassword())
-            .phoneNumber(memberJoinRequestDto.getPhoneNumber())
-            .gender(memberJoinRequestDto.getGender())
+            .email("test@example.com")
+            .nickname("nickname")
             .role(MemberRole.USER)
             .build();
 
-        MemberResponseDto responseDto = MemberResponseDto.toDto(savedMember);
-
         when(memberService.registerMember(any(MemberJoinRequestDto.class))).thenReturn(responseDto);
 
-        MvcResult result = mockMvc.perform(post("/api/members/join")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.message").value("회원가입에 성공했습니다."))
-            .andExpect(jsonPath("$.data.id").value(savedMember.getId()))
-            .andExpect(jsonPath("$.data.email").value(savedMember.getEmail()))
-            .andExpect(jsonPath("$.data.nickname").value(savedMember.getNickname()))
-            .andExpect(jsonPath("$.data.role").value(savedMember.getRole().name()))
-            .andDo(print())
-            .andReturn();
+        ResponseEntity<ApiResponseDto<MemberResponseDto>> response = memberController.registerMember(requestDto);
 
-        String responseContent = result.getResponse().getContentAsString();
-        System.out.println("Actual response: " + responseContent);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("회원가입에 성공했습니다.", Objects.requireNonNull(response.getBody()).getMessage());
+        assertEquals(responseDto, response.getBody().getData());
+        verify(memberService, times(1)).registerMember(any(MemberJoinRequestDto.class));
     }
 
     @Test
-    @DisplayName("회원 가입 실패 테스트 - 서버 오류")
-    void registerMember_Failure_ServerError() throws Exception {
-        when(memberService.registerMember(any(MemberJoinRequestDto.class)))
-            .thenThrow(new RuntimeException("서버 오류 발생"));
+    void getAllMembers_Success() {
+        Page<MemberResponseDto> page = new PageImpl<>(Collections.singletonList(MemberResponseDto.builder().build()));
+        when(memberService.getAllMembers(anyInt(), anyInt())).thenReturn(page);
 
-        MvcResult result = mockMvc.perform(post("/api/members/join")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
-            .andExpect(status().isInternalServerError())
-            .andExpect(jsonPath("$.message").value("서버 오류가 발생했습니다."))
-            .andExpect(jsonPath("$.data").doesNotExist())
-            .andDo(print())
-            .andReturn();
+        ResponseEntity<ApiResponseDto<Page<MemberResponseDto>>> response = memberController.getAllMembers(0, 10);
 
-        String responseContent = result.getResponse().getContentAsString();
-        System.out.println("Actual response: " + responseContent);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("회원 목록 조회 성공", Objects.requireNonNull(response.getBody()).getMessage());
+        assertEquals(page, response.getBody().getData());
     }
 
     @Test
-    @DisplayName("회원 가입 실패 테스트 - 잘못된 요청")
-    void registerMember_Failure_BadRequest() throws Exception {
-        String errorMessage = "잘못된 요청입니다.";
-        when(memberService.registerMember(any(MemberJoinRequestDto.class)))
-            .thenThrow(new IllegalArgumentException(errorMessage));
+    void getMyMember_Success() {
+        MemberResponseDto responseDto = MemberResponseDto.builder()
+            .id(1L)
+            .email("test@example.com")
+            .nickname("nickname")
+            .role(MemberRole.USER)
+            .build();
 
-        MvcResult result = mockMvc.perform(post("/api/members/join")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(memberJoinRequestDto)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("요청에 실패했습니다: " + errorMessage))
-            .andExpect(jsonPath("$.data").doesNotExist())
-            .andDo(print())
-            .andReturn();
+        when(memberService.getMyMember(any(HttpServletRequest.class))).thenReturn(responseDto);
 
-        String responseContent = result.getResponse().getContentAsString();
-        System.out.println("Actual response: " + responseContent);
+        ResponseEntity<ApiResponseDto<MemberResponseDto>> response = memberController.getMyMember(mock(HttpServletRequest.class));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("회원 조회 성공:", Objects.requireNonNull(response.getBody()).getMessage());
+        assertEquals(responseDto, response.getBody().getData());
     }
 
     @Test
-    @DisplayName("회원 전체 목록 조회 - 페이징")
-    void getAllMembers_no_search() throws Exception {
-        // given
-        given(memberService.getAllMembers(anyInt(), anyInt()))
-            .willReturn(Page.empty());
+    void deleteMember_Success() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        doNothing().when(memberService).deleteMember(any(HttpServletRequest.class), any(HttpServletResponse.class));
 
-        // when
-        ResultActions actions = mockMvc.perform(
-            get("/api/members")
-                .param("page", "0")
-                .param("size", "10"));
+        ResponseEntity<ApiResponseDto<Void>> result = memberController.deleteMember(request, response);
 
-        // then
-        actions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("회원 목록 조회 성공"))
-            .andExpect(jsonPath("$.data").isMap())
-            .andDo(print());
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("회원 삭제 성공", Objects.requireNonNull(result.getBody()).getMessage());
+        assertNull(result.getBody().getData());
+        verify(memberService, times(1)).deleteMember(any(HttpServletRequest.class), any(HttpServletResponse.class));
     }
 
+    @Test
+    void modifyMember_Success() {
+        MemberModifyRequestDto requestDto = MemberModifyRequestDto.builder()
+            .nickname("newNickname")
+            .name("newName")
+            .phoneNumber("010-9876-5432")
+            .gender(Gender.FEMALE)
+            .build();
+
+        MemberResponseDto responseDto = MemberResponseDto.builder()
+            .id(1L)
+            .email("test@example.com")
+            .nickname("newNickname")
+            .role(MemberRole.USER)
+            .build();
+
+        when(memberService.modifyMember(any(HttpServletRequest.class), any(MemberModifyRequestDto.class))).thenReturn(responseDto);
+
+        ResponseEntity<ApiResponseDto<MemberResponseDto>> response = memberController.modifyMember(mock(HttpServletRequest.class), requestDto);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("회원 정보 수정 성공:", Objects.requireNonNull(response.getBody()).getMessage());
+        assertEquals(responseDto, response.getBody().getData());
+    }
+
+    @Test
+    void modifyMemberRole_Success() {
+        MemberRoleModifyRequestDto requestDto = MemberRoleModifyRequestDto.builder()
+            .role(MemberRole.ADMIN)
+            .build();
+
+        MemberResponseDto responseDto = MemberResponseDto.builder()
+            .id(1L)
+            .email("test@example.com")
+            .nickname("nickname")
+            .role(MemberRole.ADMIN)
+            .build();
+
+        when(memberService.modifyMemberRole(anyLong(), any(MemberRoleModifyRequestDto.class), any(HttpServletRequest.class))).thenReturn(responseDto);
+
+        ResponseEntity<ApiResponseDto<MemberResponseDto>> response = memberController.modifyMemberRole(1L, requestDto,
+            mock(HttpServletRequest.class));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("회원 권한 수정 성공", Objects.requireNonNull(response.getBody()).getMessage());
+        assertEquals(responseDto, response.getBody().getData());
+    }
+
+    @Test
+    void verifyEmail_Success() {
+        MemberEmailVerifiedResponseDto responseDto = MemberEmailVerifiedResponseDto.builder()
+            .email("test@example.com")
+            .build();
+
+        when(memberService.verifyEmail(anyString())).thenReturn(responseDto);
+
+        ResponseEntity<ApiResponseDto<MemberEmailVerifiedResponseDto>> response = memberController.verifyEmail("token");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("이메일 인증이 완료되었습니다.", Objects.requireNonNull(response.getBody()).getMessage());
+        assertEquals(responseDto, response.getBody().getData());
+    }
+
+    @Test
+    void resendVerificationEmail_Success() {
+        doNothing().when(memberService).resendVerificationEmail(any(HttpServletRequest.class));
+
+        ResponseEntity<ApiResponseDto<Void>> response = memberController.resendVerificationEmail(mock(HttpServletRequest.class));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("인증 이메일 재발송이 완료되었습니다.", Objects.requireNonNull(response.getBody()).getMessage());
+        assertNull(response.getBody().getData());
+        verify(memberService, times(1)).resendVerificationEmail(any(HttpServletRequest.class));
+    }
 }

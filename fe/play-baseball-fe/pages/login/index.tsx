@@ -10,6 +10,7 @@ import Alert from "@mui/material/Alert";
 import FormControl from "@mui/material/FormControl";
 import axios from "axios";
 import { MEMBER_LOGIN, SERVER_URL } from "@/constants/endpoints";
+import Wrapper from '../../components/Wrapper'
 
 const LoginPage: React.FC = () => {
   const [formValues, setFormValues] = useState({
@@ -70,68 +71,70 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h4" gutterBottom>
-          로그인
-        </Typography>
-
-        {showError && (
-          <Alert severity="error">
-            이메일 또는 비밀번호를 다시 입력해주세요.
-          </Alert>
-        )}
-        <FormControl fullWidth margin="normal">
-          <TextField
-            label="Email"
-            variant="outlined"
-            fullWidth
-            name="email"
-            value={formValues.email}
-            onChange={handleChange}
-          />
-        </FormControl>
-
-        <FormControl fullWidth margin="normal">
-          <TextField
-            label="Password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            name="password"
-            value={formValues.password}
-            onChange={handleChange}
-          />
-        </FormControl>
-
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={handleLogin}
+    <Wrapper>
+      <Container maxWidth="sm">
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
         >
-          로그인
-        </Button>
-
-        <Box mt={2} display="flex" justifyContent="center" alignItems="center">
-          <Link href="/signup" variant="body2" sx={{ mx: 2 }}>
-            회원가입
-          </Link>
-          <Typography variant="body2" sx={{ mx: 1 }}>
-            |
+          <Typography variant="h4" gutterBottom>
+            로그인
           </Typography>
-          <Link href="/forgot-password" variant="body2" sx={{ mx: 2 }}>
-            비밀번호 찾기
-          </Link>
+
+          {showError && (
+            <Alert severity="error">
+              이메일 또는 비밀번호를 다시 입력해주세요.
+            </Alert>
+          )}
+          <FormControl fullWidth margin="normal">
+            <TextField
+              label="Email"
+              variant="outlined"
+              fullWidth
+              name="email"
+              value={formValues.email}
+              onChange={handleChange}
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <TextField
+              label="Password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              name="password"
+              value={formValues.password}
+              onChange={handleChange}
+            />
+          </FormControl>
+
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleLogin}
+          >
+            로그인
+          </Button>
+
+          <Box mt={2} display="flex" justifyContent="center" alignItems="center">
+            <Link href="/signup" variant="body2" sx={{ mx: 2 }}>
+              회원가입
+            </Link>
+            <Typography variant="body2" sx={{ mx: 1 }}>
+              |
+            </Typography>
+            <Link href="/forgot-password" variant="body2" sx={{ mx: 2 }}>
+              비밀번호 찾기
+            </Link>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </Wrapper>
   );
 };
 

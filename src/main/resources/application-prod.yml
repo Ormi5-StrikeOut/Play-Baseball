@@ -1,6 +1,7 @@
-
-
 spring:
+  config:
+    import: optional:file:/home/ubuntu/.env
+
   application:
     name: Play_Baseball
 
@@ -40,9 +41,20 @@ spring:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.debug: true
+      mail.smtp.connectiontimeout: 1000 #1초
+      mail.starttls.enable: true
+      mail.smtp.auth: true
+
 logging:
   level:
-    root: DEBUG
+    root: INFO
     org.springframework.web: DEBUG
     org.hibernate.SQL: INFO
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
@@ -56,9 +68,31 @@ jwt:
   expiration: ${JWT_EXPIRATION}  # 24시간
   refresh-token:
     expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
+  email-verification:
+    expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
 
-server:
-  forward-headers-strategy: native
-  tomcat:
-    remote-ip-header: X-Forwarded-For
-    protocol-header: X-Forwarded-Proto
+file:
+  upload-dir: src/main/resources/static/uploads
+
+app:
+  base-url: https://api.ioshane.com
+  fe-url: https://ioshane.com
+  resource-url: https://resource.ioshane.com
+
+cloud:
+  aws:
+    s3:
+      bucket: ${S3_NAME}
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: ${S3_KEY}
+      secretKey: ${S3_SECRET}
+
+
+
+#server:
+#  forward-headers-strategy: native
+#  tomcat:
+#    remote-ip-header: X-Forwarded-For
+#    protocol-header: X-Forwarded-Proto

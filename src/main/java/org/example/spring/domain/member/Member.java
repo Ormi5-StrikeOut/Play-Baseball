@@ -79,8 +79,6 @@ public class Member {
     private MemberRole role;
 
     public void updateFrom(MemberModifyRequestDto dto) {
-        this.email = dto.getEmail();
-        this.password = dto.getPassword();
         this.nickname = dto.getNickname();
         this.name = dto.getName();
         this.phoneNumber = dto.getPhoneNumber();
@@ -98,5 +96,13 @@ public class Member {
 
     public void updateRole(@NotNull(message = "권한 정보는 필수입니다.") MemberRole role) {
         this.role = role;
+    }
+
+    public void updateEmailVerified(boolean isVerified) {
+        this.emailVerified = isVerified;
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 }

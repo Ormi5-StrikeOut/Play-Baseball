@@ -8,9 +8,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.example.spring.security.jwt.CookieService;
+import org.example.spring.security.service.CookieService;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.example.spring.security.service.JwtAuthenticationService;
+import org.example.spring.security.service.TokenBlacklistService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -25,16 +26,19 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 
     private final CookieService cookieService;
     private final JwtAuthenticationService jwtAuthenticationService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join"
+        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/api/members/verify-email", "/api/members/reset-password", "/api/members/request-password-reset"
     );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
+        TokenBlacklistService tokenBlacklistService,
         JwtTokenValidator jwtTokenValidator) {
         this.cookieService = cookieService;
         this.jwtAuthenticationService = jwtAuthenticationService;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.jwtTokenValidator = jwtTokenValidator;
     }
 
@@ -56,7 +60,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
             String accessToken = jwtTokenValidator.extractTokenFromHeader(request);
             String refreshToken = cookieService.extractTokenFromCookie(request, "refresh_token");
 
-            if (accessToken != null && jwtTokenValidator.isTokenBlacklisted(accessToken)) {
+            if (accessToken != null && tokenBlacklistService.isTokenBlacklisted(accessToken)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Token has been invalidated. Please log in again.");
                 return;
@@ -102,7 +106,9 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             log.error("Authentication error: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authentication failed: " + e.getMessage());
+            if (!response.isCommitted()) {
+                response.getWriter().write("Authentication failed: " + e.getMessage());
+            }
         }
     }
 
@@ -115,7 +121,9 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith) || path.startsWith("/api/members/verify/");
+        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith)
+            || path.equals("/")
+            || path.equals("/favicon.ico");
         log.debug("Should skip filter for path {}: {}", path, shouldSkip);
         return shouldSkip;
     }

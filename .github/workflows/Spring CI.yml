@@ -10,6 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
+      SPRING_PROFILES_ACTIVE: prod
       RDS_HOST: ${{ secrets.RDS_HOST }}
       RDS_PORT: ${{ secrets.RDS_PORT }}
       RDS_NAME: ${{ secrets.RDS_NAME }}
@@ -22,6 +23,14 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
       JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
+      JWT_EMAIL_VERIFICATION_EXPIRATION: ${{ secrets.JWT_EMAIL_VERIFICATION_EXPIRATION }}
+      MAIL_HOST: ${{ secrets.MAIL_HOST }}
+      MAIL_PORT: ${{ secrets.MAIL_PORT }}
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      S3_NAME: ${{ secrets.S3_NAME }}
+      S3_KEY: ${{ secrets.S3_KEY }}
+      S3_SECRET: ${{ secrets.S3_SECRET }}
 
     steps:
       - name: Check out code
