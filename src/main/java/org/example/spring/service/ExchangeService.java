@@ -15,9 +15,11 @@ import org.example.spring.domain.exchange.dto.ExchangeNavigationResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
+import org.example.spring.domain.reviewOverview.ReviewOverview;
 import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.repository.ExchangeImageRepository;
 import org.example.spring.repository.ExchangeRepository;
+import org.example.spring.repository.ReviewOverviewRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -42,13 +44,15 @@ public class ExchangeService {
 	private final ExchangeImageRepository exchangeImageRepository;
 	private final S3Service s3Service;
 	private final JwtTokenValidator jwtTokenValidator;
+	private final ReviewOverviewRepository reviewOverviewRepository;
 
 	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
-		JwtTokenValidator jwtTokenValidator, S3Service s3Service) {
+		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository) {
 		this.exchangeRepository = exchangeRepository;
 		this.exchangeImageRepository = exchangeImageRepository;
 		this.s3Service = s3Service;
 		this.jwtTokenValidator = jwtTokenValidator;
+		this.reviewOverviewRepository = reviewOverviewRepository;
 	}
 
 	/**
@@ -178,7 +182,16 @@ public class ExchangeService {
 
 		boolean isWriter = isWriter(request, id);
 
-		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter);
+		ReviewOverview reviewOverview = reviewOverviewRepository.findByMemberId(exchange.getMember().getId())
+			.orElse(ReviewOverview.builder()
+				.count(0L)
+				.average(0.0)
+				.build());
+
+		long reviewCount = reviewOverview.getCount();
+		double average = reviewOverview.getAverage();
+
+		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount, average);
 	}
 
 	/**
