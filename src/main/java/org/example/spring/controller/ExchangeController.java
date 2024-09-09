@@ -91,7 +91,7 @@ public class ExchangeController {
    * @param size 한 번에 렌더링할 게시물 개수
    * @return memberId와 일치하는 게시글 목록을 page와 size에 따라 반환
    */
-  @GetMapping("/{memberId}")
+  @GetMapping("/member/{memberId}")
   public ResponseEntity<ApiResponseDto<Page<ExchangeNavigationResponseDto>>> getMyExchanges(
       @PathVariable Long memberId,
       @RequestParam(required = false, defaultValue = PAGE_DEFAULT) int page,
