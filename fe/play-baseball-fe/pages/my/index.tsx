@@ -1,11 +1,11 @@
 import React from 'react';
-import UserProfile from '../../components/UserProfile';
+import MyProfile from '../../components/MyProfile';
 import Wrapper from '../../components/Wrapper'
 
 const My: React.FC = () => {
     return (
         <Wrapper>
-            <UserProfile />
+            <MyProfile />
         </Wrapper>
     );
 };

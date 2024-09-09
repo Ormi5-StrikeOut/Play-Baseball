@@ -6,24 +6,36 @@ import { User } from '../constants/types';
 const users: User[] = [
     {
         id: 1,
-        name: 'John Doe',
-        age: 30,
-        bio: 'Full Stack Developer',
-        avatarUrl: 'https://via.placeholder.com/150',
+        nickname: 'John Doe',
+        email: '',
+        role: '',
+        createdAt: undefined,
+        updatedAt: undefined,
+        lastLoginDate: undefined,
+        deletedAt: undefined,
+        emailVerified: false
     },
     {
         id: 2,
-        name: 'Jane Smith',
-        age: 25,
-        bio: 'UI/UX Designer',
-        avatarUrl: 'https://via.placeholder.com/150',
+        nickname: 'Jane Smith',
+        email: '',
+        role: '',
+        createdAt: undefined,
+        updatedAt: undefined,
+        lastLoginDate: undefined,
+        deletedAt: undefined,
+        emailVerified: false
     },
     {
         id: 3,
-        name: 'Alice Johnson',
-        age: 28,
-        bio: 'Data Scientist',
-        avatarUrl: 'https://via.placeholder.com/150',
+        nickname: 'Alice Johnson',
+        email: '',
+        role: '',
+        createdAt: undefined,
+        updatedAt: undefined,
+        lastLoginDate: undefined,
+        deletedAt: undefined,
+        emailVerified: false
     },
 ];
 

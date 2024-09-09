@@ -1,7 +1,11 @@
 export interface User {
-    id: number;
-    name: string;
-    age: number;
-    bio: string;
-    avatarUrl: string;
+    id: number,
+    email: string,
+    nickname: string,
+    role: string,
+    createdAt: Date,
+    updatedAt: Date,
+    lastLoginDate: Date,
+    deletedAt: Date,
+    emailVerified: boolean
 }
