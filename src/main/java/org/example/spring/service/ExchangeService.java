@@ -189,9 +189,7 @@ public class ExchangeService {
 
     boolean isWriter = isWriter(request, id);
 
-    return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter)
-        .toBuilder()
-        .build();
+    return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter);
   }
 
   /**
