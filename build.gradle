@@ -65,7 +65,9 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
     // AWS S3
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.771'
+    implementation('com.amazonaws:aws-java-sdk-s3:1.12.771') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
 }
 
 test {
