@@ -5,7 +5,9 @@ import java.util.Optional;
 import org.example.spring.domain.exchange.Exchange;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -28,5 +30,7 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
   Page<Exchange> findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(
       Long memberId, Pageable pageable);
 
+  @Query("SELECT e FROM Exchange e WHERE e.id = :id AND e.deletedAt IS NULL")
+  @EntityGraph(attributePaths = {"member"})
   Optional<Exchange> findByIdAndDeletedAtIsNull(Long id);
 }
