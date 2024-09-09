@@ -65,7 +65,7 @@ jobs:
 
           scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/playBaseballServer-0.0.1-SNAPSHOT.jar ubuntu@$EC2_HOST:/home/ubuntu/playBaseballServer.jar
           scp -i private_key.pem -o StrictHostKeyChecking=no .env ubuntu@$EC2_HOST:/home/ubuntu/.env
-          ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << EOF
 
             if pgrep java; then
               pkill java
