@@ -23,7 +23,7 @@ public class ExchangeDetailResponseDto {
   private final List<ExchangeImageResponseDto> images;
   private final String writer;
   private final List<ExchangeNavigationResponseDto> recentExchangesByMember;
-  private final boolean isWriter;
+  private final String isWriter;
 
   public static ExchangeDetailResponseDto fromExchange(
       Exchange exchange,
@@ -48,7 +48,7 @@ public class ExchangeDetailResponseDto {
         .images(images)
         .writer(exchange.getMember().getNickname())
         .recentExchangesByMember(recentExchangesByMember)
-        .isWriter(isWriter)
+        .isWriter(isWriter ? "TRUE" : "FALSE")
         .build();
   }
 }
