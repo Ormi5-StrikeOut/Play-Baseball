@@ -1,4 +1,7 @@
 spring:
+  config:
+    import: optional:file:/home/ubuntu/.env
+
   application:
     name: Play_Baseball
 
@@ -67,6 +70,9 @@ jwt:
     expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
   email-verification:
     expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
+
+file:
+  upload-dir: src/main/resources/static/uploads
 
 app:
   base-url: https://api.ioshane.com

@@ -1,36 +1,25 @@
 name: Deploy Spring BE to EC2
+
 on:
   push:
     branches: [ main, dev ]
+
 permissions:
   contents: read
+
 jobs:
   build-and-deploy:
-    env:
-      RDS_HOST: ${{ secrets.RDS_HOST }}
-      RDS_PORT: ${{ secrets.RDS_PORT }}
-      RDS_NAME: ${{ secrets.RDS_NAME }}
-      RDS_USER: ${{ secrets.RDS_USER }}
-      RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
-      SECURITY_USER_NAME: ${{ secrets.SECURITY_USER_NAME }}
-      SECURITY_USER_PASSWORD: ${{ secrets.SECURITY_USER_PASSWORD }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
-      JWT_REFRESH_TOKEN_EXPIRATION: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
-      JWT_EMAIL_VERIFICATION_EXPIRATION: ${{ secrets.JWT_EMAIL_VERIFICATION_EXPIRATION }}
-      MAIL_HOST: ${{ secrets.MAIL_HOST }}
-      MAIL_PORT: ${{ secrets.MAIL_PORT }}
-      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
+
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
@@ -40,10 +29,31 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
       - name: Execute Gradle
         run: chmod +x ./gradlew
+
       - name: Build with Gradle
         run: ./gradlew build -x test
+
+      - name: Create .env file
+        run: |
+          echo "RDS_HOST=${{ secrets.RDS_HOST }}" >> .env
+          echo "RDS_PORT=${{ secrets.RDS_PORT }}" >> .env
+          echo "RDS_NAME=${{ secrets.RDS_NAME }}" >> .env
+          echo "RDS_USER=${{ secrets.RDS_USER }}" >> .env
+          echo "RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
+          echo "SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }}" >> .env
+          echo "SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
+          echo "JWT_REFRESH_TOKEN_EXPIRATION=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}" >> .env
+          echo "JWT_EMAIL_VERIFICATION_EXPIRATION=${{ secrets.JWT_EMAIL_VERIFICATION_EXPIRATION }}" >> .env
+          echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> .env
+          echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> .env
+          echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+
       - name: Deploy to EC2
         env:
           PRIVATE_KEY: ${{ secrets.EC2_KEY }}
@@ -52,11 +62,14 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/playBaseballServer-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/$EC2_USER/playBaseballServer.jar
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
+
+          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/playBaseballServer-0.0.1-SNAPSHOT.jar ubuntu@$EC2_HOST:/home/ubuntu/playBaseballServer.jar
+          scp -i private_key.pem -o StrictHostKeyChecking=no .env ubuntu@$EC2_HOST:/home/ubuntu/.env
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST
+
             if pgrep java; then
               pkill java
               sleep 5
             fi
-            nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &"
+            nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &
           rm -f private_key.pem

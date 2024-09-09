@@ -30,7 +30,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     private final JwtTokenValidator jwtTokenValidator;
 
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/members/verify-email", "/favicon.ico"
+        "/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/api/members/verify-email", "/api/members/reset-password", "/api/members/request-password-reset", "/favicon.ico"
     );
 
     public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
@@ -106,7 +106,9 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             log.error("Authentication error: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authentication failed: " + e.getMessage());
+            if (!response.isCommitted()) {
+                response.getWriter().write("Authentication failed: " + e.getMessage());
+            }
         }
     }
 
@@ -119,7 +121,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith) || path.startsWith("/api/members/verify/");
+        boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith) || path.equals("/");
         log.debug("Should skip filter for path {}: {}", path, shouldSkip);
         return shouldSkip;
     }

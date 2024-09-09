@@ -34,7 +34,16 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public String generateEmailVerificationToken(String email) {
+    public void sendPasswordResetEmail(String email, String token) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("비밀번호 재설정");
+        message.setText("다음 링크를 클릭하여 비밀번호를 재설정하세요: " +
+            baseUrl + "/api/members/reset-password?token=" + token);
+        mailSender.send(message);
+    }
+
+    public String generateEmailToken(String email) {
         return Jwts.builder()
             .setSubject(email)
             .setIssuedAt(new Date())
@@ -42,4 +51,5 @@ public class EmailService {
             .signWith(jwtUtils.getSigningKey(), SignatureAlgorithm.HS256)
             .compact();
     }
+
 }

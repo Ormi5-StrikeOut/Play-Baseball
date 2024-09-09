@@ -39,8 +39,9 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         if ("Invalid Token".equals(errorReason)) {
             message = "The provided token is invalid. Please login again.";
         } else {
-            message = (authException != null && authException.getMessage() != null) ? authException.getMessage()
-                : "Unauthorized";
+            message = (authException != null && authException.getMessage() != null)
+                ? authException.getMessage()
+                : "Unauthorized access";
         }
 
         String path = request.getRequestURI();
