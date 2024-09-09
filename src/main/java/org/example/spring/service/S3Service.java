@@ -1,7 +1,5 @@
 package org.example.spring.service;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -27,6 +25,13 @@ public class S3Service {
 	@Value("${app.resource-url}")
 	private String domain;
 
+	/**
+	 * MultipartFile로 받은 리소스를 S3 Bucket에 업로드할 때 사용합니다.
+	 *
+	 * @param file 요청받은 file 정보
+	 * @return 업로드 완료된 url
+	 * @throws IOException 업로드 관련 이슈가 생길 시 반환하는 Exception
+	 */
 	public String uploadFile(MultipartFile file) throws IOException {
 		String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 		ObjectMetadata metadata = new ObjectMetadata();
@@ -39,12 +44,12 @@ public class S3Service {
 		return domain + "/" + fileName;
 	}
 
-	private File convertMultiPartToFile(MultipartFile file) throws IOException {
-		File convFile = new File(file.getOriginalFilename());
-		FileOutputStream fos = new FileOutputStream(convFile);
-		fos.write(file.getBytes());
-		fos.close();
-		return convFile;
+	/**
+	 * S3 Bucket에 등록되어있는 이미지를 삭제합니다.
+	 * @param fileName 이미지 경로
+	 */
+	public void deleteFile(String fileName) {
+		amazonS3.deleteObject(bucket, fileName);
 	}
 
 }
