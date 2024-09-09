@@ -8,34 +8,62 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Container,
 } from "@mui/material";
 import Image from "next/image";
 import axios from "axios";
+import Wrapper from "../../../components/Wrapper";
 import { EXCHANGE } from "@/constants/endpoints";
 
+// Enum 정의
+enum ExchangeStatus {
+  SALE = "SALE",
+  COMPLETE = "COMPLETE",
+}
+
+// 이미지 타입 정의
+interface ImageData {
+  id: number;
+  url: string;
+}
+
 const EditPostForm = () => {
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [content, setContent] = useState("");
-  const [status, setStatus] = useState("");
-  const [images, setImages] = useState<(File | string)[]>([]);
+  const [title, setTitle] = useState<string>("");
+  const [price, setPrice] = useState<number>(0);
+  const [content, setContent] = useState<string>("");
+  const [status, setStatus] = useState<ExchangeStatus>(ExchangeStatus.SALE); // Enum 사용
+  const [images, setImages] = useState<(File | ImageData)[]>([]); // 기존 URL 이미지와 파일을 함께 저장
+  const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const { id } = router.query;
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("Authorization")
+      : null;
 
   useEffect(() => {
     if (id) {
       const fetchPostData = async () => {
         try {
-          const response = await axios.get(`/api/exchanges/${id}`);
+          const response = await axios.get(`${EXCHANGE}/${id}`, {
+            headers: {
+              Authorization: token,
+            },
+            withCredentials: true,
+          });
+
+          // 받아온 데이터 구조 분해 할당
           const { title, price, content, status, images } = response.data.data;
+
           setTitle(title);
           setPrice(price);
           setContent(content);
-          setStatus(status);
+          setStatus(status as ExchangeStatus); // Enum으로 캐스팅
           setImages(images);
         } catch (error) {
           console.error("Error fetching post data:", error);
         }
+        setLoading(true);
       };
       fetchPostData();
     }
@@ -46,15 +74,15 @@ const EditPostForm = () => {
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPrice(event.target.value);
+    setPrice(parseInt(event.target.value));
   };
 
   const handleContentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setContent(event.target.value);
   };
 
-  const handleStatusChange = (event: SelectChangeEvent<string>) => {
-    setStatus(event.target.value as string);
+  const handleStatusChange = (event: SelectChangeEvent<ExchangeStatus>) => {
+    setStatus(event.target.value as ExchangeStatus);
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,16 +98,13 @@ const EditPostForm = () => {
 
   const handleSubmit = async () => {
     const formData = new FormData();
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("Authorization")
-        : null;
     const jsonData = {
       title,
       price,
       content,
       status,
     };
+
     formData.append(
       "exchangeRequestDto",
       new Blob([JSON.stringify(jsonData)], { type: "application/json" })
@@ -87,7 +112,7 @@ const EditPostForm = () => {
 
     images.forEach((image) => {
       // 파일과 기존 URL 이미지를 분리하여 처리
-      if (typeof image !== "string") {
+      if (typeof image !== "string" && !(image as ImageData).url) {
         formData.append("images", image);
       }
     });
@@ -100,6 +125,7 @@ const EditPostForm = () => {
         },
         withCredentials: true,
       });
+
       router.push({
         pathname: "/result",
         query: {
@@ -121,6 +147,16 @@ const EditPostForm = () => {
       });
     }
   };
+
+  if (!loading) {
+    return (
+      <Wrapper>
+        <Container maxWidth="lg" style={{ marginTop: "20px" }}>
+          <Typography variant="h6">Loading...</Typography>
+        </Container>
+      </Wrapper>
+    );
+  }
 
   return (
     <Box
@@ -146,8 +182,8 @@ const EditPostForm = () => {
 
       <Typography>상태</Typography>
       <Select value={status} onChange={handleStatusChange}>
-        <MenuItem value="SALE">판매중</MenuItem>
-        <MenuItem value="COMPLETE">판매완료</MenuItem>
+        <MenuItem value={ExchangeStatus.SALE}>판매중</MenuItem>
+        <MenuItem value={ExchangeStatus.COMPLETE}>판매완료</MenuItem>
       </Select>
 
       <Box>
@@ -162,21 +198,13 @@ const EditPostForm = () => {
               key={index}
               sx={{ position: "relative", width: 100, height: 100 }}
             >
-              {typeof image === "string" ? (
-                <Image
-                  src={image}
-                  alt={`기존 이미지 ${index + 1}`}
-                  layout="fill"
-                  objectFit="cover"
-                />
-              ) : (
-                <Image
-                  src={URL.createObjectURL(image)}
-                  alt={`새 이미지 ${index + 1}`}
-                  layout="fill"
-                  objectFit="cover"
-                />
-              )}
+              <Image
+                src={image.url}
+                alt={`기존 이미지 ${index + 1}`}
+                layout="fill"
+                objectFit="cover"
+              />
+
               <Button
                 variant="contained"
                 color="secondary"
