@@ -20,6 +20,7 @@ import org.example.spring.domain.member.Member;
 import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.repository.ExchangeRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Service
 public class ExchangeService {
+
+  @Value("${app.fe-url}")
+  private String frontendBaseUrl;
 
   private final ExchangeRepository exchangeRepository;
   private final ExchangeImageService exchangeImageService;
@@ -99,7 +103,7 @@ public class ExchangeService {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
-        .map(ExchangeNavigationResponseDto::fromExchange);
+        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl));
   }
 
   /**
@@ -110,7 +114,7 @@ public class ExchangeService {
   @Transactional(readOnly = true)
   public List<ExchangeNavigationResponseDto> getLatestFiveExchanges() {
     return exchangeRepository.findTop5ByDeletedAtIsNullOrderByCreatedAtDesc().stream()
-        .map(ExchangeNavigationResponseDto::fromExchange)
+        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl))
         .collect(Collectors.toList());
   }
 
@@ -127,7 +131,7 @@ public class ExchangeService {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(memberId, pageable)
-        .map(ExchangeNavigationResponseDto::fromExchange);
+        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl));
   }
 
   /**
@@ -144,7 +148,7 @@ public class ExchangeService {
     Pageable pageable = PageRequest.of(page, size);
     return exchangeRepository
         .findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(title, pageable)
-        .map(ExchangeNavigationResponseDto::fromExchange);
+        .map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl));
   }
 
   /**
@@ -167,13 +171,14 @@ public class ExchangeService {
         exchangeRepository
             .findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(
                 exchange.getMember().getId(), pageable)
-            .map(ExchangeNavigationResponseDto::fromExchange)
+            .map(
+                exchangeItem ->
+                    ExchangeNavigationResponseDto.fromExchange(exchangeItem, frontendBaseUrl))
             .getContent();
 
     boolean isWriter = isWriter(request, id);
 
-    return ExchangeDetailResponseDto.fromExchange(
-            exchange, recentExchangesByMember, isWriter)
+    return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter)
         .toBuilder()
         .build();
   }
