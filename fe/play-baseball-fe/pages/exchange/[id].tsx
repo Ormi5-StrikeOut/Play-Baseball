@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Box,
@@ -19,62 +19,91 @@ import Wrapper from "../../components/Wrapper";
 import { useRouter } from "next/router";
 import { EXCHANGE } from "@/constants/endpoints";
 
-// Mock data in the structure of ExchangeDetailResponseDto
-const mockData = {
-  title: "휴대폰",
-  price: 191000,
-  regularPrice: 1000000,
-  content: "이 상품은 거의 새 제품과 다름없습니다.",
-  viewCount: 123,
-  status: "SALE", // 판매중(SALE) 혹은 판매완료(COMPLETE)
-  updatedAt: "2024-08-29T12:34:56",
-  images: [
-    { url: "/exchange/image.jpg", title: "Image 1" },
-    { url: "/exchange/image2.jpg", title: "Image 2" },
-    { url: "/exchange/image3.jpg", title: "Image 3" },
-  ],
-  writer: "닉네임",
-  recentExchangesByMember: [
-    {
-      title: "최근 게시글 1",
-      price: 20000,
-      url: `/exchange/1`,
-      imageUrl: "/exchange/image.jpg",
-      updatedAt: "2024-08-29T12:34:56",
-    },
-    {
-      title: "최근 게시글 2",
-      price: 25000,
-      url: `/exchange/2`,
-      imageUrl: "/exchange/image2.jpg",
-      updatedAt: "2024-08-29T12:34:56",
-    },
-    {
-      title: "최근 게시글 3",
-      price: 30000,
-      url: `/exchange/3`,
-      imageUrl: "/exchange/image3.jpg",
-      updatedAt: "2024-08-29T12:34:56",
-    },
-  ],
-  isWriter: true, // 현재 사용자가 작성자인지 여부
-};
+// Define types for the ExchangeDetailResponseDto and Image objects
+interface Image {
+  url: string;
+  title: string;
+}
+
+interface RecentExchange {
+  title: string;
+  price: number;
+  url: string;
+  imageUrl: string;
+  updatedAt: string;
+}
+
+interface ExchangeDetailResponseDto {
+  title: string;
+  price: number;
+  regularPrice: number;
+  content: string;
+  viewCount: number;
+  status: "SALE" | "COMPLETE";
+  updatedAt: string;
+  images: Image[];
+  writer: string;
+  recentExchangesByMember: RecentExchange[];
+  isWriter: boolean;
+}
 
 const ItemDetail: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [hover, setHover] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [hover, setHover] = useState<boolean>(false);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [exchangeData, setExchangeData] =
+    useState<ExchangeDetailResponseDto | null>(null); // State with specific type
   const router = useRouter();
+  const { id } = router.query;
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("Authorization")
+      : null;
+
+  useEffect(() => {
+    const fetchExchangeData = async () => {
+      if (!id) return;
+      try {
+        const response = await axios.get<ExchangeDetailResponseDto>(
+          `${EXCHANGE}/${id}`,
+          {
+            headers: {
+              Authorization: token,
+            },
+            withCredentials: true,
+          }
+        );
+        setExchangeData(response.data);
+      } catch (error) {
+        router.push({
+          pathname: "/result",
+          query: {
+            isSuccess: "false",
+            message: `데이터를 가져오는 중 오류가 발생했습니다: ${
+              (error as Error).message
+            }`,
+            buttonText: "메인으로 돌아가기",
+            buttonAction: `/`,
+          },
+        });
+      }
+    };
+
+    fetchExchangeData();
+  }, [id, router]);
 
   const handlePrev = () => {
     setCurrentIndex(
       (prevIndex) =>
-        (prevIndex - 1 + mockData.images.length) % mockData.images.length
+        (prevIndex - 1 + (exchangeData?.images.length || 1)) %
+        (exchangeData?.images.length || 1)
     );
   };
 
   const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % mockData.images.length);
+    setCurrentIndex(
+      (prevIndex) => (prevIndex + 1) % (exchangeData?.images.length || 1)
+    );
   };
 
   const handleMouseEnter = () => {
@@ -92,7 +121,7 @@ const ItemDetail: React.FC = () => {
         : null;
 
     try {
-      await axios.delete(`${EXCHANGE}/${router.query.id}`, {
+      await axios.delete(`${EXCHANGE}/${id}`, {
         headers: {
           Authorization: token,
         },
@@ -102,7 +131,7 @@ const ItemDetail: React.FC = () => {
         pathname: "/result",
         query: {
           isSuccess: "true",
-          message: `글이 정상적으로 삭제되었습니다. ${mockData.title}`,
+          message: `글이 정상적으로 삭제되었습니다. ${exchangeData?.title}`,
           buttonText: "메인으로 돌아가기",
           buttonAction: `/`,
         },
@@ -112,13 +141,23 @@ const ItemDetail: React.FC = () => {
         pathname: "/result",
         query: {
           isSuccess: "false",
-          message: `통신 오류가 발생했습니다: ${error}`,
+          message: `통신 오류가 발생했습니다: ${(error as Error).message}`,
           buttonText: "작성한 글로 돌아가기",
-          buttonAction: `/exchange/${router.query.id}`,
+          buttonAction: `/exchange/${id}`,
         },
       });
     }
   };
+
+  if (!exchangeData) {
+    return (
+      <Wrapper>
+        <Container maxWidth="lg" style={{ marginTop: "20px" }}>
+          <Typography variant="h6">Loading...</Typography>
+        </Container>
+      </Wrapper>
+    );
+  }
 
   return (
     <Wrapper>
@@ -160,8 +199,8 @@ const ItemDetail: React.FC = () => {
                   </IconButton>
                 </Fade>
                 <Image
-                  src={mockData.images[currentIndex].url}
-                  alt={mockData.images[currentIndex].title}
+                  src={exchangeData.images[currentIndex].url}
+                  alt={exchangeData.images[currentIndex].title}
                   layout="responsive"
                   width={700}
                   height={400}
@@ -185,7 +224,7 @@ const ItemDetail: React.FC = () => {
 
               {/* Indicators */}
               <Box display="flex" justifyContent="center" mt={1}>
-                {mockData.images.map((_, index) => (
+                {exchangeData.images.map((_, index) => (
                   <Box
                     key={index}
                     onClick={() => setCurrentIndex(index)}
@@ -207,21 +246,21 @@ const ItemDetail: React.FC = () => {
           {/* Product Info */}
           <Grid item xs={12} md={6}>
             <Paper elevation={3} sx={{ padding: "20px" }}>
-              <Typography variant="h5">{mockData.title}</Typography>
+              <Typography variant="h5">{exchangeData.title}</Typography>
               <Typography
                 variant="h5"
                 color="primary"
                 sx={{ marginTop: "10px" }}
               >
-                {mockData.price.toLocaleString()}원
+                {exchangeData.price.toLocaleString()}원
               </Typography>
               <Divider sx={{ margin: "20px 0" }} />
               <Typography variant="body1">
-                상태: {mockData.status === "SALE" ? "판매중" : "판매완료"}
+                상태: {exchangeData.status === "SALE" ? "판매중" : "판매완료"}
               </Typography>
               <Divider sx={{ margin: "20px 0" }} />
               <Typography variant="body1">
-                이 상품의 정가는 {mockData.regularPrice.toLocaleString()}원
+                이 상품의 정가는 {exchangeData.regularPrice.toLocaleString()}원
                 입니다.
               </Typography>
               <Divider sx={{ margin: "20px 0" }} />
@@ -231,15 +270,13 @@ const ItemDetail: React.FC = () => {
               <Button variant="contained" fullWidth sx={{ mt: 2 }}>
                 결제하기
               </Button>
-              {mockData.isWriter && (
+              {exchangeData.isWriter && (
                 <>
                   <Button
                     variant="outlined"
                     fullWidth
                     sx={{ mt: 2 }}
-                    onClick={() =>
-                      router.push(`/exchange/write/${router.query.id}`)
-                    }
+                    onClick={() => router.push(`/exchange/write/${id}`)}
                   >
                     수정하기
                   </Button>
@@ -262,20 +299,20 @@ const ItemDetail: React.FC = () => {
             <Paper elevation={3} sx={{ padding: "20px" }}>
               <Typography variant="h4">상품 정보</Typography>
               <Typography color="textSecondary" sx={{ marginTop: "10px" }}>
-                작성일: {new Date(mockData.updatedAt).toLocaleDateString()}
+                작성일: {new Date(exchangeData.updatedAt).toLocaleDateString()}
               </Typography>
               <Typography color="textSecondary">
-                조회: {mockData.viewCount}
+                조회: {exchangeData.viewCount}
               </Typography>
               <Divider sx={{ margin: "20px 0" }} />
-              <Typography variant="body1">{mockData.content}</Typography>
+              <Typography variant="body1">{exchangeData.content}</Typography>
             </Paper>
           </Grid>
 
           {/* Seller Info */}
           <Grid item xs={12} md={6}>
             <Paper elevation={3} sx={{ padding: "20px" }}>
-              <Typography variant="h6">{mockData.writer}</Typography>
+              <Typography variant="h6">{exchangeData.writer}</Typography>
               <Box display="flex" alignItems="center">
                 <Box display="flex" alignItems="center">
                   <Rating value={4.6} precision={0.1} readOnly />
@@ -290,8 +327,8 @@ const ItemDetail: React.FC = () => {
               </Box>
               <Divider sx={{ margin: "20px 0" }} />
               <Grid container spacing={1} mt={2}>
-                {mockData.recentExchangesByMember.length > 0 ? (
-                  mockData.recentExchangesByMember.map((item, index) => (
+                {exchangeData.recentExchangesByMember.length > 0 ? (
+                  exchangeData.recentExchangesByMember.map((item, index) => (
                     <Grid
                       item
                       xs={4}
