@@ -63,7 +63,7 @@ public class SecurityDevConfig {
 				.permitAll()
 				.requestMatchers("/api/members/reset-password", "/api/members/request-password-reset")
 				.permitAll()
-				.requestMatchers(HttpMethod.POST, "/api/members/join")
+				.requestMatchers(HttpMethod.POST, "/api/members/join", "/api/members/resend-verification-email")
 				.permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/members/verify-email")
 				.permitAll()
@@ -91,8 +91,7 @@ public class SecurityDevConfig {
 				.hasAnyAuthority(MemberRole.ADMIN.name())
 
 				// 인증된 사용자 엔드포인트 (이메일 인증 불필요)
-				.requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my",
-					"/api/members/resend-verification-email")
+				.requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my")
 				.authenticated()
 				.requestMatchers("/api/exchange-likes/**")
 				.authenticated()
