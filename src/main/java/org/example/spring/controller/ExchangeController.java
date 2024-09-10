@@ -50,7 +50,7 @@ public class ExchangeController {
 	@PostMapping
 	public ResponseEntity<ApiResponseDto<ExchangeResponseDto>> addExchange(HttpServletRequest request,
 		@RequestPart("exchangeRequestDto") ExchangeAddRequestDto exchangeAddRequestDto,
-		@RequestPart("images") List<MultipartFile> images) {
+		@RequestPart(value = "images", required = false) List<MultipartFile> images) {
 
 		try {
 			ExchangeResponseDto exchangeResponseDto = exchangeService.addExchange(request, exchangeAddRequestDto,
