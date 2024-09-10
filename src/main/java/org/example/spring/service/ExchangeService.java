@@ -40,19 +40,29 @@ public class ExchangeService {
 	@Value("${app.fe-url}")
 	private String frontendBaseUrl;
 	private final String EXCHANGE = "/exchange";
+	private final String REGULAR_PRICE_PROMPT = "질문: 의 출시 가격은 얼마인지 말해줄래? \n"
+		+ "답변 조건: \n"
+		+ "1. 오직 질문에 해당하는 숫자 데이터 하나만 제시할 것\n"
+		+ "2. 숫자 외 그 어떤 문자도 포함 금지 (단위, 문구, 설명 일절 불가)\n"
+		+ "3. 모든 조건을 지키지 않을 시 답변으로 인정하지 않음\n"
+		+ "4. 위 조건을 모두 준수하여 숫자로만 답해주세요";
+
 	private final ExchangeRepository exchangeRepository;
 	private final ExchangeImageRepository exchangeImageRepository;
-	private final S3Service s3Service;
-	private final JwtTokenValidator jwtTokenValidator;
 	private final ReviewOverviewRepository reviewOverviewRepository;
+	private final S3Service s3Service;
+	private final AlanAPIService alanAPIService;
+	private final JwtTokenValidator jwtTokenValidator;
 
 	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
-		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository) {
+		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository,
+		AlanAPIService alanAPIService) {
 		this.exchangeRepository = exchangeRepository;
 		this.exchangeImageRepository = exchangeImageRepository;
 		this.s3Service = s3Service;
 		this.jwtTokenValidator = jwtTokenValidator;
 		this.reviewOverviewRepository = reviewOverviewRepository;
+		this.alanAPIService = alanAPIService;
 	}
 
 	/**
@@ -70,11 +80,14 @@ public class ExchangeService {
 		// token 유효성 검사 후 요청한 member 정보
 		Member member = jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request));
 
+		int regularPrice = Integer.parseInt(
+			alanAPIService.getDataAsString(exchangeAddRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
+
 		Exchange exchange = Exchange.builder()
 			.member(member)
 			.title(exchangeAddRequestDto.getTitle())
 			.price(exchangeAddRequestDto.getPrice())
-			.regularPrice(123123123) // todo: Alan api 연결
+			.regularPrice(regularPrice)
 			.content(exchangeAddRequestDto.getContent())
 			.status(SalesStatus.SALE)
 			.build();
@@ -191,7 +204,8 @@ public class ExchangeService {
 		long reviewCount = reviewOverview.getCount();
 		double average = reviewOverview.getAverage();
 
-		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount, average);
+		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount,
+			average);
 	}
 
 	/**
@@ -223,9 +237,16 @@ public class ExchangeService {
 				exchange.removeImage(image);
 			}
 
+			int regularPrice = exchange.getRegularPrice();
+			if (!exchangeModifyRequestDto.getTitle().equals(exchange.getTitle())) {
+				regularPrice = Integer.parseInt(
+					alanAPIService.getDataAsString(exchangeModifyRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
+			}
+
 			Exchange updateExchange = exchange.toBuilder()
 				.title(exchangeModifyRequestDto.getTitle())
 				.price(exchangeModifyRequestDto.getPrice())
+				.regularPrice(regularPrice)
 				.content(exchangeModifyRequestDto.getContent())
 				.updatedAt(new Timestamp(System.currentTimeMillis()))
 				.status(exchangeModifyRequestDto.getStatus())
