@@ -28,7 +28,7 @@ public class EmailService {
     public void sendVerificationEmail(String email, String token) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
-        message.setSubject("이메일 인증");
+        message.setSubject("Play_Baseball 이메일 인증");
         message.setText("다음 링크를 클릭하여 이메일을 인증하세요: " +
             feUrl + "/verify-email?token=" + token);
         mailSender.send(message);
@@ -37,9 +37,9 @@ public class EmailService {
     public void sendPasswordResetEmail(String email, String token) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
-        message.setSubject("비밀번호 재설정");
+        message.setSubject("Play_Baseball 비밀번호 재설정");
         message.setText("다음 링크를 클릭하여 비밀번호를 재설정하세요: " +
-            feUrl + "/api/members/reset-password?token=" + token);
+            feUrl + "/forgot-password?token=" + token);
         mailSender.send(message);
     }
 
