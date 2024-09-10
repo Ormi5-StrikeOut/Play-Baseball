@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - dev
-
     paths:
       - "fe/play-baseball-fe/**"
 
@@ -26,6 +25,9 @@ jobs:
           push: false
           load: true
           tags: play-baseball-fe:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEC=${{ secrets.NEC }}
 
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar
@@ -42,5 +44,9 @@ jobs:
             docker load < image.tar
             docker stop fe-container || true
             docker rm fe-container || true
-            docker run -d --name fe-container -p 8080:3000 -e NODE_ENV=production play-baseball-fe:latest
+            docker run -d --name fe-container -p 8080:3000 \
+              -e NODE_ENV=production \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+              -e NEC=${{ secrets.NEC }} \
+              play-baseball-fe:latest
           '

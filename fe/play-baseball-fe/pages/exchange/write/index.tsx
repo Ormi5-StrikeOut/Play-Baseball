@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { Box, TextField, Button, Typography } from "@mui/material";
+import { Box, Button, TextField, Typography } from "@mui/material";
 import Image from "next/image";
 import Wrapper from "../../../components/Wrapper";
-import axios from "axios";
 import { EXCHANGE_ADD } from "@/constants/endpoints";
+import axiosInstance from "@/components/axiosInstance";
 
 const PostCreationForm = () => {
   const [title, setTitle] = useState("");
@@ -13,12 +13,22 @@ const PostCreationForm = () => {
   const [images, setImages] = useState<File[]>([]);
   const router = useRouter();
 
+  useEffect(() => {
+    const token = localStorage.getItem("Authorization");
+    if (!token) {
+      router.push("/auth/login");
+    }
+  }, [router]);
+
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPrice(event.target.value);
+    const value = event.target.value;
+    const numericValue = value.replace(/[^0-9]/g, "");
+
+    setPrice(numericValue);
   };
 
   const handleContentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,11 +47,28 @@ const PostCreationForm = () => {
   };
 
   const handleSubmit = async () => {
+    // 입력값 검사
+    if (!title || title.trim() === "") {
+      alert("제목을 입력해주세요.");
+      return; // 제출 중단
+    }
+    if (!content || content.trim() === "") {
+      alert("설명을 입력해주세요.");
+      return; // 제출 중단
+    }
+    // price 값 유효성 확인
+    if (isNaN(Number(price))) {
+      alert("가격에 올바른 숫자를 입력해주세요.");
+      return; // 제출 중단
+    }
+
+    const token = localStorage.getItem("Authorization");
+    if (!token) {
+      router.push("/auth/login");
+      return;
+    }
+
     const formData = new FormData();
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("Authorization")
-        : null;
     const jsonData = {
       title,
       price,
@@ -57,12 +84,10 @@ const PostCreationForm = () => {
     });
 
     try {
-      const response = await axios.post(EXCHANGE_ADD, formData, {
+      const response = await axiosInstance.post(EXCHANGE_ADD, formData, {
         headers: {
-          Authorization: token,
           "Content-Type": "multipart/form-data",
         },
-        withCredentials: true,
       });
       router.push({
         pathname: "/result",
@@ -70,7 +95,7 @@ const PostCreationForm = () => {
           isSuccess: "true",
           message: `글이 정상적으로 작성되었습니다. ${title}`,
           buttonText: "작성한 글 확인하기",
-          buttonAction: `/exchanges/${response.data.id}`,
+          buttonAction: `/exchange/${response.data.data.id}`,
         },
       });
     } catch (error) {
@@ -100,7 +125,17 @@ const PostCreationForm = () => {
       >
         <Typography variant="h5">상품 등록</Typography>
         <TextField label="제목" value={title} onChange={handleTitleChange} />
-        <TextField label="가격" value={price} onChange={handlePriceChange} />
+        <TextField
+          label="가격"
+          value={price}
+          onChange={handlePriceChange}
+          InputProps={{
+            inputProps: {
+              inputMode: "numeric", // 숫자 키패드가 뜨도록 설정
+              pattern: "[0-9]*", // 숫자만 입력되도록 제한
+            },
+          }}
+        />
         <TextField
           label="설명"
           multiline

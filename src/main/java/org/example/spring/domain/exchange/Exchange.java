@@ -9,6 +9,7 @@ import org.example.spring.domain.exchangeImage.ExchangeImage;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.review.Review;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.CascadeType;
@@ -35,6 +36,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "exchange")
 @Getter
 @Builder
+@DynamicUpdate
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Exchange {
@@ -82,6 +84,13 @@ public class Exchange {
 
 	@OneToMany(mappedBy = "exchange", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ExchangeImage> images = new ArrayList<>();
+
+	@Column(name = "reviewed_at")
+	private Timestamp reviewedAt;
+
+	public void markAsReviewed() {
+		this.reviewedAt = new Timestamp(System.currentTimeMillis());
+	}
 
 	public void addImage(ExchangeImage image) {
 		if (images == null) {

@@ -14,9 +14,14 @@ import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeNavigationResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
+import org.example.spring.domain.likeOverview.LikeOverview;
 import org.example.spring.domain.member.Member;
+import org.example.spring.domain.reviewOverview.ReviewOverview;
 import org.example.spring.exception.AuthenticationFailedException;
+import org.example.spring.repository.ExchangeImageRepository;
 import org.example.spring.repository.ExchangeRepository;
+import org.example.spring.repository.LikeOverviewRepository;
+import org.example.spring.repository.ReviewOverviewRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -36,18 +41,30 @@ public class ExchangeService {
 
 	@Value("${app.fe-url}")
 	private String frontendBaseUrl;
-
 	private final String EXCHANGE = "/exchange";
+	private final String REGULAR_PRICE_PROMPT =
+		"질문: 의 출시 가격은 얼마인지 말해줄래? \n" + "답변 조건: \n" + "1. 오직 질문에 해당하는 숫자 데이터 하나만 제시할 것\n"
+			+ "2. 숫자 외 그 어떤 문자도 포함 금지 (단위, 문구, 설명 일절 불가)\n" + "3. 모든 조건을 지키지 않을 시 답변으로 인정하지 않음\n"
+			+ "4. 위 조건을 모두 준수하여 숫자로만 답해주세요";
 
 	private final ExchangeRepository exchangeRepository;
-	private final ExchangeImageService exchangeImageService;
+	private final ExchangeImageRepository exchangeImageRepository;
+	private final ReviewOverviewRepository reviewOverviewRepository;
+	private final LikeOverviewRepository likeOverviewRepository;
+	private final S3Service s3Service;
+	private final AlanAPIService alanAPIService;
 	private final JwtTokenValidator jwtTokenValidator;
 
-	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageService exchangeImageService,
-		JwtTokenValidator jwtTokenValidator) {
+	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
+		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository,
+		LikeOverviewRepository likeOverviewRepository, AlanAPIService alanAPIService) {
 		this.exchangeRepository = exchangeRepository;
-		this.exchangeImageService = exchangeImageService;
+		this.exchangeImageRepository = exchangeImageRepository;
+		this.reviewOverviewRepository = reviewOverviewRepository;
+		this.likeOverviewRepository = likeOverviewRepository;
+		this.s3Service = s3Service;
 		this.jwtTokenValidator = jwtTokenValidator;
+		this.alanAPIService = alanAPIService;
 	}
 
 	/**
@@ -65,21 +82,32 @@ public class ExchangeService {
 		// token 유효성 검사 후 요청한 member 정보
 		Member member = jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request));
 
+		int regularPrice = Integer.parseInt(
+			alanAPIService.getDataAsString(exchangeAddRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
+
 		Exchange exchange = Exchange.builder()
 			.member(member)
 			.title(exchangeAddRequestDto.getTitle())
 			.price(exchangeAddRequestDto.getPrice())
-			.regularPrice(123123123) // todo: Alan api 연결
+			.regularPrice(regularPrice)
 			.content(exchangeAddRequestDto.getContent())
 			.status(SalesStatus.SALE)
 			.build();
 
 		exchangeRepository.save(exchange);
 
-		if (!images.isEmpty()) {
+		if (images != null) {
 			for (MultipartFile image : images) {
-				ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, exchange);
-				exchange.addImage(exchangeImage);
+				try {
+					String fileUrl = s3Service.uploadFile(image);
+					ExchangeImage exchangeImage = ExchangeImage.builder().url(fileUrl).exchange(exchange).build();
+
+					exchange.addImage(exchangeImage);
+					exchangeImageRepository.save(exchangeImage);
+				} catch (Exception e) {
+					log.error("이미지 업로드 중 오류 발생: {}", e.getMessage());
+					throw new RuntimeException("Image upload failed");
+				}
 			}
 		}
 
@@ -96,10 +124,19 @@ public class ExchangeService {
 	 * @return 게시글 목록을 page와 size에 따라 반환
 	 */
 	@Transactional(readOnly = true)
-	public Page<ExchangeNavigationResponseDto> getAllExchanges(int page, int size) {
+	public Page<ExchangeNavigationResponseDto> getAllExchanges(SalesStatus status, int page, int size) {
+		
 		Pageable pageable = PageRequest.of(page, size);
-		return exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
-			.map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
+		Page<Exchange> exchanges;
+
+		if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+			exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(pageable, status);
+		} else {
+			exchanges = exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+		}
+
+		return exchanges.map(
+			exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
 	}
 
 	/**
@@ -166,7 +203,21 @@ public class ExchangeService {
 
 		boolean isWriter = isWriter(request, id);
 
-		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter);
+		ReviewOverview reviewOverview = reviewOverviewRepository.findByMemberId(exchange.getMember().getId())
+			.orElse(ReviewOverview.builder().count(0).average(0.0).build());
+
+		long reviewCount = reviewOverview.getCount();
+		double average = reviewOverview.getAverage();
+
+		LikeOverview likeOverview = likeOverviewRepository.findByExchangeId(id)
+			.orElse(LikeOverview.builder().count(0).build());
+
+		long likeCount = likeOverview.getCount();
+
+		exchangeRepository.incrementViewCount(id);
+
+		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount,
+			average, likeCount);
 	}
 
 	/**
@@ -198,18 +249,33 @@ public class ExchangeService {
 				exchange.removeImage(image);
 			}
 
+			int regularPrice = exchange.getRegularPrice();
+			if (!exchangeModifyRequestDto.getTitle().equals(exchange.getTitle())) {
+				regularPrice = Integer.parseInt(
+					alanAPIService.getDataAsString(exchangeModifyRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
+			}
+
 			Exchange updateExchange = exchange.toBuilder()
 				.title(exchangeModifyRequestDto.getTitle())
 				.price(exchangeModifyRequestDto.getPrice())
+				.regularPrice(regularPrice)
 				.content(exchangeModifyRequestDto.getContent())
 				.updatedAt(new Timestamp(System.currentTimeMillis()))
 				.status(exchangeModifyRequestDto.getStatus())
 				.build();
 
-			if (!images.isEmpty()) {
+			if (images != null) {
 				for (MultipartFile image : images) {
-					ExchangeImage exchangeImage = exchangeImageService.uploadImage(image, updateExchange);
-					updateExchange.addImage(exchangeImage);
+					try {
+						String fileUrl = s3Service.uploadFile(image);
+						ExchangeImage exchangeImage = ExchangeImage.builder().url(fileUrl).exchange(exchange).build();
+
+						exchange.addImage(exchangeImage);
+						exchangeImageRepository.save(exchangeImage);
+					} catch (Exception e) {
+						log.error("이미지 업로드 중 오류 발생: {}", e.getMessage());
+						throw new RuntimeException("Image upload failed");
+					}
 				}
 			}
 

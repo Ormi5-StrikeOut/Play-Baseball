@@ -17,7 +17,7 @@ import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import Image from "next/image";
 import Wrapper from "../../components/Wrapper";
 import { useRouter } from "next/router";
-import { EXCHANGE } from "@/constants/endpoints";
+import { DEFAULT_IMAGE, EXCHANGE } from "@/constants/endpoints";
 
 interface Image {
   url: string;
@@ -49,6 +49,8 @@ interface ExchangeDetailResponseDto {
   writer: string;
   recentExchangesByMember: RecentExchange[];
   isWriter: "TRUE" | "FALSE";
+  reviewCount: number;
+  average: number;
 }
 
 const ItemDetail: React.FC = () => {
@@ -196,7 +198,11 @@ const ItemDetail: React.FC = () => {
                   alignItems="center"
                   justifyContent="center"
                   position="relative"
-                  width="100%"
+                  sx={{
+                    width: "100%",
+                    aspectRatio: "1 / 1", // 원하는 비율을 설정할 수 있음
+                    overflow: "hidden", // 이미지가 잘릴 수 있음
+                  }}
                 >
                   <Fade in={hover}>
                     <IconButton
@@ -217,19 +223,15 @@ const ItemDetail: React.FC = () => {
                     <Image
                       src={exchangeData.images[currentIndex]?.url}
                       alt={exchangeData.images[currentIndex]?.id.toString()}
-                      layout="responsive"
-                      width={700}
-                      height={400}
-                      objectFit="cover"
+                      layout="fill" // 컨테이너에 맞춰 이미지를 채움
+                      objectFit="cover" // 이미지 비율 유지하며 컨테이너를 채움
                     />
                   ) : (
                     <Image
-                      src={"/default-img.jpg"}
+                      src={DEFAULT_IMAGE}
                       alt={"Default image"}
-                      layout="responsive"
-                      width={700}
-                      height={400}
-                      objectFit="cover"
+                      layout="fill" // 컨테이너에 맞춰 이미지를 채움
+                      objectFit="cover" // 이미지 비율 유지하며 컨테이너를 채움
                     />
                   )}
 
@@ -360,13 +362,17 @@ const ItemDetail: React.FC = () => {
                 </Typography>
                 <Box display="flex" alignItems="center">
                   <Box display="flex" alignItems="center">
-                    <Rating value={4.6} precision={0.1} readOnly />
+                    <Rating
+                      value={exchangeData.average}
+                      precision={0.1}
+                      readOnly
+                    />
                     <Typography
                       variant="body2"
                       color="textSecondary"
                       sx={{ marginLeft: "5px" }}
                     >
-                      (123)
+                      ({exchangeData.reviewCount})
                     </Typography>
                   </Box>
                 </Box>
@@ -386,15 +392,26 @@ const ItemDetail: React.FC = () => {
                           },
                         }}
                       >
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.title}
-                          layout="responsive"
-                          width={100}
-                          height={100}
-                          objectFit="cover"
-                          style={{ borderRadius: "4px" }}
-                        />
+                        {/* 이미지를 담는 Box */}
+                        <Box
+                          sx={{
+                            position: "relative",
+                            width: "100%",
+                            height: 0,
+                            paddingBottom: "75%", // 비율을 조정하는 부분 (예: 4:3 비율)
+                            overflow: "hidden", // 넘치는 부분을 숨김
+                            borderRadius: "4px", // 모서리 둥글게
+                          }}
+                        >
+                          <Image
+                            src={item.imageUrl || DEFAULT_IMAGE}
+                            alt={item.title}
+                            layout="fill" // 부모 Box를 가득 채움
+                            objectFit="cover" // 이미지를 Box에 꽉 채우되 비율 유지
+                          />
+                        </Box>
+
+                        {/* 제목 및 가격 정보 */}
                         <Typography
                           variant="caption"
                           display="block"

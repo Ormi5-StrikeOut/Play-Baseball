@@ -1,15 +1,20 @@
-export const SERVER_URL = "https://ioshane.com"; // FE 서버 주소
-const REQUEST_URL: string = "https://api.ioshane.com/api"; // BE 서버 주소
+export const SERVER_URL = process.env.NEC; // FE 서버 주소
+const REQUEST_URL = process.env.NEXT_PUBLIC_API_URL; // BE 서버 주소
+const RESOURCE_URL = "https://resource.ioshane.com";
+
+export const DEFAULT_IMAGE = `${RESOURCE_URL}/default.jpg`;
 
 // Member Endpoints
 export const MEMBER: string = `${REQUEST_URL}/members`;
 export const MEMBER_SIGNUP: string = `${MEMBER}/join`;
 export const MEMBER_MODIFY: string = `${MEMBER}/my/modify-member`;
-export const MEMBER_VERIFY: string = `${MEMBER}/verify/{memberId}`;
+export const MEMBER_VERIFY: string = `${MEMBER}/verify-email`;
+export const MEMBER_VERIFY_RESEND: string = `${MEMBER}/resend-verification-email`;
+export const MEMBER_REQUEST_PASSWORD_RESET: string = `${MEMBER}/request-password-reset`;
+export const MEMBER_RESET_PASSWORD: string = `${MEMBER}/reset-password`;
 export const MEMBER_RESIGN: string = `${MEMBER}/my`;
 export const MEMBER_LOGIN: string = `${REQUEST_URL}/auth/login`;
 export const MEMBER_GET_ALL: string = `${MEMBER}`;
-export const MEMBER_REISSUE_TOKEN: string = `${REQUEST_URL}/auth/reissue-token/{memberId}`;
 export const MEMBER_GET: string = `${MEMBER}/{memberId}`;
 export const MEMBER_LOGOUT: string = `${REQUEST_URL}/auth/logout`;
 export const MEMBER_MODIFY_ROLE: string = `${MEMBER}/verify-role/{memberId}`;

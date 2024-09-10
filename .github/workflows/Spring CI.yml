@@ -28,6 +28,11 @@ jobs:
       MAIL_PORT: ${{ secrets.MAIL_PORT }}
       MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
       MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      S3_NAME: ${{ secrets.S3_NAME }}
+      S3_KEY: ${{ secrets.S3_KEY }}
+      S3_SECRET: ${{ secrets.S3_SECRET }}
+      ALAN_KEY: ${{ secrets.ALAN_KEY }}
+      ALAN_HOST: ${{ secrets.ALAN_HOST }}
 
     steps:
       - name: Check out code

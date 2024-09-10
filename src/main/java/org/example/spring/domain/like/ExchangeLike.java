@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.sql.Timestamp;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,7 @@ import org.example.spring.domain.member.Member;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Like {
+public class ExchangeLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "like_id")
@@ -35,5 +36,31 @@ public class Like {
 
     @JoinColumn(name = "member_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Member writer;
+    private Member member;
+
+    @Column(name = "created_at", nullable = false)
+    private Timestamp createdAt;
+
+    @Column(name = "canceled_at")
+    private Timestamp canceledAt;
+
+    /**
+     * 좋아요 상태를 토글합니다.
+     *
+     * <ul>
+     *   <li>좋아요가 활성 상태인 경우 (canceledAt이 null인 경우), 좋아요를 취소합니다.</li>
+     *   <li>좋아요가 취소된 상태인 경우 (canceledAt이 null이 아닌 경우), 좋아요를 다시 활성화합니다.</li>
+     * </ul>
+     *
+     * <p>좋아요 취소 시, 현재 시간을 canceledAt에 기록합니다.</p>
+     * <p>좋아요 재활성화 시, canceledAt을 null로 설정하고 createdAt을 현재 시간으로 업데이트합니다.</p>
+     */
+    public void toggleLike() {
+        if (this.canceledAt == null) {
+            this.canceledAt = new Timestamp(System.currentTimeMillis());
+        } else {
+            this.canceledAt = null;
+            this.createdAt = new Timestamp(System.currentTimeMillis());
+        }
+    }
 }
