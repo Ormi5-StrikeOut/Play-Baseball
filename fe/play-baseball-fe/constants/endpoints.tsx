@@ -1,6 +1,6 @@
 export const SERVER_URL = process.env.NEC; // FE 서버 주소
 const REQUEST_URL = process.env.NEXT_PUBLIC_API_URL; // BE 서버 주소
-const RESOURCE_URL = "https://resource/ioshane.com";
+const RESOURCE_URL = "https://resource.ioshane.com";
 
 export const DEFAULT_IMAGE = `${RESOURCE_URL}/default.jpg`;
 
