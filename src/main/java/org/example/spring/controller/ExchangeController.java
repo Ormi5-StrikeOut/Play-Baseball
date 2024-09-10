@@ -87,7 +87,7 @@ public class ExchangeController {
 	 */
 	@GetMapping("/five")
 	public ResponseEntity<ApiResponseDto<List<ExchangeNavigationResponseDto>>> getLatestFiveExchanges() {
-		
+
 		List<ExchangeNavigationResponseDto> responses = exchangeService.getLatestFiveExchanges();
 		return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDto.success("게시물 5개 조회 성공.", responses));
 	}
@@ -119,9 +119,11 @@ public class ExchangeController {
 	@GetMapping("/search")
 	public ResponseEntity<ApiResponseDto<Page<ExchangeNavigationResponseDto>>> getExchangesByTitleContaining(
 		@RequestParam(required = false, defaultValue = "") String keyword,
+		@RequestParam(required = false, defaultValue = "NONE") SalesStatus status,
 		@RequestParam(required = false, defaultValue = PAGE_DEFAULT) int page,
 		@RequestParam(required = false, defaultValue = PAGE_SIZE_DEFAULT) int size) {
-		Page<ExchangeNavigationResponseDto> responses = exchangeService.getExchangesByTitleContaining(keyword, page,
+		Page<ExchangeNavigationResponseDto> responses = exchangeService.getExchangesByTitleContaining(keyword, status,
+			page,
 			size);
 		return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDto.success("검색 성공", responses));
 	}

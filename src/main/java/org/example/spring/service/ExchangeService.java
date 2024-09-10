@@ -55,6 +55,7 @@ public class ExchangeService {
 	private final AlanAPIService alanAPIService;
 	private final JwtTokenValidator jwtTokenValidator;
 
+	@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
 		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository,
 		LikeOverviewRepository likeOverviewRepository, AlanAPIService alanAPIService) {
@@ -125,12 +126,12 @@ public class ExchangeService {
 	 */
 	@Transactional(readOnly = true)
 	public Page<ExchangeNavigationResponseDto> getAllExchanges(SalesStatus status, int page, int size) {
-		
+
 		Pageable pageable = PageRequest.of(page, size);
 		Page<Exchange> exchanges;
 
 		if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
-			exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(pageable, status);
+			exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(status, pageable);
 		} else {
 			exchanges = exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
 		}
@@ -170,16 +171,37 @@ public class ExchangeService {
 	/**
 	 * 제목을 포함하고 있는 삭제되지 않은 게시물 모두 조회합니다.
 	 *
-	 * @param title 검색에 포함할 제목 키워드
+	 * @param keyword 검색에 포함할 제목 키워드
 	 * @param page 게시물이 포함된 페이지
 	 * @param size 한 번에 렌더링할 게시물 개수
 	 * @return 제목이 키워드에 포함되어있는 게시물 목록을 page와 size에 따라 반환
 	 */
 	@Transactional
-	public Page<ExchangeNavigationResponseDto> getExchangesByTitleContaining(String title, int page, int size) {
+	public Page<ExchangeNavigationResponseDto> getExchangesByTitleContaining(String keyword, SalesStatus status,
+		int page,
+		int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		return exchangeRepository.findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(title, pageable)
-			.map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
+		Page<Exchange> exchanges;
+
+		if (keyword.equals("")) {
+			if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+				exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(status, pageable);
+			} else {
+				exchanges = exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+			}
+		} else {
+			if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+				exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullAndStatusOrderByCreatedAtDesc(
+					keyword,
+					status, pageable);
+			} else {
+				exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(keyword,
+					pageable);
+			}
+		}
+
+		return exchanges.map(
+			exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
 	}
 
 	/**

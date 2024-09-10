@@ -24,11 +24,16 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
 	// 삭제되지 않은 모든 글 조회
 	Page<Exchange> findByDeletedAtIsNullOrderByCreatedAtDesc(Pageable pageable);
 
-	// 삭제되지 않은 모든 글 중 status와 일치하는 글 조회
-	Page<Exchange> findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(Pageable pageable, SalesStatus status);
+	// 삭제되지 않은 모든 글 중 판매 상태가 일치하는 글 조회
+	Page<Exchange> findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(SalesStatus status, Pageable pageable);
 
-	// 검색 키워드에 포함되어 있는 게시글 목록 조회
+	// 삭제되지 않은 검색 키워드에 포함되어 있는 게시글 목록 조회
 	Page<Exchange> findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(String title, Pageable pageable);
+
+	// 삭제되지 않은 검색 키워드에 포함되어 있으면서 판매 상태가 일치하는 게시글글 목록 조회
+	Page<Exchange> findByTitleContainingAndDeletedAtIsNullAndStatusOrderByCreatedAtDesc(String title,
+		SalesStatus status, Pageable pageable
+	);
 
 	// 최근 5개의 게시글 조회
 	List<Exchange> findTop5ByDeletedAtIsNullOrderByCreatedAtDesc();

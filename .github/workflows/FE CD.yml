@@ -27,7 +27,7 @@ jobs:
           tags: play-baseball-fe:latest
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            NEC=${{ secrets.NEC }}
+            NEXT_PUBLIC_NEC=${{ secrets.NEC }}
 
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar

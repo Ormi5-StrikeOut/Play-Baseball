@@ -9,13 +9,13 @@ import {
   Container,
 } from "@mui/material";
 import Link from "next/link";
-import Wrapper from "../components/Wrapper";
-import SearchBar from "../components/SearchBar";
 import axios from "axios";
-import { DEFAULT_IMAGE, EXCHANGE } from "@/constants/endpoints";
+import { DEFAULT_BANNER, DEFAULT_IMAGE, EXCHANGE } from "@/constants/endpoints";
 import debounce from "lodash/debounce";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import SaleStatusNavigation from "../components/SaleStatusNavigation"; // 네비게이션 컴포넌트 임포트
+import RecentExchangesNavigation from "@/components/RecentExchangesNavigation";
 
 interface Item {
   title: string;
@@ -50,16 +50,24 @@ const MainPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [status, setStatus] = useState<string | null>(null); // 초기에는 null로 설정
 
-  const handleSearch = (searchTerm: string) => {
-    console.log("Searching for:", searchTerm);
-  };
+  // 클라이언트에서만 쿼리 파라미터 처리
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const query = new URLSearchParams(window.location.search);
+      const statusFromQuery = query.get("status") || "NONE"; // 기본값 설정
+      setStatus(statusFromQuery); // 쿼리에서 status 값을 설정
+    }
+  }, []);
 
   // 데이터 불러오기
   const fetchItems = async (pageNumber: number) => {
     setLoading(true);
     try {
-      const response = await axios.get(`${EXCHANGE}?page=${pageNumber}`);
+      const response = await axios.get(
+        `${EXCHANGE}?page=${pageNumber}&status=${status}`
+      );
       const newItems = response.data.data.content.map((item: any) => ({
         title: item.title,
         price: item.price,
@@ -77,10 +85,13 @@ const MainPage: React.FC = () => {
     setLoading(false);
   };
 
-  // 페이지 처음 로드 시 첫 데이터 요청
+  // 쿼리에서 받은 status 값이 설정된 후에만 fetchItems 실행
   useEffect(() => {
-    fetchItems(page);
-  }, [page]);
+    if (status !== null) {
+      // status가 null이 아닐 때만 실행
+      fetchItems(page);
+    }
+  }, [status, page]);
 
   // 스크롤 이벤트 핸들러
   const handleScroll = useCallback(
@@ -106,131 +117,188 @@ const MainPage: React.FC = () => {
   }, [handleScroll]);
 
   return (
-    <Wrapper>
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        <div className="width-[70%]">
-          <SearchBar onSearch={handleSearch} />
-        </div>
+    <Box
+      sx={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        paddingTop: 2,
+      }}
+    >
+      {/* 왼쪽 네비게이션 영역 */}
+      <Box
+        sx={{
+          width: "20%",
+          position: "fixed", // 화면에 고정
+          left: 0, // 화면 왼쪽에 고정
+          top: "50%", // 세로 기준 가운데
+          transform: "translateY(-50%)", // 세로 가운데 정렬
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center", // 부모 기준 가로 및 세로 중앙 정렬
+          "@media (max-width: 900px)": {
+            display: "none", // 화면이 작아지면 숨김 처리
+          },
+        }}
+      >
+        <Box>
+          <SaleStatusNavigation />
+        </Box>
+      </Box>
 
-        <Box
-          sx={{
-            width: "100%",
-            height: "250px", // 원하는 배너 높이
-            mb: 5,
-          }}
-        >
-          {/* 배경 이미지 */}
-          <CardMedia
-            component="img"
-            image={DEFAULT_IMAGE} // 배너 이미지 경로
-            alt="배너 이미지"
+      {/* 가운데 컨텐츠 영역 */}
+      <Box sx={{ width: "100%" }}>
+        <Container maxWidth="lg" sx={{ py: 3 }}>
+          {/* 배너 이미지 */}
+          <Box
             sx={{
               width: "100%",
-              height: "100%",
-              objectFit: "cover", // 이미지가 컨테이너를 꽉 채우도록 설정
+              height: "250px", // 원하는 배너 높이
+              mb: 5,
             }}
-          />
-        </Box>
+          >
+            <CardMedia
+              component="img"
+              image={DEFAULT_BANNER} // 배너 이미지 경로
+              alt="배너 이미지"
+              sx={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover", // 이미지가 컨테이너를 꽉 채우도록 설정
+              }}
+            />
+          </Box>
 
-        <Grid container spacing={3}>
-          {items.map((item) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={item.url}>
-              <Link href={`${item.url}`} passHref>
-                <Card
-                  sx={{
-                    height: "100%",
-                    position: "relative", // 상태 표시를 위한 상대 위치 지정
-                    "&:hover": {
-                      boxShadow: 6,
-                      transform: "translateY(-5px)",
-                      transition: "transform 0.3s ease-in-out",
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={item.imageUrl || DEFAULT_IMAGE}
-                    alt={item.title}
-                  />
-
-                  {/* 상태 아이콘 */}
-                  <Box
+          <Grid container spacing={3}>
+            {items.map((item) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={item.url}>
+                <Link href={`${item.url}`} passHref>
+                  <Card
                     sx={{
-                      position: "absolute",
-                      top: 8,
-                      left: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      backgroundColor: "rgba(0, 0, 0, 0.5)",
-                      borderRadius: "50px",
-                      padding: "4px 8px",
+                      height: "100%",
+                      position: "relative", // 상태 표시를 위한 상대 위치 지정
+                      "&:hover": {
+                        boxShadow: 6,
+                        transform: "translateY(-5px)",
+                        transition: "transform 0.3s ease-in-out",
+                      },
                     }}
                   >
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        backgroundColor:
-                          item.status === "SALE" ? "#32CD32" : "#FF0000",
-                        marginRight: "8px",
-                      }}
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={item.imageUrl || DEFAULT_IMAGE}
+                      alt={item.title}
                     />
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#fff", fontWeight: "bold" }}
-                    >
-                      {item.status === "SALE" ? "판매중" : "판매완료"}
-                    </Typography>
-                  </Box>
 
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      {/* 제목이 30글자 이상이면 ... 처리 */}
-                      {item.title.length > 30
-                        ? `${item.title.substring(0, 30)}...`
-                        : item.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.price.toLocaleString()} 원
-                    </Typography>
-                    {/* 조회수 및 작성시간 추가 */}
+                    {/* 상태 아이콘 */}
                     <Box
                       sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
                         display: "flex",
-                        justifyContent: "space-between",
                         alignItems: "center",
-                        mt: 2,
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        borderRadius: "50px",
+                        padding: "4px 8px",
                       }}
                     >
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <VisibilityIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                        <Typography variant="body2">
-                          {item.viewCount}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                        <Typography variant="body2">
-                          {formatTimeAgo(item.updatedAt)}
-                        </Typography>
-                      </Box>
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          backgroundColor:
+                            item.status === "SALE" ? "#32CD32" : "#FF0000",
+                          marginRight: "8px",
+                        }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "#fff", fontWeight: "bold" }}
+                      >
+                        {item.status === "SALE" ? "판매중" : "판매완료"}
+                      </Typography>
                     </Box>
-                  </CardContent>
-                </Card>
-              </Link>
-            </Grid>
-          ))}
-        </Grid>
 
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Typography>Loading...</Typography>
-          </Box>
-        )}
-      </Container>
-    </Wrapper>
+                    <CardContent>
+                      <Typography
+                        variant="h6"
+                        gutterBottom
+                        sx={{
+                          display: "-webkit-box", // Flexbox와 유사한 스타일로, 클램핑 가능
+                          WebkitLineClamp: 2, // 보여줄 최대 줄 수 (2줄)
+                          WebkitBoxOrient: "vertical", // 수직 정렬
+                          overflow: "hidden", // 넘치는 부분을 숨김
+                          textOverflow: "ellipsis", // 말줄임표 (...)
+                          lineHeight: "1.5em", // 한 줄의 높이를 1.5em로 설정 (사용할 폰트에 맞게 조정 가능)
+                          minHeight: "3em", // 두 줄에 해당하는 높이를 고정 (1.5em * 2줄 = 3em)
+                        }}
+                      >
+                        {item.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.price.toLocaleString()} 원
+                      </Typography>
+                      {/* 조회수 및 작성시간 추가 */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          mt: 2,
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <VisibilityIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                          <Typography variant="body2">
+                            {item.viewCount}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                          <Typography variant="body2">
+                            {formatTimeAgo(item.updatedAt)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </Grid>
+            ))}
+          </Grid>
+
+          {loading && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+              <Typography>Loading...</Typography>
+            </Box>
+          )}
+        </Container>
+      </Box>
+
+      {/* 오른쪽 네비게이션 영역 */}
+      <Box
+        sx={{
+          width: "20%",
+          position: "fixed", // 화면에 고정
+          right: 0, // 화면 오른쪽에 고정
+          top: "50%", // 세로 기준 가운데
+          transform: "translateY(-50%)", // 세로 가운데 정렬
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center", // 부모 기준 가로 및 세로 중앙 정렬
+          "@media (max-width: 900px)": {
+            display: "none", // 화면이 작아지면 숨김 처리
+          },
+        }}
+      >
+        <Box>
+          <RecentExchangesNavigation />
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

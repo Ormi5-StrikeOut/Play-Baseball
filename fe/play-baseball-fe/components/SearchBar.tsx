@@ -1,18 +1,18 @@
-import React, { useState, ChangeEvent } from 'react';
-import Paper from '@mui/material/Paper';
-import InputBase from '@mui/material/InputBase';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
-import DirectionsIcon from '@mui/icons-material/Directions';
+import React, { useState, ChangeEvent } from "react";
+import Paper from "@mui/material/Paper";
+import InputBase from "@mui/material/InputBase";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import MenuIcon from "@mui/icons-material/Menu";
+import SearchIcon from "@mui/icons-material/Search";
+import DirectionsIcon from "@mui/icons-material/Directions";
 
 interface SearchBarProps {
-    onSearch: (searchTerm: string) => void;
-  }
-  
+  onSearch: (searchTerm: string) => void;
+}
+
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -24,17 +24,22 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   // 엔터 키 처리 함수
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      onSearch(searchTerm); // Search on enter
-      console.log(`Searching for: ${searchTerm}`);
-      // router.push(`/search?query=${searchQuery}`);
+    if (e.key === "Enter" && searchTerm.trim()) {
+      e.preventDefault();
+      onSearch(searchTerm.trim()); // Search on enter
     }
   };
 
   return (
     <Paper
       component="form"
-      sx={{ p: '2px 4px', m: 'auto 2px', display: 'flex', alignItems: 'center', flex: 1 }}
+      sx={{
+        p: "2px 4px",
+        m: "auto 2px",
+        display: "flex",
+        alignItems: "center",
+        flex: 1,
+      }}
     >
       {/* <IconButton sx={{ p: '10px' }} aria-label="menu">
         <MenuIcon />
@@ -44,9 +49,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         placeholder="검색하세요"
         value={searchTerm}
         onChange={handleChange}
-        inputProps={{ 'aria-label': 'search transactions' }}
+        onKeyDown={handleKeyDown}
+        inputProps={{ "aria-label": "search transactions" }}
       />
-      <IconButton type="button" onClick={() => {onSearch(searchTerm)}} sx={{ p: '10px' }} aria-label="search">
+      <IconButton
+        type="button"
+        onClick={() => {
+          onSearch(searchTerm);
+        }}
+        sx={{ p: "10px" }}
+        aria-label="search"
+      >
         <SearchIcon />
       </IconButton>
       {/* <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" /> */}
@@ -55,6 +68,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       </IconButton> */}
     </Paper>
   );
-}
+};
 
 export default SearchBar;
