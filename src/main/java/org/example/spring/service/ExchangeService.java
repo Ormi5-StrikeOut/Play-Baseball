@@ -204,6 +204,9 @@ public class ExchangeService {
 		long reviewCount = reviewOverview.getCount();
 		double average = reviewOverview.getAverage();
 
+		Exchange viewCountUpdateExchange = exchange.toBuilder().viewCount(exchange.getViewCount() + 1).build();
+		exchangeRepository.save(viewCountUpdateExchange);
+
 		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount,
 			average);
 	}
