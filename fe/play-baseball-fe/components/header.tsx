@@ -3,11 +3,11 @@ import { useRouter } from "next/router";
 import { Box, Button, Toolbar, Typography, Container } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import Link from "next/link";
-import { MEMBER_LOGOUT } from "@/constants/endpoints";
+import { MEMBER_LOGOUT, PAGE_SEARCH } from "@/constants/endpoints";
 import SearchBar from "./SearchBar";
 import Wrapper from "./Wrapper";
 import axiosInstance, { handleApiError } from "./axiosInstance";
-import SaleStatusNavigation from "./SaleStatusNavigation";
+import qs from "qs";
 
 const Header: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
@@ -62,7 +62,10 @@ const Header: React.FC = () => {
   // handleSearch 함수에서 검색어를 keyword로 추가하여 페이지 이동
   const handleSearch = (input: string) => {
     if (input) {
-      router.push(`/search?keyword=${encodeURIComponent(input)}`);
+      const updatedQuery = { ...router.query, keyword: input };
+      const url = `${PAGE_SEARCH}?${qs.stringify(updatedQuery)}`;
+
+      window.location.href = url;
     }
   };
 
