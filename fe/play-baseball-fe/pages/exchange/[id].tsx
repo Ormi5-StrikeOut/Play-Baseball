@@ -13,13 +13,19 @@ import {
   Modal,
 } from "@mui/material";
 import axios from "axios";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import {
+  ArrowBack,
+  ArrowForward,
+  Favorite,
+  FavoriteBorder,
+  Visibility,
+} from "@mui/icons-material";
 import Image from "next/image";
 import Wrapper from "../../components/Wrapper";
 import { useRouter } from "next/router";
-import { DEFAULT_IMAGE, EXCHANGE } from "@/constants/endpoints";
+import { DEFAULT_IMAGE, EXCHANGE, EXCHANGE_LIKE } from "@/constants/endpoints";
 
-interface Image {
+interface ImageType {
   url: string;
   id: number;
 }
@@ -45,12 +51,14 @@ interface ExchangeDetailResponseDto {
   viewCount: number;
   status: "SALE" | "COMPLETE";
   updatedAt: string;
-  images: Image[];
+  images: ImageType[];
   writer: string;
   recentExchangesByMember: RecentExchange[];
   isWriter: "TRUE" | "FALSE";
   reviewCount: number;
   average: number;
+  likeCount: number;
+  isLike: boolean;
 }
 
 const ItemDetail: React.FC = () => {
@@ -60,6 +68,8 @@ const ItemDetail: React.FC = () => {
   const [exchangeData, setExchangeData] =
     useState<ExchangeDetailResponseDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isLike, setIsLike] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(0);
   const router = useRouter();
   const { id } = router.query;
   const token =
@@ -67,9 +77,10 @@ const ItemDetail: React.FC = () => {
       ? localStorage.getItem("Authorization")
       : null;
 
+  // 데이터 가져오는 함수
   useEffect(() => {
     const fetchExchangeData = async () => {
-      if (!id) return; // id가 없는 경우 일찍 반환
+      if (!id) return; // id가 없는 경우 바로 반환
       try {
         const response = await axios.get<
           ApiResponse<ExchangeDetailResponseDto>
@@ -79,8 +90,10 @@ const ItemDetail: React.FC = () => {
           },
           withCredentials: true,
         });
-        console.log(response);
+
         setExchangeData(response.data.data);
+        setIsLike(response.data.data.isLike);
+        setLikeCount(response.data.data.likeCount);
       } catch (error) {
         router.push({
           pathname: "/result",
@@ -99,12 +112,14 @@ const ItemDetail: React.FC = () => {
     if (id) fetchExchangeData(); // id가 존재할 때만 API 호출
   }, [id, router, token]);
 
+  // 로딩 상태 변경
   useEffect(() => {
     if (exchangeData) {
       setLoading(false);
     }
-  }, [exchangeData]); // exchangeData가 변경될 때마다 실행
+  }, [exchangeData]);
 
+  // 이전 이미지로 변경
   const handlePrev = () => {
     if (exchangeData?.images?.length) {
       setCurrentIndex(
@@ -115,6 +130,7 @@ const ItemDetail: React.FC = () => {
     }
   };
 
+  // 다음 이미지로 변경
   const handleNext = () => {
     if (exchangeData?.images?.length) {
       setCurrentIndex(
@@ -123,20 +139,30 @@ const ItemDetail: React.FC = () => {
     }
   };
 
-  const handleMouseEnter = () => {
-    setHover(true);
+  // 찜 토글
+  const toggleLike = async () => {
+    try {
+      const response = await axios.post(
+        `${EXCHANGE_LIKE}`,
+        {
+          exchangeId: id,
+        },
+        {
+          headers: {
+            Authorization: token,
+          },
+          withCredentials: true,
+        }
+      );
+      setIsLike(!isLike);
+      //setLikeCount(isLike ? likeCount - 1 : likeCount + 1);
+    } catch (error) {
+      console.error("찜 토글 중 오류 발생:", error);
+    }
   };
 
-  const handleMouseLeave = () => {
-    setHover(false);
-  };
-
+  // 삭제 처리 함수
   const handleDelete = async () => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("Authorization")
-        : null;
-
     try {
       await axios.delete(`${EXCHANGE}/${id}`, {
         headers: {
@@ -179,19 +205,16 @@ const ItemDetail: React.FC = () => {
       <Wrapper>
         <Container maxWidth="lg" style={{ marginTop: "20px" }}>
           <Grid container spacing={2}>
-            {/* Gallery */}
+            {/* 이미지 갤러리 */}
             <Grid item xs={12} md={6}>
               <Box
                 position="relative"
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                sx={{
-                  width: "100%",
-                  maxWidth: "100%",
-                }}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                sx={{ width: "100%", maxWidth: "100%" }}
               >
                 <Box
                   display="flex"
@@ -200,8 +223,8 @@ const ItemDetail: React.FC = () => {
                   position="relative"
                   sx={{
                     width: "100%",
-                    aspectRatio: "1 / 1", // 원하는 비율을 설정할 수 있음
-                    overflow: "hidden", // 이미지가 잘릴 수 있음
+                    aspectRatio: "1 / 1",
+                    overflow: "hidden",
                   }}
                 >
                   <Fade in={hover}>
@@ -223,15 +246,15 @@ const ItemDetail: React.FC = () => {
                     <Image
                       src={exchangeData.images[currentIndex]?.url}
                       alt={exchangeData.images[currentIndex]?.id.toString()}
-                      layout="fill" // 컨테이너에 맞춰 이미지를 채움
-                      objectFit="cover" // 이미지 비율 유지하며 컨테이너를 채움
+                      layout="fill"
+                      objectFit="cover"
                     />
                   ) : (
                     <Image
                       src={DEFAULT_IMAGE}
-                      alt={"Default image"}
-                      layout="fill" // 컨테이너에 맞춰 이미지를 채움
-                      objectFit="cover" // 이미지 비율 유지하며 컨테이너를 채움
+                      alt="Default image"
+                      layout="fill"
+                      objectFit="cover"
                     />
                   )}
 
@@ -251,8 +274,7 @@ const ItemDetail: React.FC = () => {
                   </Fade>
                 </Box>
 
-                {/* Indicators */}
-
+                {/* 이미지 인디케이터 */}
                 <Box display="flex" justifyContent="center" mt={1}>
                   {exchangeData?.images?.length > 0 ? (
                     exchangeData.images.map((_, index) => (
@@ -279,7 +301,7 @@ const ItemDetail: React.FC = () => {
               </Box>
             </Grid>
 
-            {/* Product Info */}
+            {/* 상품 정보 */}
             <Grid item xs={12} md={6}>
               <Paper elevation={3} sx={{ padding: "20px" }}>
                 <Typography variant="h5">
@@ -300,8 +322,7 @@ const ItemDetail: React.FC = () => {
                 <Divider sx={{ margin: "20px 0" }} />
                 <Typography variant="body1">
                   이 상품의 정가는{" "}
-                  {exchangeData?.regularPrice?.toLocaleString() || "0"}원
-                  입니다.
+                  {exchangeData?.regularPrice?.toLocaleString() || "0"}원입니다.
                 </Typography>
                 <Divider sx={{ margin: "20px 0" }} />
                 <Button variant="contained" fullWidth>
@@ -334,19 +355,37 @@ const ItemDetail: React.FC = () => {
               </Paper>
             </Grid>
 
-            {/* Details */}
+            {/* 상품 상세 정보 */}
             <Grid item xs={12} md={6}>
               <Paper elevation={3} sx={{ padding: "20px" }}>
                 <Typography variant="h4">상품 정보</Typography>
-                <Typography color="textSecondary" sx={{ marginTop: "10px" }}>
-                  작성일:{" "}
-                  {exchangeData?.updatedAt
-                    ? new Date(exchangeData.updatedAt).toLocaleDateString()
-                    : "N/A"}
-                </Typography>
-                <Typography color="textSecondary">
-                  조회: {exchangeData?.viewCount || 0}
-                </Typography>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  sx={{ marginTop: "10px" }}
+                >
+                  {/* 조회수 표시 */}
+                  <Box display="flex" alignItems="center" sx={{ mr: 2 }}>
+                    <Visibility sx={{ fontSize: 16, mr: 0.5 }} />
+                    <Typography color="textSecondary">
+                      {exchangeData?.viewCount || 0}
+                    </Typography>
+                  </Box>
+
+                  {/* 찜 버튼과 찜 개수 표시 */}
+                  <Box display="flex" alignItems="center">
+                    <IconButton onClick={toggleLike} sx={{ p: 0 }}>
+                      {isLike ? (
+                        <Favorite sx={{ color: "red" }} />
+                      ) : (
+                        <FavoriteBorder sx={{ color: "gray" }} />
+                      )}
+                    </IconButton>
+                    <Typography color="textSecondary" sx={{ ml: 0.5 }}>
+                      {likeCount}
+                    </Typography>
+                  </Box>
+                </Box>
                 <Divider sx={{ margin: "20px 0" }} />
                 <Typography variant="body1">
                   {exchangeData?.content || "상품 설명이 없습니다."}
@@ -354,27 +393,25 @@ const ItemDetail: React.FC = () => {
               </Paper>
             </Grid>
 
-            {/* Seller Info */}
+            {/* 판매자 정보 */}
             <Grid item xs={12} md={6}>
               <Paper elevation={3} sx={{ padding: "20px" }}>
                 <Typography variant="h6">
                   {exchangeData?.writer || "판매자 정보"}
                 </Typography>
                 <Box display="flex" alignItems="center">
-                  <Box display="flex" alignItems="center">
-                    <Rating
-                      value={exchangeData.average}
-                      precision={0.1}
-                      readOnly
-                    />
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      sx={{ marginLeft: "5px" }}
-                    >
-                      ({exchangeData.reviewCount})
-                    </Typography>
-                  </Box>
+                  <Rating
+                    value={exchangeData.average}
+                    precision={0.1}
+                    readOnly
+                  />
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{ marginLeft: "5px" }}
+                  >
+                    ({exchangeData.reviewCount})
+                  </Typography>
                 </Box>
                 <Divider sx={{ margin: "20px 0" }} />
                 <Grid container spacing={1} mt={2}>
@@ -385,33 +422,25 @@ const ItemDetail: React.FC = () => {
                         xs={4}
                         key={index}
                         onClick={() => router.push(item.url)}
-                        sx={{
-                          cursor: "pointer",
-                          "&:hover": {
-                            boxShadow: 2,
-                          },
-                        }}
+                        sx={{ cursor: "pointer", "&:hover": { boxShadow: 2 } }}
                       >
-                        {/* 이미지를 담는 Box */}
                         <Box
                           sx={{
                             position: "relative",
                             width: "100%",
                             height: 0,
-                            paddingBottom: "75%", // 비율을 조정하는 부분 (예: 4:3 비율)
-                            overflow: "hidden", // 넘치는 부분을 숨김
-                            borderRadius: "4px", // 모서리 둥글게
+                            paddingBottom: "75%",
+                            overflow: "hidden",
+                            borderRadius: "4px",
                           }}
                         >
                           <Image
                             src={item.imageUrl || DEFAULT_IMAGE}
                             alt={item.title}
-                            layout="fill" // 부모 Box를 가득 채움
-                            objectFit="cover" // 이미지를 Box에 꽉 채우되 비율 유지
+                            layout="fill"
+                            objectFit="cover"
                           />
                         </Box>
-
-                        {/* 제목 및 가격 정보 */}
                         <Typography
                           variant="caption"
                           display="block"
@@ -437,7 +466,7 @@ const ItemDetail: React.FC = () => {
               </Paper>
             </Grid>
 
-            {/* Delete Confirmation Modal */}
+            {/* 삭제 확인 모달 */}
             <Modal open={openModal} onClose={() => setOpenModal(false)}>
               <Box
                 sx={{
