@@ -7,7 +7,7 @@ export const DEFAULT_IMAGE = `${RESOURCE_URL}/default.jpg`;
 // Member Endpoints
 export const MEMBER: string = `${REQUEST_URL}/members`;
 export const MEMBER_SIGNUP: string = `${MEMBER}/join`;
-export const MEMBER_MODIFY: string = `${MEMBER}/{memberId}`;
+export const MEMBER_MODIFY: string = `${MEMBER}/my/modify-member`;
 export const MEMBER_VERIFY: string = `${MEMBER}/verify-email`;
 export const MEMBER_VERIFY_RESEND: string = `${MEMBER}/resend-verification-email`;
 export const MEMBER_REQUEST_PASSWORD_RESET: string = `${MEMBER}/request-password-reset`;
