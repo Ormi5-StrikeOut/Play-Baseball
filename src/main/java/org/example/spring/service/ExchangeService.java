@@ -179,12 +179,21 @@ public class ExchangeService {
 		Pageable pageable = PageRequest.of(page, size);
 		Page<Exchange> exchanges;
 
-		if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
-			exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullAndStatusOrderByCreatedAtDesc(keyword,
-				status, pageable);
+		if (keyword.equals("")) {
+			if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+				exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(status, pageable);
+			} else {
+				exchanges = exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+			}
 		} else {
-			exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(keyword,
-				pageable);
+			if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+				exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullAndStatusOrderByCreatedAtDesc(
+					keyword,
+					status, pageable);
+			} else {
+				exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(keyword,
+					pageable);
+			}
 		}
 
 		return exchanges.map(
