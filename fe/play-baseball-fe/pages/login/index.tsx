@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
         const token = response.headers["authorization"];
         if (token) {
           localStorage.setItem("Authorization", token);
-          window.location.href = SERVER_URL;
+          await router.push("/");
         } else {
           throw new Error("token 생성 오류");
         }
@@ -49,7 +49,7 @@ const LoginPage: React.FC = () => {
       }
     } catch (error) {
       console.error("로그인 요청 실패", error);
-      router.push({
+      await router.push({
         pathname: "/result",
         query: {
           isSuccess: "false",

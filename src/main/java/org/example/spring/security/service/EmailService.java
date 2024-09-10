@@ -16,8 +16,8 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final JwtUtils jwtUtils;
 
-    @Value("${app.base-url}")
-    private String baseUrl;
+    @Value("${app.fe-url}")
+    private String feUrl;
 
     @Autowired
     public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils) {
@@ -30,7 +30,7 @@ public class EmailService {
         message.setTo(email);
         message.setSubject("이메일 인증");
         message.setText("다음 링크를 클릭하여 이메일을 인증하세요: " +
-            baseUrl + "/api/members/verify-email?token=" + token);
+            feUrl + "/verify-email?token=" + token);
         mailSender.send(message);
     }
 
@@ -39,7 +39,7 @@ public class EmailService {
         message.setTo(email);
         message.setSubject("비밀번호 재설정");
         message.setText("다음 링크를 클릭하여 비밀번호를 재설정하세요: " +
-            baseUrl + "/api/members/reset-password?token=" + token);
+            feUrl + "/api/members/reset-password?token=" + token);
         mailSender.send(message);
     }
 
