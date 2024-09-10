@@ -14,11 +14,13 @@ import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeNavigationResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
+import org.example.spring.domain.like.ExchangeLike;
 import org.example.spring.domain.likeOverview.LikeOverview;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.reviewOverview.ReviewOverview;
 import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.repository.ExchangeImageRepository;
+import org.example.spring.repository.ExchangeLikeRepository;
 import org.example.spring.repository.ExchangeRepository;
 import org.example.spring.repository.LikeOverviewRepository;
 import org.example.spring.repository.ReviewOverviewRepository;
@@ -51,16 +53,19 @@ public class ExchangeService {
 	private final ExchangeImageRepository exchangeImageRepository;
 	private final ReviewOverviewRepository reviewOverviewRepository;
 	private final LikeOverviewRepository likeOverviewRepository;
+	private final ExchangeLikeRepository exchangeLikeRepository;
 	private final S3Service s3Service;
 	private final AlanAPIService alanAPIService;
 	private final JwtTokenValidator jwtTokenValidator;
 
 	@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
+		ExchangeLikeRepository exchangeLikeRepository,
 		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository,
 		LikeOverviewRepository likeOverviewRepository, AlanAPIService alanAPIService) {
 		this.exchangeRepository = exchangeRepository;
 		this.exchangeImageRepository = exchangeImageRepository;
+		this.exchangeLikeRepository = exchangeLikeRepository;
 		this.reviewOverviewRepository = reviewOverviewRepository;
 		this.likeOverviewRepository = likeOverviewRepository;
 		this.s3Service = s3Service;
@@ -238,8 +243,15 @@ public class ExchangeService {
 
 		exchangeRepository.incrementViewCount(id);
 
+		ExchangeLike exchangeLike = exchangeLikeRepository.findByExchangeAndMember(exchange,
+				jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request)))
+			.orElse(ExchangeLike.builder()
+				.build());
+
+		boolean isLike = exchangeLike.getCanceledAt() != null;
+
 		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount,
-			average, likeCount);
+			average, likeCount, isLike);
 	}
 
 	/**

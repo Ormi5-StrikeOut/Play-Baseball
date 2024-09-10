@@ -31,6 +31,7 @@ export const EXCHANGE_GET_ALL: string = `${EXCHANGE}`;
 export const EXCHANGE_GET_LATEST_FIVE: string = `${EXCHANGE}/five`;
 export const EXCHANGE_MODIFY_SALES_STATUS: string = `${EXCHANGE}/{id}`;
 export const EXCHANGE_GET_MY: string = `${EXCHANGE}/{memberId}`;
+export const EXCHANGE_LIKE: string = `${REQUEST_URL}/likes`;
 
 // Review Endpoints
 export const REVIEW: string = `${REQUEST_URL}/reviews`;
