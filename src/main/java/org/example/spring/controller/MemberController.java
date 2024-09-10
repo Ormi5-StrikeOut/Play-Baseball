@@ -130,16 +130,16 @@ public class MemberController {
     }
 
     /**
+     *
      * 인증 이메일 재발송
      *
-     * @param request HttpServletRequest
+     * @param email email
      * @return 이메일 재발송 결과
      */
     @PostMapping("/resend-verification-email")
-    public ResponseEntity<ApiResponseDto<Void>> resendVerificationEmail(HttpServletRequest request) {
-        memberService.resendVerificationEmail(request);
+    public ResponseEntity<ApiResponseDto<Void>> resendVerificationEmail(@RequestParam String email) {
+        memberService.resendVerificationEmail(email);
         return ResponseEntity.ok(ApiResponseDto.success("인증 이메일 재발송이 완료되었습니다.", null));
-
     }
 
     @PostMapping("/request-password-reset")
