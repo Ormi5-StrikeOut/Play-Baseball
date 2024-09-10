@@ -7,6 +7,7 @@ import { MEMBER_LOGOUT } from "@/constants/endpoints";
 import SearchBar from "./SearchBar";
 import Wrapper from "./Wrapper";
 import axiosInstance, { handleApiError } from "./axiosInstance";
+import SaleStatusNavigation from "./SaleStatusNavigation";
 
 const Header: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
@@ -58,8 +59,11 @@ const Header: React.FC = () => {
     }
   };
 
+  // handleSearch 함수에서 검색어를 keyword로 추가하여 페이지 이동
   const handleSearch = (input: string) => {
-    console.log("Search input:", input);
+    if (input) {
+      router.push(`/search?keyword=${encodeURIComponent(input)}`);
+    }
   };
 
   return (
