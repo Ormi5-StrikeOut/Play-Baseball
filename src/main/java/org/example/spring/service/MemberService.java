@@ -158,17 +158,17 @@ public class MemberService {
     /**
      * 이메일 인증 이메일을 재발송 합니다.
      *
-     * @param request HttpServletRequest
+     * @param email email
      */
-    public void resendVerificationEmail(HttpServletRequest request) {
-        Member memberByToken = getMemberByToken(request);
-
-        if (memberByToken.isEmailVerified()) {
+    public void resendVerificationEmail(String email) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
+        if (member.isEmailVerified()) {
             throw new EmailAlreadyVerifiedException("Email already verified");
         }
 
-        String token = emailService.generateEmailToken(memberByToken.getEmail());
-        emailService.sendVerificationEmail(memberByToken.getEmail(), token);
+        String token = emailService.generateEmailToken(member.getEmail());
+        emailService.sendVerificationEmail(member.getEmail(), token);
     }
 
     /**
