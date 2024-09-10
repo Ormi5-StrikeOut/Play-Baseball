@@ -9,7 +9,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -30,10 +32,16 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
 	// 특정 회원이 작성한 게시글 조회
 	Page<Exchange> findByMemberIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long memberId, Pageable pageable);
 
-  // reviewedAt 필드가 주어진 두 Timestamp 사이에 있는 Exchange를 조회
-  List<Exchange> findByReviewedAtBetween(Timestamp startTimestamp, Timestamp endTimestamp);
+	// reviewedAt 필드가 주어진 두 Timestamp 사이에 있는 Exchange를 조회
+	List<Exchange> findByReviewedAtBetween(Timestamp startTimestamp, Timestamp endTimestamp);
 
+	// 삭제되지 않은 1개의 게시글 조회
 	@Query("SELECT e FROM Exchange e WHERE e.id = :id AND e.deletedAt IS NULL")
 	@EntityGraph(attributePaths = {"member"})
 	Optional<Exchange> findByIdAndDeletedAtIsNull(Long id);
+
+	// updated_at field에 반영되지 않도록 조회수 증가 처리
+	@Modifying
+	@Query("UPDATE Exchange e SET e.viewCount = e.viewCount + 1 WHERE e.id = :id")
+	void incrementViewCount(@Param("id") Long id);
 }
