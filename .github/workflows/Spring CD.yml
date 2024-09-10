@@ -57,8 +57,11 @@ jobs:
           echo "S3_KEY=${{ secrets.S3_KEY }}" >> .env
           echo "S3_SECRET=${{ secrets.S3_SECRET }}" >> .env
           echo "S3_SECRET=${{ secrets.NEXT_PUBLIC_API_URL }}" >> .env
-          echo "S3_SECRET=${{ secrets.NEC }}" >> .env
-          
+          echo "S3_SECRET=${{ secrets.NEC }}" >> .env      
+          echo "ALAN_KEY=${{ secrets.ALAN_KEY }}" >> .env
+          echo "ALAN_HOST=${{ secrets.ALAN_HOST }}" >> .env
+
+
 
       - name: Deploy to EC2
         env:
@@ -73,12 +76,19 @@ jobs:
           scp -i private_key.pem -o StrictHostKeyChecking=no .env ubuntu@$EC2_HOST:/home/ubuntu/.env
           ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << EOF
 
-            if pgrep java; then
-              pkill java
-              sleep 5
-            fi
-            export \$(cat /home/ubuntu/.env | xargs)
-            nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &
+          # .env 파일의 내용을 .bashrc에 추가
+          cat /home/ubuntu/.env | sed 's/^/export /' >> /home/ubuntu/.bashrc
+          
+          # .bashrc 파일을 다시 불러와 환경 변수 적용
+          source /home/ubuntu/.bashrc
+
+          if pgrep java; then
+            pkill java
+            sleep 5
+          fi
+
+          nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &
+          
           # 실행 확인을 위한 로그 출력
             sleep 20
             tail -n 50 app.log
