@@ -1,6 +1,7 @@
 package org.example.spring.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.sql.Timestamp;
 import lombok.RequiredArgsConstructor;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.like.ExchangeLike;
@@ -10,6 +11,7 @@ import org.example.spring.repository.ExchangeLikeRepository;
 import org.example.spring.repository.ExchangeRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 중고 거래 게시글에 대한 좋아요 기능을 처리하는 서비스 클래스입니다.
@@ -35,25 +37,35 @@ public class ExchangeLikeService {
     }
 
     /**
-     * 중고 거래 게시글에 대한 좋아요를 추가하거나 삭제합니다.
-     * 이미 좋아요가 존재하는 경우 삭제하고, 존재하지 않는 경우 새로 추가합니다.
+     * 중고 거래 게시글에 대한 좋아요를 추가하거나 비활성화합니다.
+     * 이미 좋아요가 존재하는 경우 상태를 토글하고, 존재하지 않는 경우 새로 추가합니다.
      *
-     * @param request           HTTP 요청 객체
-     * @param addLikeRequest    좋아요 추가 요청 DTO
-     * @throws RuntimeException 교환 거래를 찾을 수 없거나 존재하는 좋아요를 찾을 수 없는 경우
+     * @param request HTTP 요청 객체
+     * @param addLikeRequest 좋아요 추가 요청 DTO
+     * @throws RuntimeException 중고 거래 게시글을 찾을 수 없는 경우
      */
+    @Transactional
     public void addLike(HttpServletRequest request, AddLikeRequest addLikeRequest) {
         Member member = getAuthenticatedMember(request);
 
         Exchange exchange = exchangeRepository.findById(addLikeRequest.getExchangeId()).orElseThrow(() -> new RuntimeException("교환 거래를 찾을 수 없습니다."));
 
-        boolean alreadyLiked = exchangeLikeRepository.existsByExchangeAndMember(exchange, member);
-        if (alreadyLiked) {
-            ExchangeLike existingLike = exchangeLikeRepository.findByExchangeAndMember(exchange, member).orElseThrow(() -> new RuntimeException("존재하는 좋아요를 찾을 수 없습니다."));
-            exchangeLikeRepository.delete(existingLike);
+        ExchangeLike existingLike = exchangeLikeRepository.findByExchangeAndMember(exchange, member).orElse(null);
+
+        if (existingLike != null) {
+            if (existingLike.getCanceledAt() == null) {
+                existingLike.toggleLike();
+            } else {
+                existingLike.toggleLike();
+            }
+            exchangeLikeRepository.save(existingLike);
         } else {
-            ExchangeLike exchangeLike = addLikeRequest.toEntity(exchange, member);
-            exchangeLikeRepository.save(exchangeLike);
+            ExchangeLike newLike = ExchangeLike.builder()
+                .exchange(exchange)
+                .member(member)
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .build();
+            exchangeLikeRepository.save(newLike);
         }
     }
 }

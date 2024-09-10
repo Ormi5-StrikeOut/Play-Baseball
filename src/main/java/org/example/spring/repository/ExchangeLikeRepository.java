@@ -1,5 +1,7 @@
 package org.example.spring.repository;
 
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.like.ExchangeLike;
@@ -14,20 +16,31 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ExchangeLikeRepository extends JpaRepository<ExchangeLike, Long> {
     /**
-     * 주어진 중고 거래 게시글과 회원이 이미 좋아요를 눌렀는지에 대한 여부를 확인합니다.
+     * 주어진 Exchange와 Member에 해당하는 ExchangeLike를 찾아 반환합니다.
      *
-     * @param exchange 확인할 교환 객체
-     * @param member   확인할 회원 객체
-     * @return         좋아요가 존재하면 true, 그렇지 않으면 false를 반환합니다.
-     */
-    boolean existsByExchangeAndMember(Exchange exchange, Member member);
-
-    /**
-     * 주어진 중고 거래 게시글과 회원에 해당하는 좋아요를 조회합니다.
-     *
-     * @param exchange 조회할 중고 거래 게시글 객체
-     * @param member   조회할 회원 객체
-     * @return         해당하는 ExchangeLike 객체를 Optional로 감싸서 반환합니다. 존재하지 않으면 빈 Optional을 반환합니다.
+     * @param exchange 조회할 Exchange 객체
+     * @param member   조회할 Member 객체
+     * @return 해당하는 ExchangeLike 객체를 포함한 Optional
      */
     Optional<ExchangeLike> findByExchangeAndMember(Exchange exchange, Member member);
+
+    /**
+     * 주어진 시간 범위 내에 생성된 모든 ExchangeLike를 찾아 반환합니다.
+     * 이 메소드는 주로 어제 생성된 좋아요를 조회하는 데 사용됩니다.
+     *
+     * @param startOfYesterdayTimestamp 조회 시작 시간
+     * @param endOfYesterdayTimestamp   조회 종료 시간
+     * @return 해당 시간 범위 내에 생성된 ExchangeLike 목록
+     */
+    List<ExchangeLike> findByCreatedAtBetween(Timestamp startOfYesterdayTimestamp, Timestamp endOfYesterdayTimestamp);
+
+    /**
+     * 주어진 시간 범위 내에 취소된 모든 ExchangeLike를 찾아 반환합니다.
+     * 이 메소드는 주로 어제 취소된 좋아요를 조회하는 데 사용됩니다.
+     *
+     * @param startOfYesterdayTimestamp 조회 시작 시간
+     * @param endOfYesterdayTimestamp 조회 종료 시간
+     * @return 해당 시간 범위 내에 취소된 ExchangeLike 목록
+     */
+    List<ExchangeLike> findByCanceledAtBetween(Timestamp startOfYesterdayTimestamp, Timestamp endOfYesterdayTimestamp);
 }
