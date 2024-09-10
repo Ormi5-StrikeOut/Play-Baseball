@@ -1,11 +1,9 @@
 package org.example.spring.security.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import static org.springframework.security.config.Customizer.*;
 
 import java.util.Arrays;
 import java.util.List;
-
-import lombok.extern.slf4j.Slf4j;
 
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.security.filter.JwtValidatorFilter;
@@ -30,6 +28,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @Profile("dev")
@@ -127,7 +127,7 @@ public class SecurityDevConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(List.of("http://localhost:3000"));
-		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(
 			Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
 		configuration.setAllowCredentials(true);
