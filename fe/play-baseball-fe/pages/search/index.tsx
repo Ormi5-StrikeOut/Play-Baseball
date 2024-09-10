@@ -96,7 +96,7 @@ const SearchPage: React.FC = () => {
   // 쿼리에서 받은 status 값이 설정된 후에만 fetchItems 실행
   useEffect(() => {
     if (keyword !== null) {
-      // status가 null이 아닐 때만 실행
+      // keyword가 null이 아닐 때만 실행
       fetchItems(page);
     }
   }, [keyword, page]);
@@ -133,46 +133,34 @@ const SearchPage: React.FC = () => {
         paddingTop: 2,
       }}
     >
-      {/* 전체 레이아웃: 20% - 60% - 20% */}
       {/* 왼쪽 네비게이션 영역 */}
-      {/* <Box
+      <Box
         sx={{
           width: "20%",
           position: "fixed", // 화면에 고정
-          left: 0, // 왼쪽에 고정
+          left: 0, // 화면 왼쪽에 고정
           top: "50%", // 세로 기준 가운데
           transform: "translateY(-50%)", // 세로 가운데 정렬
           display: "flex",
           justifyContent: "center",
           alignItems: "center", // 부모 기준 가로 및 세로 중앙 정렬
+          "@media (max-width: 900px)": {
+            display: "none", // 화면이 작아지면 숨김 처리
+          },
         }}
       >
         <Box>
           <SaleStatusNavigation />
         </Box>
-      </Box> */}
+      </Box>
 
       {/* 가운데 컨텐츠 영역 */}
       <Box sx={{ width: "100%" }}>
         <Container maxWidth="lg" sx={{ py: 3 }}>
-          {/* 배너 이미지 */}
-          <Box
-            sx={{
-              width: "100%",
-              height: "250px", // 원하는 배너 높이
-              mb: 5,
-            }}
-          >
-            <CardMedia
-              component="img"
-              image={DEFAULT_BANNER} // 배너 이미지 경로
-              alt="배너 이미지"
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover", // 이미지가 컨테이너를 꽉 채우도록 설정
-              }}
-            />
+          <Box sx={{ mb: 5 }}>
+            <Typography variant="h4">
+              {`"${keyword}" 검색 결과입니다.`}
+            </Typography>
           </Box>
 
           <Grid container spacing={3}>
@@ -229,15 +217,22 @@ const SearchPage: React.FC = () => {
                     </Box>
 
                     <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        {/* 제목이 30글자 이상이면 ... 처리 */}
-                        {item.title.length > 30
-                          ? `${item.title.substring(0, 30)}...`
-                          : item.title}
+                      <Typography
+                        variant="h6"
+                        gutterBottom
+                        sx={{
+                          display: "-webkit-box", // Flexbox와 유사한 스타일로, 클램핑 가능
+                          WebkitLineClamp: 2, // 보여줄 최대 줄 수 (2줄)
+                          WebkitBoxOrient: "vertical", // 수직 정렬
+                          overflow: "hidden", // 넘치는 부분을 숨김
+                          textOverflow: "ellipsis", // 말줄임표 (...)
+                          lineHeight: "1.5em", // 한 줄의 높이를 1.5em로 설정 (사용할 폰트에 맞게 조정 가능)
+                          minHeight: "3em", // 두 줄에 해당하는 높이를 고정 (1.5em * 2줄 = 3em)
+                        }}
+                      >
+                        {item.title}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {item.price.toLocaleString()} 원
-                      </Typography>
+
                       {/* 조회수 및 작성시간 추가 */}
                       <Box
                         sx={{
@@ -276,22 +271,25 @@ const SearchPage: React.FC = () => {
       </Box>
 
       {/* 오른쪽 네비게이션 영역 */}
-      {/* <Box
+      <Box
         sx={{
           width: "20%",
           position: "fixed", // 화면에 고정
-          right: 0, // 오른쪽에 고정
+          right: 0, // 화면 오른쪽에 고정
           top: "50%", // 세로 기준 가운데
           transform: "translateY(-50%)", // 세로 가운데 정렬
           display: "flex",
           justifyContent: "center",
           alignItems: "center", // 부모 기준 가로 및 세로 중앙 정렬
+          "@media (max-width: 900px)": {
+            display: "none", // 화면이 작아지면 숨김 처리
+          },
         }}
       >
         <Box>
           <RecentExchangesNavigation />
         </Box>
-      </Box> */}
+      </Box>
     </Box>
   );
 };
