@@ -32,7 +32,7 @@ public class ExchangeResponseDto {
 		String defaultImageUrl = "http://localhost:8080/uploads/c2ba53a3-c5d2-458d-beea-584384ad88c1_ad.jpg";
 
 		List<ExchangeImageResponseDto> images = new ArrayList<>();
-		if (!exchange.getImages().isEmpty()) {
+		if (exchange.getImages() != null) {
 			images = exchange.getImages()
 				.stream()
 				.map(ExchangeImageResponseDto::fromImage)

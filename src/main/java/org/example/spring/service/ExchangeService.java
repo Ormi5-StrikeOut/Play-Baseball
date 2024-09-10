@@ -94,7 +94,7 @@ public class ExchangeService {
 
 		exchangeRepository.save(exchange);
 
-		if (!images.isEmpty()) {
+		if (images != null) {
 			for (MultipartFile image : images) {
 				try {
 					String fileUrl = s3Service.uploadFile(image);
@@ -252,7 +252,7 @@ public class ExchangeService {
 				.status(exchangeModifyRequestDto.getStatus())
 				.build();
 
-			if (!images.isEmpty()) {
+			if (images != null) {
 				for (MultipartFile image : images) {
 					try {
 						String fileUrl = s3Service.uploadFile(image);
