@@ -1,6 +1,6 @@
 package org.example.spring.security.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import static org.springframework.security.config.Customizer.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -131,7 +131,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(List.of("https://ioshane.com"));
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(
 			Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "Accept", "Origin"));
 		configuration.setAllowCredentials(true);

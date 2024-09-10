@@ -14,11 +14,13 @@ import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeNavigationResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
+import org.example.spring.domain.likeOverview.LikeOverview;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.reviewOverview.ReviewOverview;
 import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.repository.ExchangeImageRepository;
 import org.example.spring.repository.ExchangeRepository;
+import org.example.spring.repository.LikeOverviewRepository;
 import org.example.spring.repository.ReviewOverviewRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +50,7 @@ public class ExchangeService {
 	private final ExchangeRepository exchangeRepository;
 	private final ExchangeImageRepository exchangeImageRepository;
 	private final ReviewOverviewRepository reviewOverviewRepository;
+	private final LikeOverviewRepository likeOverviewRepository;
 	private final S3Service s3Service;
 	private final AlanAPIService alanAPIService;
 	private final JwtTokenValidator jwtTokenValidator;
@@ -55,12 +58,13 @@ public class ExchangeService {
 	@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
 		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository,
-		AlanAPIService alanAPIService) {
+		LikeOverviewRepository likeOverviewRepository, AlanAPIService alanAPIService) {
 		this.exchangeRepository = exchangeRepository;
 		this.exchangeImageRepository = exchangeImageRepository;
+		this.reviewOverviewRepository = reviewOverviewRepository;
+		this.likeOverviewRepository = likeOverviewRepository;
 		this.s3Service = s3Service;
 		this.jwtTokenValidator = jwtTokenValidator;
-		this.reviewOverviewRepository = reviewOverviewRepository;
 		this.alanAPIService = alanAPIService;
 	}
 
@@ -222,15 +226,20 @@ public class ExchangeService {
 		boolean isWriter = isWriter(request, id);
 
 		ReviewOverview reviewOverview = reviewOverviewRepository.findByMemberId(exchange.getMember().getId())
-			.orElse(ReviewOverview.builder().count(0L).average(0.0).build());
+			.orElse(ReviewOverview.builder().count(0).average(0.0).build());
 
 		long reviewCount = reviewOverview.getCount();
 		double average = reviewOverview.getAverage();
 
+		LikeOverview likeOverview = likeOverviewRepository.findByExchangeId(id)
+			.orElse(LikeOverview.builder().count(0).build());
+
+		long likeCount = likeOverview.getCount();
+
 		exchangeRepository.incrementViewCount(id);
 
 		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount,
-			average);
+			average, likeCount);
 	}
 
 	/**

@@ -9,9 +9,11 @@ export const DEFAULT_BANNER = `${RESOURCE_URL}/banner.webp`;
 // Member Endpoints
 export const MEMBER: string = `${REQUEST_URL}/members`;
 export const MEMBER_SIGNUP: string = `${MEMBER}/join`;
-export const MEMBER_MODIFY: string = `${MEMBER}/{memberId}`;
+export const MEMBER_MODIFY: string = `${MEMBER}/my/modify-member`;
 export const MEMBER_VERIFY: string = `${MEMBER}/verify-email`;
 export const MEMBER_VERIFY_RESEND: string = `${MEMBER}/resend-verification-email`;
+export const MEMBER_REQUEST_PASSWORD_RESET: string = `${MEMBER}/request-password-reset`;
+export const MEMBER_RESET_PASSWORD: string = `${MEMBER}/reset-password`;
 export const MEMBER_RESIGN: string = `${MEMBER}/my`;
 export const MEMBER_LOGIN: string = `${REQUEST_URL}/auth/login`;
 export const MEMBER_GET_ALL: string = `${MEMBER}`;
