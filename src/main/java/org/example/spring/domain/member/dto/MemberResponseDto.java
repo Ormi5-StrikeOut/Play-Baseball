@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+
+import org.example.spring.constants.Gender;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
 
@@ -23,6 +25,8 @@ public class MemberResponseDto {
     private Long id;
     private String email;
     private String nickname;
+    private String phoneNumber;
+    private Gender gender;
     private MemberRole role;
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -35,6 +39,8 @@ public class MemberResponseDto {
             .id(member.getId())
             .email(member.getEmail())
             .nickname(member.getNickname())
+            .phoneNumber(member.getPhoneNumber())
+            .gender(member.getGender())
             .role(member.getRole())
             .createdAt(member.getCreatedAt())
             .updatedAt(member.getUpdatedAt())
