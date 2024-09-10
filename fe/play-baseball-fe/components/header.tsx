@@ -33,13 +33,13 @@ const Header: React.FC = () => {
                 localStorage.removeItem("Authorization");
                 delete axiosInstance.defaults.headers.common['Authorization'];
                 setLoggedIn(false);
-                window.location.href = SERVER_URL;
+                await router.push("/");
             } else {
                 throw new Error("로그아웃 처리 중 오류가 발생했습니다.");
             }
         } catch (error) {
             handleApiError(error);
-            router.push({
+            await router.push({
                 pathname: "/result",
                 query: {
                     isSuccess: "false",
