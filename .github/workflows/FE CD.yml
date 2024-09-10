@@ -27,6 +27,11 @@ jobs:
           load: true
           tags: play-baseball-fe:latest
 
+      - name: Create .env file
+        run: |
+          echo "S3_SECRET=${{ secrets.NEXT_PUBLIC_API_URL }}" >> .env
+          echo "S3_SECRET=${{ secrets.NEC }}" >> .env
+
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar
 
