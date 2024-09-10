@@ -29,9 +29,10 @@ public class ExchangeDetailResponseDto {
 	private final String isWriter;
 	private final long reviewCount;
 	private final double average;
+	private final long likeCount;
 
 	public static ExchangeDetailResponseDto fromExchange(Exchange exchange,
-		List<ExchangeNavigationResponseDto> recentExchangesByMember, boolean isWriter, long reviewCount, double average) {
+		List<ExchangeNavigationResponseDto> recentExchangesByMember, boolean isWriter, long reviewCount, double average, long likeCount) {
 		List<ExchangeImageResponseDto> images = new ArrayList<>();
 		if (!exchange.getImages().isEmpty()) {
 			images = exchange.getImages()
@@ -54,6 +55,7 @@ public class ExchangeDetailResponseDto {
 			.isWriter(isWriter ? "TRUE" : "FALSE")
 			.reviewCount(reviewCount)
 			.average(average)
+			.likeCount(likeCount)
 			.build();
 	}
 }
