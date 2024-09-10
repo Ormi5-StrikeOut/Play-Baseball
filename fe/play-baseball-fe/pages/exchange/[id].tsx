@@ -49,6 +49,8 @@ interface ExchangeDetailResponseDto {
   writer: string;
   recentExchangesByMember: RecentExchange[];
   isWriter: "TRUE" | "FALSE";
+  reviewCount: number;
+  average: number;
 }
 
 const ItemDetail: React.FC = () => {
@@ -360,13 +362,17 @@ const ItemDetail: React.FC = () => {
                 </Typography>
                 <Box display="flex" alignItems="center">
                   <Box display="flex" alignItems="center">
-                    <Rating value={4.6} precision={0.1} readOnly />
+                    <Rating
+                      value={exchangeData.average}
+                      precision={0.1}
+                      readOnly
+                    />
                     <Typography
                       variant="body2"
                       color="textSecondary"
                       sx={{ marginLeft: "5px" }}
                     >
-                      (123)
+                      ({exchangeData.reviewCount})
                     </Typography>
                   </Box>
                 </Box>
