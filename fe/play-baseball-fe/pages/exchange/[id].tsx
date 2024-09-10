@@ -196,7 +196,11 @@ const ItemDetail: React.FC = () => {
                   alignItems="center"
                   justifyContent="center"
                   position="relative"
-                  width="100%"
+                  sx={{
+                    width: "100%",
+                    aspectRatio: "1 / 1", // 원하는 비율을 설정할 수 있음
+                    overflow: "hidden", // 이미지가 잘릴 수 있음
+                  }}
                 >
                   <Fade in={hover}>
                     <IconButton
@@ -217,19 +221,15 @@ const ItemDetail: React.FC = () => {
                     <Image
                       src={exchangeData.images[currentIndex]?.url}
                       alt={exchangeData.images[currentIndex]?.id.toString()}
-                      layout="responsive"
-                      width={700}
-                      height={400}
-                      objectFit="cover"
+                      layout="fill" // 컨테이너에 맞춰 이미지를 채움
+                      objectFit="cover" // 이미지 비율 유지하며 컨테이너를 채움
                     />
                   ) : (
                     <Image
                       src={"/default-img.jpg"}
                       alt={"Default image"}
-                      layout="responsive"
-                      width={700}
-                      height={400}
-                      objectFit="cover"
+                      layout="fill" // 컨테이너에 맞춰 이미지를 채움
+                      objectFit="cover" // 이미지 비율 유지하며 컨테이너를 채움
                     />
                   )}
 
