@@ -16,22 +16,24 @@ import { User } from '@/constants/types';
 
 interface MyProfileProps {
     user: User;
+    setUser: React.Dispatch<React.SetStateAction<User>>;
+    onSubmit: (user: User) => void;
 }
 
-const MyProfile: React.FC<MyProfileProps> = ({ user }) => { 
+const MyProfile: React.FC<MyProfileProps> = ({ user, setUser, onSubmit }) => { 
     // const [joinedString, setJoinedString] = useState("");
 
-    // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const { name, value } = e.target;
-    //     setUser((prevUser) => ({
-    //         ...prevUser,
-    //         [name]: value,
-    //     }));
-    // };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setUser((prevUser: User) => ({
+            ...prevUser,
+            [name]: value,
+        }));
+    };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // Handle form submission logic here (e.g., send data to server)
+        onSubmit(user);
         console.log('User Profile Updated:', user);
     };
 
@@ -71,7 +73,7 @@ const MyProfile: React.FC<MyProfileProps> = ({ user }) => {
                                 name="email"
                                 type="email"
                                 value={user.email}
-                                // onChange={handleChange}
+                                onChange={handleChange}
                             />
                             <TextField
                                 fullWidth
@@ -79,7 +81,7 @@ const MyProfile: React.FC<MyProfileProps> = ({ user }) => {
                                 label="Nickname"
                                 name="nickname"
                                 value={user.nickname}
-                                // onChange={handleChange}
+                                onChange={handleChange}
                             />
                             <TextField
                                 fullWidth
@@ -87,10 +89,11 @@ const MyProfile: React.FC<MyProfileProps> = ({ user }) => {
                                 label="Role"
                                 name="role"
                                 value={user.role}
-                                // onChange={handleChange}
+                                disabled
+                                onChange={handleChange}
                             />
                             <FormControlLabel control={<Checkbox
-                                value={user.emailVerified}
+                                value={user.emailVerified} disabled
                             />} label="Email Verified" />
                             
                             <Box className="italic">

@@ -4,7 +4,7 @@ const REQUEST_URL: string = "https://api.ioshane.com/api"; // BE 서버 주소
 // Member Endpoints
 export const MEMBER: string = `${REQUEST_URL}/members`;
 export const MEMBER_SIGNUP: string = `${MEMBER}/join`;
-export const MEMBER_MODIFY: string = `${MEMBER}/{memberId}`;
+export const MEMBER_MODIFY: string = `${MEMBER}/my/modify-member`;
 export const MEMBER_VERIFY: string = `${MEMBER}/verify/{memberId}`;
 export const MEMBER_RESIGN: string = `${MEMBER}/my`;
 export const MEMBER_LOGIN: string = `${REQUEST_URL}/auth/login`;

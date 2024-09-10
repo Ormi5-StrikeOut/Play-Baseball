@@ -1,6 +1,6 @@
 import React from 'react';
 import { ListItem, ListItemAvatar, ListItemText, Avatar } from '@mui/material';
-import { User } from '../constants/types';
+import { User } from '@/constants/types';
 
 interface UserListItemProps {
     user: User;

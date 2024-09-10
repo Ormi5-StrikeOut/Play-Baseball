@@ -1,7 +1,7 @@
 import React from 'react';
 import { List, ListItem, ListItemAvatar, ListItemText, Avatar, Paper, Box } from '@mui/material';
 import UserItem from './UserItem';
-import { User } from '../constants/types';
+import { User } from '@/constants/types';
 
 const users: User[] = [
     {
@@ -9,10 +9,10 @@ const users: User[] = [
         nickname: 'John Doe',
         email: '',
         role: '',
-        createdAt: undefined,
-        updatedAt: undefined,
-        lastLoginDate: undefined,
-        deletedAt: undefined,
+        createdAt: '',
+        updatedAt: '',
+        lastLoginDate: '',
+        deletedAt: '',
         emailVerified: false
     },
     {
@@ -20,10 +20,10 @@ const users: User[] = [
         nickname: 'Jane Smith',
         email: '',
         role: '',
-        createdAt: undefined,
-        updatedAt: undefined,
-        lastLoginDate: undefined,
-        deletedAt: undefined,
+        createdAt: '',
+        updatedAt: '',
+        lastLoginDate: '',
+        deletedAt: '',
         emailVerified: false
     },
     {
@@ -31,10 +31,10 @@ const users: User[] = [
         nickname: 'Alice Johnson',
         email: '',
         role: '',
-        createdAt: undefined,
-        updatedAt: undefined,
-        lastLoginDate: undefined,
-        deletedAt: undefined,
+        createdAt: '',
+        updatedAt: '',
+        lastLoginDate: '',
+        deletedAt: '',
         emailVerified: false
     },
 ];
