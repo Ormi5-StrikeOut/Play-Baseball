@@ -20,6 +20,13 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+/**
+ * 요청 속도 제한 필터
+ * <p>
+ * 이 필터는 들어오는 요청에 대해 속도 제한을 적용합니다.
+ * JWT 토큰, IP 주소, User-Agent를 기반으로 요청을 식별하고 제한합니다.
+ * </p>
+ */
 @Slf4j
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -37,6 +44,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
 		this.objectMapper = objectMapper;
 	}
 
+	/**
+	 * 필터 내부 로직을 처리합니다.
+	 * <p>
+	 * 요청에 대한 속도 제한을 확인하고, 제한을 초과하지 않은 경우 요청을 계속 진행합니다.
+	 * 제한을 초과한 경우 오류 응답을 생성합니다.
+	 * </p>
+	 *
+	 * @param request     HTTP 요청
+	 * @param response    HTTP 응답
+	 * @param filterChain 필터 체인
+	 * @throws ServletException 서블릿 예외
+	 * @throws IOException      IO 예외
+	 */
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 		throws ServletException, IOException {
@@ -51,6 +71,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
 		}
 	}
 
+	/**
+	 * 오류 응답 생성
+	 * <p>
+	 * 속도 제한 초과 시 클라이언트에게 전송할 JSON 형식의 오류 응답을 생성합니다.
+	 * </p>
+	 *
+	 * @param response HTTP 응답
+	 * @throws IOException IO 예외
+	 */
 	private void createErrorResponse(HttpServletResponse response) throws IOException {
 		response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
