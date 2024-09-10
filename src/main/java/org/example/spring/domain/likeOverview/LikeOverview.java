@@ -23,7 +23,6 @@ import org.example.spring.domain.exchange.Exchange;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class LikeOverview {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "like_overview_id")
@@ -34,5 +33,14 @@ public class LikeOverview {
     private Exchange exchange;
 
     @Column(name = "count", nullable = false)
-    private int count;
+    private long count;
+
+    /**
+     * 좋아요 통계를 업데이트합니다.
+     *
+     * @param newCount 추가되는 좋아요 수. 양수면 좋아요 증가, 음수면 좋아요 감소를 의미합니다.
+     */
+    public void updateLikeStats(long newCount) {
+        this.count += newCount;
+    }
 }
