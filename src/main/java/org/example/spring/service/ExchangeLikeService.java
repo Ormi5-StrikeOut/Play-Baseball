@@ -37,15 +37,15 @@ public class ExchangeLikeService {
     }
 
     /**
-     * 중고 거래 게시글에 대한 좋아요를 추가하거나 비활성화합니다.
+     * 중고 거래 게시글에 대한 좋아요를 추가하거나 상태를 변경합니다.
      * 이미 좋아요가 존재하는 경우 상태를 토글하고, 존재하지 않는 경우 새로 추가합니다.
      *
-     * @param request HTTP 요청 객체
-     * @param addLikeRequest 좋아요 추가 요청 DTO
-     * @throws RuntimeException 중고 거래 게시글을 찾을 수 없는 경우
+     * @param request HTTP 요청 객체. 사용자 인증 정보를 포함합니다.
+     * @param addLikeRequest 좋아요 추가 요청 DTO. 좋아요를 추가할 중고 거래 게시글의 ID를 포함합니다.
+     * @return 좋아요 처리 결과. 성공적으로 처리된 경우 true를 반환합니다.
      */
     @Transactional
-    public void addLike(HttpServletRequest request, AddLikeRequest addLikeRequest) {
+    public boolean addLike(HttpServletRequest request, AddLikeRequest addLikeRequest) {
         Member member = getAuthenticatedMember(request);
 
         Exchange exchange = exchangeRepository.findById(addLikeRequest.getExchangeId()).orElseThrow(() -> new RuntimeException("교환 거래를 찾을 수 없습니다."));
@@ -67,5 +67,7 @@ public class ExchangeLikeService {
                 .build();
             exchangeLikeRepository.save(newLike);
         }
+
+        return true;
     }
 }
