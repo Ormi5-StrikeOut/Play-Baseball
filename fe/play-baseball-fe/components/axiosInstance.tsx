@@ -1,10 +1,9 @@
-import axios, {AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:8000';
+const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
-interface ErrorResponseData {
-    tokenRefreshed?: boolean;
-    // 필요한 다른 속성들을 추가로 정의
+if (!baseURL) {
+    throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
 }
 
 const axiosInstance: AxiosInstance = axios.create({
@@ -18,13 +17,14 @@ const axiosInstance: AxiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
+
+        if (config.url?.includes('/verify-email')) {
+            return config;
+        }
+
         const token = localStorage.getItem('Authorization');
         if (token) {
-            // 'Bearer' 키워드 중복 방지
             config.headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        } else if (!config.url?.includes('/auth/login')) {
-            console.warn('No token found in localStorage');
-            window.location.href = '/auth/login';
         }
         return config;
     },
@@ -41,52 +41,15 @@ axiosInstance.interceptors.response.use(
         return response;
     },
     async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-        if (error.response?.status === 401 && (error.response.data as ErrorResponseData)?.tokenRefreshed === true) {
-            if (originalRequest._retry) {
-                return Promise.reject(error);
-            }
-
-            originalRequest._retry = true;
-            const newToken = error.response.headers['authorization'];
-            if (newToken) {
-                localStorage.setItem('Authorization', newToken);
-                axiosInstance.defaults.headers.common['Authorization'] = newToken;
-            }
-
-            // 원래 요청 객체 복제
-            const newRequest = {
-                ...originalRequest,
-                headers: {
-                    ...originalRequest.headers,
-                    Authorization: newToken,
-                },
-            };
-
-            // 새로운 요청 객체로 요청 재시도
-            return axiosInstance(newRequest);
+        if (error.response?.status === 401 && !error.config?.url?.includes('/verify-email')) {
+            localStorage.removeItem('Authorization');
+            window.location.href = '/auth/login';
         }
-
-        // 401 에러 처리 (토큰 만료)
-        if (error.response?.status === 401) {
-            // HttpOnly 쿠키 확인
-            const cookies = document.cookie.split('; ');
-            const refreshToken = cookies.find((cookie) => cookie.startsWith('refreshToken='));
-
-            if (!refreshToken) {
-                // HttpOnly 쿠키가 없는 경우, 로그인 페이지로 이동
-                localStorage.removeItem('Authorization');
-                window.location.href = '/auth/login';
-                return Promise.reject(error);
-            }
-        }
-
         return Promise.reject(error);
     }
 );
 
-export const handleApiError = (error: unknown) => {
+export const handleApiError = (error: unknown): void => {
     if (axios.isAxiosError(error)) {
         console.error('API Error:', error.response?.data);
     } else {
