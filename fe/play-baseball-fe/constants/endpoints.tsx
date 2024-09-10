@@ -1,7 +1,8 @@
-export const SERVER_URL = process.env.NEC; // FE 서버 주소
+export const SERVER_URL = process.env.NEXT_PUBLIC_NEC; // FE 서버 주소
 const REQUEST_URL = process.env.NEXT_PUBLIC_API_URL; // BE 서버 주소
 const RESOURCE_URL = "https://resource.ioshane.com";
 
+// Resources
 export const DEFAULT_IMAGE = `${RESOURCE_URL}/default.jpg`;
 export const DEFAULT_BANNER = `${RESOURCE_URL}/banner.webp`;
 
@@ -48,3 +49,6 @@ export const CHATROOM_ADD: string = `${CHATROOM}`;
 export const CHATROOM_DELETE: string = `${CHATROOM}`;
 export const CHAT: string = `${REQUEST_URL}/chat`;
 export const CHAT_POST_MESSAGE: string = `${CHAT}`;
+
+// Pages
+export const PAGE_SEARCH: string = `${SERVER_URL}/search`;
