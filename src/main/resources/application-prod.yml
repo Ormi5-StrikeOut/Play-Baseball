@@ -90,8 +90,8 @@ cloud:
       secretKey: ${S3_SECRET}
 
 alan:
-  key:${ALAN_KEY}
-  host:${ALAN_HOST}
+  key: ${ALAN_KEY}
+  host: ${ALAN_HOST}
 
 #server:
 #  forward-headers-strategy: native
