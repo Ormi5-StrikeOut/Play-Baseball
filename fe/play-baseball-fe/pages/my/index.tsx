@@ -1,8 +1,9 @@
-import React, { useState, useEffect} from 'react';
-import axios from 'axios';
-import MyProfile from '../../components/MyProfile';
-import Wrapper from '../../components/Wrapper'
+import React, { useState, useEffect, useRef} from 'react';
+import MyProfile from '@/components/MyProfile';
+import Wrapper from '@/components/Wrapper'
+import api from '@/constants/axios';
 import { User } from '@/constants/types'
+import { MEMBER_RESIGN } from '@/constants/endpoints'
 
 const My: React.FC = () => {
     const initialUser: User = {
@@ -10,10 +11,10 @@ const My: React.FC = () => {
         email: "",
         nickname: "",
         role: "",
-        createdAt: new Date(0),
-        updatedAt: new Date(0),
-        lastLoginDate: new Date(0),
-        deletedAt: new Date(0),
+        createdAt: "",
+        updatedAt: "",
+        lastLoginDate: "",
+        deletedAt: "",
         emailVerified: false
     };
 
@@ -21,17 +22,35 @@ const My: React.FC = () => {
 
     useEffect(() => {
         try {
-            axios.get<User>('https://api.ioshane.com/api/members/my').then(res => {
-              setUser(res.data);
+            api.get<User>(MEMBER_RESIGN).then(res => {
+                const userData = res.data.data;
+
+                const user: User = {
+                    id: userData.id,
+                    email: userData.email,
+                    nickname: userData.nickname,
+                    role: userData.role,
+                    createdAt: userData.createdAt,
+                    updatedAt: userData.updatedAt,
+                    lastLoginDate: userData.lastLoginDate,
+                    deletedAt: userData.deletedAt,
+                    // createdAt: new Date(userData.createdAt),
+                    // updatedAt: new Date(userData.updatedAt),
+                    // lastLoginDate: new Date(userData.lastLoginDate),
+                    // deletedAt: new Date(userData.deletedAt),
+                    emailVerified: userData.emailVerified,
+                };
+                
+                setUser(user);
+                console.log("User loaded! " + res.data);
+                console.log("User is " + userState.nickname);
             })
           } catch (err) {
             if(err instanceof Error) {
-              console.error("Error fetching user data: " + err.message);
-              setUser(initialUser)
+                console.error("Error fetching user data: " + err.message);
+                setUser(initialUser)
             }
           }
-  
-          console.log("User loaded! " + userState);
     }, []);
 
     return (

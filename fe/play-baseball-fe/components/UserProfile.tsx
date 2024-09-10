@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { Grid, Paper, Typography, Avatar, Box } from '@mui/material';
+import { User } from '@/constants/types'
 
-const initialUser = {
+const initialUser: User = {
     id: -1,
     email: "user@example.com",
     nickname: "UserNickname",
     role: "UserRole",
-    createdAt: NaN,
-    updatedAt: NaN,
-    lastLoginDate: NaN,
-    deletedAt: NaN,
+    createdAt: "",
+    updatedAt: "",
+    lastLoginDate: "",
+    deletedAt: "",
     emailVerified: false
 };
 
 const UserProfile: React.FC = () => {
-    const [user] = useState(initialUser);
+    const [user] = useState<User>(initialUser);
 
     return (
         <Box sx={{ flexGrow: 1, padding: 3 }}>
@@ -48,7 +49,7 @@ const UserProfile: React.FC = () => {
                             <strong>Email Verified:</strong> {user.emailVerified ? "Yes" : "No"}
                         </Typography>
                         <Typography variant="body2" className="italic">
-                            Member since: {user.createdAt}
+                            Member since: {user.createdAt.substring(0, 10)}
                         </Typography>
                     </Paper>
                 </Grid>

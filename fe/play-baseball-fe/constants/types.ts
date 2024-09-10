@@ -3,9 +3,9 @@ export interface User {
     email: string,
     nickname: string,
     role: string,
-    createdAt: Date,
-    updatedAt: Date,
-    lastLoginDate: Date,
-    deletedAt: Date,
+    createdAt: string,
+    updatedAt: string,
+    lastLoginDate: string,
+    deletedAt: string,
     emailVerified: boolean
 }

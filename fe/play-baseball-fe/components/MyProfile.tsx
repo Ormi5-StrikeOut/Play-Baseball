@@ -19,31 +19,30 @@ interface MyProfileProps {
 }
 
 const MyProfile: React.FC<MyProfileProps> = ({ user }) => { 
-    const [userState, setUser] = useState(user);
-    const [joinedString, setJoinedString] = useState("");
+    // const [joinedString, setJoinedString] = useState("");
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setUser((prevUser) => ({
-            ...prevUser,
-            [name]: value,
-        }));
-    };
+    // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const { name, value } = e.target;
+    //     setUser((prevUser) => ({
+    //         ...prevUser,
+    //         [name]: value,
+    //     }));
+    // };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         // Handle form submission logic here (e.g., send data to server)
-        console.log('User Profile Updated:', userState);
+        console.log('User Profile Updated:', user);
     };
 
-    useEffect(() => {
-        const formatted = userState.createdAt.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        setJoinedString(formatted);
-    }, [userState.createdAt]);
+    // useEffect(() => {
+    //     // const formatted = user.createdAt.toLocaleDateString('en-US', {
+    //     //     year: 'numeric',
+    //     //     month: 'long',
+    //     //     day: 'numeric'
+    //     // });
+    //     // setJoinedString(formatted);
+    // }, [user.createdAt]);
 
     return (
         <Box sx={{ flexGrow: 1, padding: 3 }}>
@@ -53,7 +52,7 @@ const MyProfile: React.FC<MyProfileProps> = ({ user }) => {
                         <Box sx={{ textAlign: 'center' }}>
                             <Avatar
                                 src={"./assets/profile_placeholder.jpg"}
-                                alt={`${userState.nickname}'s avatar`}
+                                alt={`${user.nickname}'s avatar`}
                                 sx={{ width: 100, height: 100, margin: '0 auto' }}
                             />
                         </Box>
@@ -71,31 +70,31 @@ const MyProfile: React.FC<MyProfileProps> = ({ user }) => {
                                 label="Email"
                                 name="email"
                                 type="email"
-                                value={userState.email}
-                                onChange={handleChange}
+                                value={user.email}
+                                // onChange={handleChange}
                             />
                             <TextField
                                 fullWidth
                                 margin="normal"
                                 label="Nickname"
                                 name="nickname"
-                                value={userState.nickname}
-                                onChange={handleChange}
+                                value={user.nickname}
+                                // onChange={handleChange}
                             />
                             <TextField
                                 fullWidth
                                 margin="normal"
                                 label="Role"
                                 name="role"
-                                value={userState.role}
-                                onChange={handleChange}
+                                value={user.role}
+                                // onChange={handleChange}
                             />
                             <FormControlLabel control={<Checkbox
-                                value={userState.emailVerified}
+                                value={user.emailVerified}
                             />} label="Email Verified" />
                             
                             <Box className="italic">
-                                <span>Member since: {joinedString}</span>
+                                <span>Member since: {user.createdAt.substring(0, 10)}</span>
                             </Box>
                             <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
                                 Save
