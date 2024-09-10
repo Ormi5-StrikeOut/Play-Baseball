@@ -3,6 +3,7 @@ const REQUEST_URL = process.env.NEXT_PUBLIC_API_URL; // BE 서버 주소
 const RESOURCE_URL = "https://resource.ioshane.com";
 
 export const DEFAULT_IMAGE = `${RESOURCE_URL}/default.jpg`;
+export const DEFAULT_BANNER = `${RESOURCE_URL}/banner.webp`;
 
 // Member Endpoints
 export const MEMBER: string = `${REQUEST_URL}/members`;
@@ -19,6 +20,7 @@ export const MEMBER_MODIFY_ROLE: string = `${MEMBER}/verify-role/{memberId}`;
 
 // Exchange Endpoints
 export const EXCHANGE: string = `${REQUEST_URL}/exchanges`;
+export const EXCHANGE_SEARCH: string = `${EXCHANGE}/search`;
 export const EXCHANGE_ADD: string = `${EXCHANGE}`;
 export const EXCHANGE_MODIFY: string = `${EXCHANGE}/{id}`;
 export const EXCHANGE_DELETE: string = `${EXCHANGE}/{id}`;
