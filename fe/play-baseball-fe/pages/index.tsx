@@ -108,10 +108,6 @@ const MainPage: React.FC = () => {
   return (
     <Wrapper>
       <Container maxWidth="lg" sx={{ py: 3 }}>
-        <div className="width-[70%]">
-          <SearchBar onSearch={handleSearch} />
-        </div>
-
         <Box
           sx={{
             width: "100%",
