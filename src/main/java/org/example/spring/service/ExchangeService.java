@@ -40,12 +40,10 @@ public class ExchangeService {
 	@Value("${app.fe-url}")
 	private String frontendBaseUrl;
 	private final String EXCHANGE = "/exchange";
-	private final String REGULAR_PRICE_PROMPT = "질문: 의 출시 가격은 얼마인지 말해줄래? \n"
-		+ "답변 조건: \n"
-		+ "1. 오직 질문에 해당하는 숫자 데이터 하나만 제시할 것\n"
-		+ "2. 숫자 외 그 어떤 문자도 포함 금지 (단위, 문구, 설명 일절 불가)\n"
-		+ "3. 모든 조건을 지키지 않을 시 답변으로 인정하지 않음\n"
-		+ "4. 위 조건을 모두 준수하여 숫자로만 답해주세요";
+	private final String REGULAR_PRICE_PROMPT =
+		"질문: 의 출시 가격은 얼마인지 말해줄래? \n" + "답변 조건: \n" + "1. 오직 질문에 해당하는 숫자 데이터 하나만 제시할 것\n"
+			+ "2. 숫자 외 그 어떤 문자도 포함 금지 (단위, 문구, 설명 일절 불가)\n" + "3. 모든 조건을 지키지 않을 시 답변으로 인정하지 않음\n"
+			+ "4. 위 조건을 모두 준수하여 숫자로만 답해주세요";
 
 	private final ExchangeRepository exchangeRepository;
 	private final ExchangeImageRepository exchangeImageRepository;
@@ -98,10 +96,7 @@ public class ExchangeService {
 			for (MultipartFile image : images) {
 				try {
 					String fileUrl = s3Service.uploadFile(image);
-					ExchangeImage exchangeImage = ExchangeImage.builder()
-						.url(fileUrl)
-						.exchange(exchange)
-						.build();
+					ExchangeImage exchangeImage = ExchangeImage.builder().url(fileUrl).exchange(exchange).build();
 
 					exchange.addImage(exchangeImage);
 					exchangeImageRepository.save(exchangeImage);
@@ -125,10 +120,19 @@ public class ExchangeService {
 	 * @return 게시글 목록을 page와 size에 따라 반환
 	 */
 	@Transactional(readOnly = true)
-	public Page<ExchangeNavigationResponseDto> getAllExchanges(int page, int size) {
+	public Page<ExchangeNavigationResponseDto> getAllExchanges(SalesStatus status, int page, int size) {
+		
 		Pageable pageable = PageRequest.of(page, size);
-		return exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
-			.map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
+		Page<Exchange> exchanges;
+
+		if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+			exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(pageable, status);
+		} else {
+			exchanges = exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+		}
+
+		return exchanges.map(
+			exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
 	}
 
 	/**
@@ -196,16 +200,12 @@ public class ExchangeService {
 		boolean isWriter = isWriter(request, id);
 
 		ReviewOverview reviewOverview = reviewOverviewRepository.findByMemberId(exchange.getMember().getId())
-			.orElse(ReviewOverview.builder()
-				.count(0L)
-				.average(0.0)
-				.build());
+			.orElse(ReviewOverview.builder().count(0L).average(0.0).build());
 
 		long reviewCount = reviewOverview.getCount();
 		double average = reviewOverview.getAverage();
 
-		Exchange viewCountUpdateExchange = exchange.toBuilder().viewCount(exchange.getViewCount() + 1).build();
-		exchangeRepository.save(viewCountUpdateExchange);
+		exchangeRepository.incrementViewCount(id);
 
 		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount,
 			average);
@@ -259,10 +259,7 @@ public class ExchangeService {
 				for (MultipartFile image : images) {
 					try {
 						String fileUrl = s3Service.uploadFile(image);
-						ExchangeImage exchangeImage = ExchangeImage.builder()
-							.url(fileUrl)
-							.exchange(exchange)
-							.build();
+						ExchangeImage exchangeImage = ExchangeImage.builder().url(fileUrl).exchange(exchange).build();
 
 						exchange.addImage(exchangeImage);
 						exchangeImageRepository.save(exchangeImage);

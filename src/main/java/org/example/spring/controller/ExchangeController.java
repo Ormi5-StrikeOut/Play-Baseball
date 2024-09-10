@@ -3,6 +3,7 @@ package org.example.spring.controller;
 import java.util.List;
 
 import org.example.spring.common.ApiResponseDto;
+import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.dto.ExchangeAddRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeDetailResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
@@ -71,9 +72,11 @@ public class ExchangeController {
 	 */
 	@GetMapping
 	public ResponseEntity<ApiResponseDto<Page<ExchangeNavigationResponseDto>>> getAllExchanges(
+		@RequestParam(required = false, defaultValue = "NONE") SalesStatus status,
 		@RequestParam(required = false, defaultValue = PAGE_DEFAULT) int page,
 		@RequestParam(required = false, defaultValue = PAGE_SIZE_DEFAULT) int size) {
-		Page<ExchangeNavigationResponseDto> responses = exchangeService.getAllExchanges(page, size);
+
+		Page<ExchangeNavigationResponseDto> responses = exchangeService.getAllExchanges(status, page, size);
 		return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDto.success("모든 게시물 조회 성공.", responses));
 	}
 
@@ -84,6 +87,7 @@ public class ExchangeController {
 	 */
 	@GetMapping("/five")
 	public ResponseEntity<ApiResponseDto<List<ExchangeNavigationResponseDto>>> getLatestFiveExchanges() {
+		
 		List<ExchangeNavigationResponseDto> responses = exchangeService.getLatestFiveExchanges();
 		return ResponseEntity.status(HttpStatus.OK).body(ApiResponseDto.success("게시물 5개 조회 성공.", responses));
 	}
