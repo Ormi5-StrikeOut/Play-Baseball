@@ -30,7 +30,7 @@ jobs:
       - name: Create .env file
         run: |
           echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> .env
-          echo "NEC=${{ secrets.NEC }}" >> .env
+          echo "NEXT_PUBLIC_NEC=${{ secrets.NEC }}" >> .env
 
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar
