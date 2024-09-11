@@ -128,8 +128,8 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 		String method = request.getMethod();
 		boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith)
 			|| path.equals("/")
-			|| ("/api/exchanges".startsWith(path) && "GET".equalsIgnoreCase(method))
-			|| ("/api/reviews".startsWith(path) && "GET".equalsIgnoreCase(method))
+			|| (path.startsWith("/api/exchanges") && "GET".equalsIgnoreCase(method))
+			|| (path.startsWith("/api/reviews") && "GET".equalsIgnoreCase(method))
 			|| path.equals("/favicon.ico");
 		log.debug("Should skip filter for path {}: {}", path, shouldSkip);
 		return shouldSkip;

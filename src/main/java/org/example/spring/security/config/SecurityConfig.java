@@ -68,9 +68,11 @@ public class SecurityConfig {
 				.permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/members/verify-email")
 				.permitAll()
-				.requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five")
+				.requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/**")
 				.permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/reviews")
+				.permitAll()
+				.requestMatchers("/ws/**", "/stomp/content", "/stomp/content/**")
 				.permitAll()
 
 				// 사용자 및 관리자 엔드포인트 (이메일 인증 필요)
