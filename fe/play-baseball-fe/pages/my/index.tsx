@@ -3,7 +3,7 @@ import MyProfile from '@/components/MyProfile';
 import Wrapper from '@/components/Wrapper'
 import api from '@/constants/axios';
 import { User } from '@/constants/types'
-import { MEMBER_MODIFY, MEMBER_RESIGN } from '@/constants/endpoints'
+import { MEMBER_MODIFY, MEMBER_MY, MEMBER_RESIGN } from '@/constants/endpoints'
 
 const My: React.FC = () => {
     const initialUser: User = {
@@ -15,14 +15,16 @@ const My: React.FC = () => {
         updatedAt: "",
         lastLoginDate: "",
         deletedAt: "",
-        emailVerified: false
+        emailVerified: false,
+        phoneNumber: '',
+        gender: ''
     };
 
     const [userState, setUser] = useState<User>(initialUser);
 
     useEffect(() => {
         try {
-            api.get(MEMBER_RESIGN).then(res => {
+            api.get(MEMBER_MY).then(res => {
                 const userData = res.data.data;
 
                 const user: User = {
@@ -39,6 +41,8 @@ const My: React.FC = () => {
                     // lastLoginDate: new Date(userData.lastLoginDate),
                     // deletedAt: new Date(userData.deletedAt),
                     emailVerified: userData.emailVerified,
+                    phoneNumber: userData.phoneNumber,
+                    gender: userData.gender
                 };
                 
                 setUser(user);
@@ -56,19 +60,22 @@ const My: React.FC = () => {
     function handleSubmit(user: User) {
         try {
             api.put(MEMBER_MODIFY, {
-                id: user.id,
-                email: user.email,
+                // id: user.id,
+                // email: user.email,
                 nickname: user.nickname,
-                role: user.role,
-                createdAt: user.createdAt,
-                updatedAt: user.updatedAt,
-                lastLoginDate: user.lastLoginDate,
-                deletedAt: user.deletedAt,
+                phoneNumber: user.phoneNumber,
+                gender: user.gender,
+                name: user.nickname
+                // role: user.role,
+                // createdAt: user.createdAt,
+                // updatedAt: user.updatedAt,
+                // lastLoginDate: user.lastLoginDate,
+                // deletedAt: user.deletedAt,
                 // createdAt: new Date(userData.createdAt),
                 // updatedAt: new Date(userData.updatedAt),
                 // lastLoginDate: new Date(userData.lastLoginDate),
                 // deletedAt: new Date(userData.deletedAt),
-                emailVerified: user.emailVerified,
+                // emailVerified: user.emailVerified,
             });
         } catch (err) {
             if(err instanceof Error) {
@@ -77,9 +84,20 @@ const My: React.FC = () => {
         }
     }
 
+    function handleDeleteAccount(user: User) {
+        try {
+            api.put(MEMBER_RESIGN, {
+            });
+        } catch (err) {
+            if(err instanceof Error) {
+                console.error("Error performing account deletion: " + err.message);
+            }
+        }
+    }
+
     return (
         <Wrapper>
-            <MyProfile user={userState} setUser={setUser} onSubmit={handleSubmit}/>
+            <MyProfile user={userState} setUser={setUser} onSubmit={handleSubmit} onDeleteAccount={handleDeleteAccount}/>
         </Wrapper>
     );
 };

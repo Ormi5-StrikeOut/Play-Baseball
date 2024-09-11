@@ -4,7 +4,7 @@ import MyProfile from '@/components/MyProfile';
 import Wrapper from '@/components/Wrapper'
 import api from '@/constants/axios';
 import { User } from '@/constants/types'
-import { MEMBER_GET, MEMBER_MODIFY, MEMBER_RESIGN } from '@/constants/endpoints'
+import { MEMBER_GET, MEMBER_MODIFY, MEMBER_MY } from '@/constants/endpoints'
 import UserProfile from '@/components/UserProfile';
 
 const My: React.FC = () => {

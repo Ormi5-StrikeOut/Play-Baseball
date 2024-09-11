@@ -11,7 +11,9 @@ const initialUser: User = {
     updatedAt: "",
     lastLoginDate: "",
     deletedAt: "",
-    emailVerified: false
+    emailVerified: false,
+    phoneNumber: '',
+    gender: ''
 };
 
 interface UserProfileProps {
