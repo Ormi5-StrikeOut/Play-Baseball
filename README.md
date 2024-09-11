@@ -1,5 +1,7 @@
 # Play-Baseball
 
+[![Deploy Next.js FE to LightSail](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/FE%20CD.yml/badge.svg?branch=dev)](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/FE%20CD.yml) [![Deploy Spring BE to EC2](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CD.yml/badge.svg?branch=dev)](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CD.yml) [![Java CI with Gradle](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CI.yml/badge.svg?branch=dev)](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CI.yml)
+
 ## 목차
 1. [프로젝트 소개](#프로젝트-소개)
 2. [프로젝트 개요](#프로젝트-개요)
