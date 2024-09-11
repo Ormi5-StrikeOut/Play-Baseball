@@ -181,13 +181,13 @@ class MemberControllerTest {
 
     @Test
     void resendVerificationEmail_Success() {
-        doNothing().when(memberService).resendVerificationEmail(any(HttpServletRequest.class));
+        doNothing().when(memberService).resendVerificationEmail(anyString());
 
-        ResponseEntity<ApiResponseDto<Void>> response = memberController.resendVerificationEmail(mock(HttpServletRequest.class));
+        ResponseEntity<ApiResponseDto<Void>> response = memberController.resendVerificationEmail(anyString());
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("인증 이메일 재발송이 완료되었습니다.", Objects.requireNonNull(response.getBody()).getMessage());
         assertNull(response.getBody().getData());
-        verify(memberService, times(1)).resendVerificationEmail(any(HttpServletRequest.class));
+        verify(memberService, times(1)).resendVerificationEmail(anyString());
     }
 }

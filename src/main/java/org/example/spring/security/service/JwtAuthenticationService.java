@@ -2,7 +2,6 @@ package org.example.spring.security.service;
 
 import org.example.spring.security.jwt.JwtTokenProvider;
 import org.example.spring.security.jwt.JwtTokenValidator;
-import org.example.spring.security.utils.AuthUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,13 +22,10 @@ public class JwtAuthenticationService {
 
 	private final JwtTokenValidator jwtTokenValidator;
 	private final JwtTokenProvider jwtTokenProvider;
-	private final AuthUtils authUtils;
 
-	public JwtAuthenticationService(JwtTokenValidator jwtTokenValidator, JwtTokenProvider jwtTokenProvider,
-		AuthUtils authUtils) {
+	public JwtAuthenticationService(JwtTokenValidator jwtTokenValidator, JwtTokenProvider jwtTokenProvider) {
 		this.jwtTokenValidator = jwtTokenValidator;
 		this.jwtTokenProvider = jwtTokenProvider;
-		this.authUtils = authUtils;
 	}
 
 	/**
@@ -66,15 +62,6 @@ public class JwtAuthenticationService {
 		log.debug("Processing token: {}", token);
 		UserDetails userDetails = jwtTokenValidator.getUserDetails(token);
 
-		String ip = authUtils.getClientIpAddress(request);
-
-        /*if (rateLimiterService.isIpChanged(userDetails.getUsername(), ip)) {
-            String storedIp = rateLimiterService.getStoredIp(userDetails.getUsername());
-            log.warn("IP address changed for user: {}. Old IP: {}, New IP: {}",
-                userDetails.getUsername(), storedIp, ip);
-            handleInvalidTokens();
-            return;
-        }*/
 		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 			userDetails, null, userDetails.getAuthorities());
 		authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -9,9 +9,10 @@ import org.example.spring.constants.SalesStatus;
 import org.example.spring.domain.exchange.Exchange;
 import org.example.spring.domain.exchangeImage.dto.ExchangeImageResponseDto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Getter;
-import org.example.spring.domain.reviewOverview.ReviewOverview;
 
 @Getter
 @Builder
@@ -29,9 +30,13 @@ public class ExchangeDetailResponseDto {
 	private final String isWriter;
 	private final long reviewCount;
 	private final double average;
+	private final long likeCount;
+	@JsonProperty("isLike")
+	private final boolean isLike;
 
 	public static ExchangeDetailResponseDto fromExchange(Exchange exchange,
-		List<ExchangeNavigationResponseDto> recentExchangesByMember, boolean isWriter, long reviewCount, double average) {
+		List<ExchangeNavigationResponseDto> recentExchangesByMember, boolean isWriter, long reviewCount, double average,
+		long likeCount, boolean isLike) {
 		List<ExchangeImageResponseDto> images = new ArrayList<>();
 		if (!exchange.getImages().isEmpty()) {
 			images = exchange.getImages()
@@ -54,6 +59,8 @@ public class ExchangeDetailResponseDto {
 			.isWriter(isWriter ? "TRUE" : "FALSE")
 			.reviewCount(reviewCount)
 			.average(average)
+			.likeCount(likeCount)
+			.isLike(isLike)
 			.build();
 	}
 }

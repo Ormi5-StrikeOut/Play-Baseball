@@ -34,7 +34,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 
 	private static final List<String> PUBLIC_PATHS = Arrays.asList(
 		"/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/api/members/verify-email",
-		"/api/members/reset-password", "/api/members/request-password-reset", "/stomp/content"
+		"/api/members/reset-password", "/api/members/request-password-reset", "/api/members/resend-verification-email"
 	);
 
 	public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,
@@ -127,8 +127,8 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 		String method = request.getMethod();
 		boolean shouldSkip = PUBLIC_PATHS.stream().anyMatch(path::startsWith)
 			|| path.equals("/")
-			|| ("/api/exchanges".equals(path) && "GET".equalsIgnoreCase(method))
-			|| ("/api/reviews".equals(path) && "GET".equalsIgnoreCase(method))
+			|| ("/api/exchanges".startsWith(path) && "GET".equalsIgnoreCase(method))
+			|| ("/api/reviews".startsWith(path) && "GET".equalsIgnoreCase(method))
 			|| path.equals("/favicon.ico");
 		log.debug("Should skip filter for path {}: {}", path, shouldSkip);
 		return shouldSkip;
