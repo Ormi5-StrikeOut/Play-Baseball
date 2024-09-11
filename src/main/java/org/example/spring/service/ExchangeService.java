@@ -14,11 +14,15 @@ import org.example.spring.domain.exchange.dto.ExchangeModifyRequestDto;
 import org.example.spring.domain.exchange.dto.ExchangeNavigationResponseDto;
 import org.example.spring.domain.exchange.dto.ExchangeResponseDto;
 import org.example.spring.domain.exchangeImage.ExchangeImage;
+import org.example.spring.domain.like.ExchangeLike;
+import org.example.spring.domain.likeOverview.LikeOverview;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.reviewOverview.ReviewOverview;
 import org.example.spring.exception.AuthenticationFailedException;
 import org.example.spring.repository.ExchangeImageRepository;
+import org.example.spring.repository.ExchangeLikeRepository;
 import org.example.spring.repository.ExchangeRepository;
+import org.example.spring.repository.LikeOverviewRepository;
 import org.example.spring.repository.ReviewOverviewRepository;
 import org.example.spring.security.jwt.JwtTokenValidator;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,19 +44,33 @@ public class ExchangeService {
 	@Value("${app.fe-url}")
 	private String frontendBaseUrl;
 	private final String EXCHANGE = "/exchange";
+	private final String REGULAR_PRICE_PROMPT =
+		"질문: 의 출시 가격은 얼마인지 말해줄래? \n" + "답변 조건: \n" + "1. 오직 질문에 해당하는 숫자 데이터 하나만 제시할 것\n"
+			+ "2. 숫자 외 그 어떤 문자도 포함 금지 (단위, 문구, 설명 일절 불가)\n" + "3. 모든 조건을 지키지 않을 시 답변으로 인정하지 않음\n"
+			+ "4. 위 조건을 모두 준수하여 숫자로만 답해주세요";
+
 	private final ExchangeRepository exchangeRepository;
 	private final ExchangeImageRepository exchangeImageRepository;
-	private final S3Service s3Service;
-	private final JwtTokenValidator jwtTokenValidator;
 	private final ReviewOverviewRepository reviewOverviewRepository;
+	private final LikeOverviewRepository likeOverviewRepository;
+	private final ExchangeLikeRepository exchangeLikeRepository;
+	private final S3Service s3Service;
+	private final AlanAPIService alanAPIService;
+	private final JwtTokenValidator jwtTokenValidator;
 
+	@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 	public ExchangeService(ExchangeRepository exchangeRepository, ExchangeImageRepository exchangeImageRepository,
-		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository) {
+		ExchangeLikeRepository exchangeLikeRepository,
+		JwtTokenValidator jwtTokenValidator, S3Service s3Service, ReviewOverviewRepository reviewOverviewRepository,
+		LikeOverviewRepository likeOverviewRepository, AlanAPIService alanAPIService) {
 		this.exchangeRepository = exchangeRepository;
 		this.exchangeImageRepository = exchangeImageRepository;
+		this.exchangeLikeRepository = exchangeLikeRepository;
+		this.reviewOverviewRepository = reviewOverviewRepository;
+		this.likeOverviewRepository = likeOverviewRepository;
 		this.s3Service = s3Service;
 		this.jwtTokenValidator = jwtTokenValidator;
-		this.reviewOverviewRepository = reviewOverviewRepository;
+		this.alanAPIService = alanAPIService;
 	}
 
 	/**
@@ -70,25 +88,25 @@ public class ExchangeService {
 		// token 유효성 검사 후 요청한 member 정보
 		Member member = jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request));
 
+		int regularPrice = Integer.parseInt(
+			alanAPIService.getDataAsString(exchangeAddRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
+
 		Exchange exchange = Exchange.builder()
 			.member(member)
 			.title(exchangeAddRequestDto.getTitle())
 			.price(exchangeAddRequestDto.getPrice())
-			.regularPrice(123123123) // todo: Alan api 연결
+			.regularPrice(regularPrice)
 			.content(exchangeAddRequestDto.getContent())
 			.status(SalesStatus.SALE)
 			.build();
 
 		exchangeRepository.save(exchange);
 
-		if (!images.isEmpty()) {
+		if (images != null) {
 			for (MultipartFile image : images) {
 				try {
 					String fileUrl = s3Service.uploadFile(image);
-					ExchangeImage exchangeImage = ExchangeImage.builder()
-						.url(fileUrl)
-						.exchange(exchange)
-						.build();
+					ExchangeImage exchangeImage = ExchangeImage.builder().url(fileUrl).exchange(exchange).build();
 
 					exchange.addImage(exchangeImage);
 					exchangeImageRepository.save(exchangeImage);
@@ -112,10 +130,19 @@ public class ExchangeService {
 	 * @return 게시글 목록을 page와 size에 따라 반환
 	 */
 	@Transactional(readOnly = true)
-	public Page<ExchangeNavigationResponseDto> getAllExchanges(int page, int size) {
+	public Page<ExchangeNavigationResponseDto> getAllExchanges(SalesStatus status, int page, int size) {
+
 		Pageable pageable = PageRequest.of(page, size);
-		return exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable)
-			.map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
+		Page<Exchange> exchanges;
+
+		if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+			exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(status, pageable);
+		} else {
+			exchanges = exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+		}
+
+		return exchanges.map(
+			exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
 	}
 
 	/**
@@ -149,16 +176,37 @@ public class ExchangeService {
 	/**
 	 * 제목을 포함하고 있는 삭제되지 않은 게시물 모두 조회합니다.
 	 *
-	 * @param title 검색에 포함할 제목 키워드
+	 * @param keyword 검색에 포함할 제목 키워드
 	 * @param page 게시물이 포함된 페이지
 	 * @param size 한 번에 렌더링할 게시물 개수
 	 * @return 제목이 키워드에 포함되어있는 게시물 목록을 page와 size에 따라 반환
 	 */
 	@Transactional
-	public Page<ExchangeNavigationResponseDto> getExchangesByTitleContaining(String title, int page, int size) {
+	public Page<ExchangeNavigationResponseDto> getExchangesByTitleContaining(String keyword, SalesStatus status,
+		int page,
+		int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		return exchangeRepository.findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(title, pageable)
-			.map(exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
+		Page<Exchange> exchanges;
+
+		if (keyword.equals("")) {
+			if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+				exchanges = exchangeRepository.findByDeletedAtIsNullAndStatusOrderByCreatedAtDesc(status, pageable);
+			} else {
+				exchanges = exchangeRepository.findByDeletedAtIsNullOrderByCreatedAtDesc(pageable);
+			}
+		} else {
+			if (status == SalesStatus.SALE || status == SalesStatus.COMPLETE) {
+				exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullAndStatusOrderByCreatedAtDesc(
+					keyword,
+					status, pageable);
+			} else {
+				exchanges = exchangeRepository.findByTitleContainingAndDeletedAtIsNullOrderByCreatedAtDesc(keyword,
+					pageable);
+			}
+		}
+
+		return exchanges.map(
+			exchange -> ExchangeNavigationResponseDto.fromExchange(exchange, frontendBaseUrl + EXCHANGE));
 	}
 
 	/**
@@ -183,15 +231,27 @@ public class ExchangeService {
 		boolean isWriter = isWriter(request, id);
 
 		ReviewOverview reviewOverview = reviewOverviewRepository.findByMemberId(exchange.getMember().getId())
-			.orElse(ReviewOverview.builder()
-				.count(0L)
-				.average(0.0)
-				.build());
+			.orElse(ReviewOverview.builder().count(0).average(0.0).build());
 
 		long reviewCount = reviewOverview.getCount();
 		double average = reviewOverview.getAverage();
 
-		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount, average);
+		LikeOverview likeOverview = likeOverviewRepository.findByExchangeId(id)
+			.orElse(LikeOverview.builder().count(0).build());
+
+		long likeCount = likeOverview.getCount();
+
+		exchangeRepository.incrementViewCount(id);
+
+		ExchangeLike exchangeLike = exchangeLikeRepository.findByExchangeAndMember(exchange,
+				jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request)))
+			.orElse(ExchangeLike.builder()
+				.build());
+
+		boolean isLike = exchangeLike.getCanceledAt() != null;
+
+		return ExchangeDetailResponseDto.fromExchange(exchange, recentExchangesByMember, isWriter, reviewCount,
+			average, likeCount, isLike);
 	}
 
 	/**
@@ -223,22 +283,26 @@ public class ExchangeService {
 				exchange.removeImage(image);
 			}
 
+			int regularPrice = exchange.getRegularPrice();
+			if (!exchangeModifyRequestDto.getTitle().equals(exchange.getTitle())) {
+				regularPrice = Integer.parseInt(
+					alanAPIService.getDataAsString(exchangeModifyRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
+			}
+
 			Exchange updateExchange = exchange.toBuilder()
 				.title(exchangeModifyRequestDto.getTitle())
 				.price(exchangeModifyRequestDto.getPrice())
+				.regularPrice(regularPrice)
 				.content(exchangeModifyRequestDto.getContent())
 				.updatedAt(new Timestamp(System.currentTimeMillis()))
 				.status(exchangeModifyRequestDto.getStatus())
 				.build();
 
-			if (!images.isEmpty()) {
+			if (images != null) {
 				for (MultipartFile image : images) {
 					try {
 						String fileUrl = s3Service.uploadFile(image);
-						ExchangeImage exchangeImage = ExchangeImage.builder()
-							.url(fileUrl)
-							.exchange(exchange)
-							.build();
+						ExchangeImage exchangeImage = ExchangeImage.builder().url(fileUrl).exchange(exchange).build();
 
 						exchange.addImage(exchangeImage);
 						exchangeImageRepository.save(exchangeImage);

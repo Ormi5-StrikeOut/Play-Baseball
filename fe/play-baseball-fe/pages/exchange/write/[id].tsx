@@ -74,7 +74,9 @@ const EditPostForm = () => {
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPrice(parseInt(event.target.value));
+    const value = event.target.value;
+    const numericValue = value.replace(/[^0-9]/g, "");
+    setPrice(parseInt(numericValue));
   };
 
   const handleContentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +102,21 @@ const EditPostForm = () => {
 
   // 서버로 폼 데이터를 전송하는 함수
   const handleSubmit = async () => {
+    // 입력값 검사
+    if (!title || title.trim() === "") {
+      alert("제목을 입력해주세요.");
+      return; // 제출 중단
+    }
+    if (!content || content.trim() === "") {
+      alert("설명을 입력해주세요.");
+      return; // 제출 중단
+    }
+    // price 값 유효성 확인
+    if (isNaN(Number(price))) {
+      alert("가격에 올바른 숫자를 입력해주세요.");
+      return; // 제출 중단
+    }
+
     const formData = new FormData();
     const jsonData = {
       title,
@@ -175,7 +192,17 @@ const EditPostForm = () => {
     >
       <Typography variant="h5">상품 수정</Typography>
       <TextField label="제목" value={title} onChange={handleTitleChange} />
-      <TextField label="가격" value={price} onChange={handlePriceChange} />
+      <TextField
+        label="가격"
+        value={price}
+        onChange={handlePriceChange}
+        InputProps={{
+          inputProps: {
+            inputMode: "numeric", // 숫자 키패드가 뜨도록 설정
+            pattern: "[0-9]*", // 숫자만 입력되도록 제한
+          },
+        }}
+      />
       <TextField
         label="설명"
         multiline
