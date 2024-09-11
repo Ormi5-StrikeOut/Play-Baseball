@@ -10,7 +10,7 @@ import Alert from "@mui/material/Alert";
 import FormControl from "@mui/material/FormControl";
 import axios from "axios";
 import { MEMBER_LOGIN, SERVER_URL } from "@/constants/endpoints";
-import Wrapper from '../../components/Wrapper'
+import Wrapper from "../../components/Wrapper";
 
 const LoginPage: React.FC = () => {
   const [formValues, setFormValues] = useState({
@@ -40,7 +40,11 @@ const LoginPage: React.FC = () => {
         const token = response.headers["authorization"];
         if (token) {
           localStorage.setItem("Authorization", token);
-          await router.push("/");
+          if (SERVER_URL === undefined) {
+            await router.push("/");
+          } else {
+            window.location.href = SERVER_URL;
+          }
         } else {
           throw new Error("token 생성 오류");
         }
@@ -121,7 +125,12 @@ const LoginPage: React.FC = () => {
             로그인
           </Button>
 
-          <Box mt={2} display="flex" justifyContent="center" alignItems="center">
+          <Box
+            mt={2}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
             <Link href="/signup" variant="body2" sx={{ mx: 2 }}>
               회원가입
             </Link>
