@@ -71,6 +71,8 @@ public class SecurityDevConfig {
 				.permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/reviews")
 				.permitAll()
+        .requestMatchers("/ws/**", "/stomp/content", "/stomp/content/**")
+        .permitAll()
 
 				// 사용자 및 관리자 엔드포인트 (이메일 인증 필요)
 				.requestMatchers(HttpMethod.PUT, "/api/members/**")
@@ -81,7 +83,7 @@ public class SecurityDevConfig {
 				.hasAuthority(MemberRole.VERIFIED_USER.name())
 				.requestMatchers("/api/messages", "/api/messages/**")
 				.hasAuthority(MemberRole.VERIFIED_USER.name())
-				.requestMatchers("/ws/**")
+				.requestMatchers()
 				.hasAuthority(MemberRole.VERIFIED_USER.name())
 
 				// 관리자 전용 엔드포인트

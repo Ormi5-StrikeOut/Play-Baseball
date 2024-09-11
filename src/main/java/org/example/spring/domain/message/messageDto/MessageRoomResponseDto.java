@@ -4,6 +4,7 @@ import lombok.*;
 import org.example.spring.domain.message.MessageRoom;
 
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,9 +28,11 @@ public class MessageRoomResponseDto {
                 .messageRoomId(messageRoom.getId())
                 .createAt(messageRoom.getCreatedAt())
                 .lastMessageAt(messageRoom.getLastMessageAt())
-                .messages(messageRoom.getMessages().stream()
-                        .map(MessageResponseDto::of)
-                        .collect(Collectors.toList()))
+                .messages(messageRoom.getMessages() != null ?
+                        messageRoom.getMessages().stream()
+                                .map(MessageResponseDto::of)
+                                .collect(Collectors.toList()) :
+                        Collections.emptyList())
                 .build();
     }
 }

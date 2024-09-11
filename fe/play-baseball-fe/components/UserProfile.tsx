@@ -14,9 +14,11 @@ const initialUser: User = {
     emailVerified: false
 };
 
-const UserProfile: React.FC = () => {
-    const [user] = useState<User>(initialUser);
+interface UserProfileProps {
+    user: User;
+}
 
+const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
     return (
         <Box sx={{ flexGrow: 1, padding: 3 }}>
             <Grid container spacing={3} justifyContent="center">
