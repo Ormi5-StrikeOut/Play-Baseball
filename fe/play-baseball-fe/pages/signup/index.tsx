@@ -18,7 +18,7 @@ import {
   Alert,
   Link,
 } from "@mui/material";
-import Wrapper from '../../components/Wrapper'
+import Wrapper from "../../components/Wrapper";
 
 const SignupPage: React.FC = () => {
   const [formValues, setFormValues] = useState({
@@ -149,7 +149,7 @@ const SignupPage: React.FC = () => {
         }
       );
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         router.push({
           pathname: "/result",
           query: {
@@ -362,7 +362,12 @@ const SignupPage: React.FC = () => {
           >
             회원가입
           </Button>
-          <Box mt={2} display="flex" justifyContent="center" alignItems="center">
+          <Box
+            mt={2}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
             <Link href="/login" variant="body2" sx={{ mx: 2 }}>
               로그인 페이지로 이동하기
             </Link>
