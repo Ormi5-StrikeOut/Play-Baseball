@@ -34,7 +34,7 @@ public class JwtValidatorFilter extends OncePerRequestFilter {
 
 	private static final List<String> PUBLIC_PATHS = Arrays.asList(
 		"/swagger-ui", "/v3/api-docs", "/webjars", "/api/auth/login", "/api/members/join", "/api/members/verify-email",
-		"/api/members/reset-password", "/api/members/request-password-reset"
+		"/api/members/reset-password", "/api/members/request-password-reset", "/stomp/content"
 	);
 
 	public JwtValidatorFilter(CookieService cookieService, JwtAuthenticationService jwtAuthenticationService,

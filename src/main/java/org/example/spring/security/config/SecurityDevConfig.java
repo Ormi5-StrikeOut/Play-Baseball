@@ -51,7 +51,11 @@ public class SecurityDevConfig {
         http
             .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource()))
-            .csrf(AbstractHttpConfigurer::disable)
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/stomp/content/**")
+                .ignoringRequestMatchers("/api/auth/login")
+                .ignoringRequestMatchers("/api/members/join")
+            )
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtValidatorFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(memberStatusCheckFilter, JwtValidatorFilter.class)
@@ -61,6 +65,9 @@ public class SecurityDevConfig {
                 .permitAll()
                 .requestMatchers("/api/members/reset-password", "/api/members/request-password-reset").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/members/join").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/messages/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.GET, "/api/messages/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
+                .requestMatchers(HttpMethod.POST, "/api/messages/**").hasAnyAuthority(MemberRole.USER.name(), MemberRole.ADMIN.name())
                 .requestMatchers(HttpMethod.GET, "/api/members/verify-email").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews").permitAll()
@@ -79,6 +86,9 @@ public class SecurityDevConfig {
                 .requestMatchers("/api/auth/logout", "/api/members/my/**", "/api/members/my", "/api/members/resend-verification-email")
                 .authenticated()
                 .requestMatchers("/api/exchange-likes/**").authenticated()
+
+                .requestMatchers("/stomp/content").permitAll()
+                .requestMatchers("/stomp/content/**").permitAll()
 
                 // 기타 모든 요청
                 .anyRequest().authenticated()

@@ -2,10 +2,8 @@ package org.example.spring.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +47,7 @@ public class MessageService {
 
     private final RedisPublisher redisPublisher;
 
-    private final Map<String, ChannelTopic> topics;
+    private final Map<String, ChannelTopic> topics = new HashMap<>();
 
     private final RedisMessageListenerContainer redisMessageListener;
 
@@ -67,7 +65,13 @@ public class MessageService {
 
         Message message = saveMessage(mrd, messageRoom, member);
 
-        MessageResponseDto dto = MessageResponseDto.of(messageRepository.save(message));
+        Message savedMessage = messageRepository.save(message);
+
+        messageRoom.updateLastMessageAt();
+
+        messageRoomRepository.save(messageRoom);
+
+        MessageResponseDto dto = MessageResponseDto.of(savedMessage);
 
         redisPublisher.publish(ChannelTopic.of("messageRoom" + messageRoom.getId()), dto);
 
@@ -77,21 +81,25 @@ public class MessageService {
     /* 특정 멤버 새로운 메시지 방 생성 */
     public MessageRoomResponseDto createMessageRoom() {
         Long memberId = extractMemberIdFromJwt();
+
         Member member = validateUserRole(memberId);
 
         try {
             MessageRoom messageRoom = saveMessageRoom();
             addMemberToMessageRoom(messageRoom, member);
             sendTopic(messageRoom.getId());
+
             return MessageRoomResponseDto.of(messageRoom);
 
         } catch (MessageException error) {
+
             throw new MessageException(ErrorCode.MESSAGE_FAILED);
         }
     }
 
     /* 특정 멤버 방 목록 조회 */
     public Page<MessageRoomResponseDto> getMessageRooms(Pageable pageable) {
+
         Long memberId = extractMemberIdFromJwt();
         Page<MessageMember> userMessageRooms = messageMemberRepository.findQueryMessageRoom(memberId, pageable);
 
@@ -199,9 +207,13 @@ public class MessageService {
 
         String token = authHeader.substring("Bearer ".length());
 
-        Member member = jwtTokenValidator.validateTokenAndGetMember(token);
+        String email = jwtTokenValidator.extractUsername(token);
 
-        return member.getId();
+        Optional<Member> optionalMember = memberRepository.findByEmail(email);
+        Member member = optionalMember.orElseThrow(() -> new MessageException(ErrorCode.MEMBER_NOT_FOUND));
+        Long memberId = member.getId();
+        log.info("Extracted member ID: {}", memberId);
+        return memberId;
     }
 
     private void addMemberToMessageRoom(MessageRoom messageRoom, Member member) {
@@ -210,15 +222,23 @@ public class MessageService {
                 .member(member)
                 .build();
 
-        messageMemberRepository.save(messageMember);
+        MessageMember savedMessageMember = messageMemberRepository.save(messageMember);
+
+        // Log the state of the savedMessageMember object
+        log.info("Saved MessageMember - ID: {}, Member ID: {}, Message Room ID: {}",
+                savedMessageMember.getId(),
+                savedMessageMember.getMember().getId(),
+                savedMessageMember.getMessageRoom().getId());
     }
 
     public Member validateUserRole(Long memberId) {
         Optional<Member> optionalMember = memberRepository.findById(memberId);
+        optionalMember.ifPresent(member -> log.info("Found Member - ID: {}, Name: {}, Email: {}",
+                member.getId(), member.getName(), member.getEmail()));
 
         Member member = optionalMember.orElseThrow(() -> new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS));
 
-        if (member.getRole() != MemberRole.USER) {
+        if (member.getRole() != MemberRole.USER && member.getRole() != MemberRole.ADMIN) {
             throw new MessageException(ErrorCode.UNAUTHORIZED_MESSAGE_ACCESS);
         }
 
@@ -236,13 +256,22 @@ public class MessageService {
                 .member(member)
                 .messageRoom(messageRoom)
                 .build();
+
         return message;
     }
 
-    private MessageRoom saveMessageRoom() {
+    public MessageRoom saveMessageRoom() {
         MessageRoom messageRoom = MessageRoom.builder()
                 .build();
-        return messageRoomRepository.save(messageRoom);
+
+        log.info("opopo");
+
+        MessageRoom savedMessageRoom = messageRoomRepository.save(messageRoom);
+
+        log.info("After Save - MessageRoom - ID: {}",
+                savedMessageRoom.getId());
+
+        return savedMessageRoom;
     }
 
     private void sendTopic(Long messageRoomId) {

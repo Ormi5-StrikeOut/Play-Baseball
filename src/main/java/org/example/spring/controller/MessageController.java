@@ -87,6 +87,7 @@ public class MessageController {
                     @ApiResponse(responseCode = "404", description = "회원이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
+
     @GetMapping("/member")
     public ResponseEntity<PageResponseDto> getMessageRooms(
             @PageableDefault(page = 0, size = 10, sort = "lastMessageAt", direction = Sort.Direction.DESC)
@@ -139,7 +140,7 @@ public class MessageController {
                     @ApiResponse(responseCode = "404", description = "메시지 방 또는 회원이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    @DeleteMapping("/rooms/{messageRoomId}")
+    @DeleteMapping("/room/{messageRoomId}")
     public ResponseEntity deleteMessageRoom(
             @PathVariable("messageRoomId") Long messageRoomId
     ) {

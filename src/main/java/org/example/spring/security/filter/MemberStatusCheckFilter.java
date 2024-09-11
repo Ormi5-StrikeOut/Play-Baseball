@@ -127,7 +127,8 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
             || path.startsWith("/api/members/verify-email")
             || ("/api/exchanges".equals(path) && "GET".equalsIgnoreCase(method))
             || ("/api/reviews".equals(path) && "GET".equalsIgnoreCase(method))
-            || path.startsWith("/api/exchanges/five");
+            || path.startsWith("/api/exchanges/five")
+            || path.startsWith("/stomp/content");
     }
 
     private boolean isEmailVerificationRequired(String path, String method) {
