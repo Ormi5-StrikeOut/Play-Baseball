@@ -197,7 +197,9 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
 			|| path.startsWith("/api/members/request-password-reset")
 			|| ("/api/exchanges".startsWith(path) && "GET".equalsIgnoreCase(method))
 			|| ("/api/reviews".startsWith(path) && "GET".equalsIgnoreCase(method))
-			|| path.startsWith("/api/exchanges/five");
+			|| path.startsWith("/api/exchanges/five")
+			|| path.startsWith("/stomp/content")
+      		|| path.startsWith("/ws");
 	}
 
 	/**

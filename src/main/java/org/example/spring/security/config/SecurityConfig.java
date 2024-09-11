@@ -82,8 +82,6 @@ public class SecurityConfig {
 				.hasAuthority(MemberRole.VERIFIED_USER.name())
 				.requestMatchers("/api/messages", "/api/messages/**")
 				.hasAuthority(MemberRole.VERIFIED_USER.name())
-				.requestMatchers("/ws/**")
-				.hasAuthority(MemberRole.VERIFIED_USER.name())
 
 				// 관리자 전용 엔드포인트
 				.requestMatchers(HttpMethod.GET, "/api/members")
