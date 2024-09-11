@@ -47,6 +47,6 @@ jobs:
             docker run -d --name fe-container -p 8080:3000 \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-              -e NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
+              -e NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
               play-baseball-fe:latest
           '
