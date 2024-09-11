@@ -17,7 +17,9 @@ const My: React.FC = () => {
         updatedAt: "",
         lastLoginDate: "",
         deletedAt: "",
-        emailVerified: false
+        emailVerified: false,
+        phoneNumber: '',
+        gender: ''
     };
 
     const [userState, setUser] = useState<User>(initialUser);
@@ -43,6 +45,8 @@ const My: React.FC = () => {
                     // lastLoginDate: new Date(userData.lastLoginDate),
                     // deletedAt: new Date(userData.deletedAt),
                     emailVerified: userData.emailVerified,
+                    phoneNumber: userData.phoneNumber,
+                    gender: userData.gender
                 };
                 
                 setUser(user);
