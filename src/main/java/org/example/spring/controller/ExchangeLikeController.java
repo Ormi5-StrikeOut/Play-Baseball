@@ -10,6 +10,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/likes")
 @RequiredArgsConstructor
+@Tag(name = "Exchange Like API", description = "중고 거래 게시글의 좋아요 기능을 관리하는 API")
 public class ExchangeLikeController {
 	private final ExchangeLikeService exchangeLikeService;
 
@@ -36,9 +44,15 @@ public class ExchangeLikeController {
 	 *         - HTTP 상태 코드 201 (CREATED)를 반환합니다.
 	 *         - 응답 본문에는 작업 성공 여부(Boolean)와 성공 메시지가 포함됩니다.
 	 */
+	@Operation(summary = "좋아요 추가 또는 취소", description = "중고 거래 게시글에 대한 좋아요를 추가하거나 취소합니다.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "201", description = "좋아요 상태 변경 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponseDto.class))),
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터")})
 	@PostMapping
-	public ResponseEntity<ApiResponseDto<Boolean>> addLike(HttpServletRequest request,
-		@RequestBody AddLikeRequest addLikeRequest) {
+	public ResponseEntity<ApiResponseDto<Boolean>> addLike(
+		@Parameter(description = "HTTP 요청 객체. 사용자의 인증 정보를 포함합니다.") HttpServletRequest request,
+		@Parameter(description = "좋아요를 추가할 게시글의 정보", required = true) @RequestBody AddLikeRequest addLikeRequest) {
 		boolean result = exchangeLikeService.addLike(request, addLikeRequest);
 		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDto.success("좋아요 상태를 변경하였습니다.", result));
 	}
