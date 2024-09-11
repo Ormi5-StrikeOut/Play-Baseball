@@ -67,7 +67,7 @@ public class SecurityDevConfig {
 				.permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/members/verify-email")
 				.permitAll()
-				.requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/five")
+				.requestMatchers(HttpMethod.GET, "/api/exchanges", "/api/exchanges/**", "/api/exchanges/five", "/api/exchanges/search")
 				.permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/reviews")
 				.permitAll()
