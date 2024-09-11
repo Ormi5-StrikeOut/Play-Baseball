@@ -59,7 +59,7 @@ const EditPostForm = () => {
           setPrice(price);
           setContent(content);
           setStatus(status as ExchangeStatus);
-          setImages(images); // 서버로부터 받은 이미지들 (ImageData 형식)
+          // setImages(images); // 서버로부터 받은 이미지들 (ImageData 형식)
         } catch (error) {
           console.error("Error fetching post data:", error);
         }
