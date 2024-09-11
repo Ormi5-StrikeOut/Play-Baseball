@@ -31,7 +31,7 @@ public class CustomMessageRoomRepositoryImpl implements CustomMessageRoomReposit
     }
 
     private long getCountForMember(Long memberId) {
-        String countQuery = "SELECT COUNT(mm) FROM MessageMember mm WHERE mm.memberId = :memberId";
+        String countQuery = "SELECT COUNT(mm) FROM MessageMember mm WHERE mm.member.id = :memberId";
         TypedQuery<Long> typedCountQuery = entityManager.createQuery(countQuery, Long.class);
         typedCountQuery.setParameter("memberId", memberId);
         return typedCountQuery.getSingleResult();

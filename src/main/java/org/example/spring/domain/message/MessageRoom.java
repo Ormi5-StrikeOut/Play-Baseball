@@ -32,14 +32,12 @@ public class MessageRoom extends Auditable {
         return messages.stream().findFirst().orElse(null);
     }
 
-    @PrePersist
-    @PreUpdate
-    private void updateLastMessageAt() {
-        if (!messages.isEmpty()) {
-            this.lastMessageAt = messages.stream()
-                    .map(Message::getCreatedAt)
-                    .max(Timestamp::compareTo)
-                    .orElse(null);
+    public void updateLastMessageAt() {
+        Message lastMessage = getLastMessage();
+        if (lastMessage != null) {
+            this.lastMessageAt = lastMessage.getCreatedAt();
+        } else {
+            this.lastMessageAt = null;
         }
     }
 }

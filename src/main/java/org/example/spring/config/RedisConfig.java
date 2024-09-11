@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,24 +19,25 @@ import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
-    @Value("localhost")
+    @Value("${redis.host:localhost}")
     private String host;
 
-    @Value("6379")
+    @Value("${redis.port:6379}")
     private int port;
 
     /* Redis 서버와 연결 설정 */
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        RedisClusterConfiguration clusterConfiguration = new RedisClusterConfiguration();
-        clusterConfiguration.clusterNode(host, port);
+//        RedisClusterConfiguration clusterConfiguration = new RedisClusterConfiguration();
+//        clusterConfiguration.clusterNode(host, port);
+        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host, port);
         LettuceClientConfiguration clientConfiguration = LettuceClientConfiguration.builder()
                 .clientOptions(ClientOptions.builder()
                         .socketOptions(SocketOptions.builder()
                                 .connectTimeout(Duration.ofMillis(60)).build())
                         .build())
                 .commandTimeout(Duration.ofSeconds(60)).build();
-        return new LettuceConnectionFactory(clusterConfiguration, clientConfiguration);
+        return new LettuceConnectionFactory(redisConfig, clientConfiguration);
     }
 
     /* Redis의 Pub/Sub 메시지 수신 컨테이너 */
