@@ -16,7 +16,7 @@ public class MessageResponseDto {
 
     private Long messageId;
 
-    private Long memberId;
+    private Member member;
 
     private String messageContent;
 
@@ -30,7 +30,7 @@ public class MessageResponseDto {
                 .messageRoomId(message.getMessageRoom().getId())
                 .messageId(message.getId())
                 .messageContent(message.getMessageContent())
-                .memberId(message.getMember().getId())
+                .member(message.getMember())
                 .createAt(message.getCreatedAt())
                 .build();
     }
