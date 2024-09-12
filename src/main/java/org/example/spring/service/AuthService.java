@@ -103,17 +103,37 @@ public class AuthService {
 		log.debug("User logged out successfully");
 	}
 
+	/**
+	 * 사용자 인증을 수행합니다.
+	 *
+	 * @param loginRequestDto 로그인 요청 데이터
+	 * @return 인증된 Authentication 객체
+	 * @throws BadCredentialsException 인증 실패 시
+	 */
 	private Authentication authenticateUser(LoginRequestDto loginRequestDto) {
 		return authenticationManager.authenticate(
 			new UsernamePasswordAuthenticationToken(loginRequestDto.email(), loginRequestDto.password())
 		);
 	}
 
+	/**
+	 * HTTP 응답에 액세스 토큰과 리프레시 토큰을 설정합니다.
+	 *
+	 * @param response     HTTP 응답
+	 * @param accessToken  액세스 토큰
+	 * @param refreshToken 리프레시 토큰
+	 */
 	private void setTokensInResponse(HttpServletResponse response, String accessToken, String refreshToken) {
 		response.setHeader("Authorization", "Bearer " + accessToken);
 		cookieService.addRefreshTokenCookie(response, refreshToken);
 	}
 
+	/**
+	 * 사용자의 마지막 로그인 날짜를 업데이트합니다.
+	 *
+	 * @param email 사용자 이메일
+	 * @throws ResourceNotFoundException 사용자를 찾을 수 없는 경우
+	 */
 	private void updateMemberLastLoginDate(String email) {
 		Member member = memberRepository.findByEmail(email)
 			.orElseThrow(() -> new ResourceNotFoundException("Member", "email", email));
@@ -122,6 +142,12 @@ public class AuthService {
 		log.debug("Updated last login date for user: {}", email);
 	}
 
+	/**
+	 * 인증 정보를 바탕으로 로그인 응답 DTO를 생성합니다.
+	 *
+	 * @param authentication 인증된 Authentication 객체
+	 * @return 생성된 LoginResponseDto 객체
+	 */
 	private LoginResponseDto createLoginResponse(Authentication authentication) {
 		return LoginResponseDto.toDto(authentication);
 	}

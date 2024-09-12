@@ -1,7 +1,7 @@
-# 🌟 SecondInning: AI 중고거래 플랫폼
 
 <div align="center">
 
+# 🌟 SecondInning: AI 중고거래 플랫폼
 ![로고](https://github.com/user-attachments/assets/a4cacec8-83fb-47fa-ad91-d12047906c67)
 
 ### 🔄 당신의 중고 물품, 새로운 가치의 시작점
@@ -10,12 +10,18 @@
 [![Spring](https://img.shields.io/badge/Backend-Spring-%236DB33F?style=for-the-badge&logo=spring&logoColor=white&labelColor=6DB33F)](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CD.yml)
 [![CI Status](https://img.shields.io/badge/CI-✅%20Passing-success?style=for-the-badge&logo=github-actions&logoColor=white&labelColor=2088FF)](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CI.yml)
 
-<br>
+<h1 align="center">🚀 SecondInning 바로가기</h1>
 
-<a href="https://ioshane.com/" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; font-size: 18px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">🌐 서비스 체험하기</a>
-<a href="https://api.ioshane.com/swagger-ui/index.html#/" style="display: inline-block; background-color: #008CBA; color: white; padding: 10px 20px; text-align: center; text-decoration: none; font-size: 18px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">📘 API 둘러보기</a>
+<div align="center">
 
-<br>
+| 서비스 | 링크 |
+|:---:|:---:|
+| 🌐 **메인 서비스** | [**체험하러 가기**](https://ioshane.com/) |
+| 📘 **API 문서** | [**살펴보러 가기**](https://api.ioshane.com/swagger-ui/index.html#/) |
+
+</div>
+
+---
 
 [🐞 버그 신고](https://github.com/Ormi5-StrikeOut/Play-Baseball/issues) | [💡 새 기능 제안](https://github.com/Ormi5-StrikeOut/Play-Baseball/issues)
 
@@ -40,22 +46,15 @@
 ---
 ## 👥 Strike-Out Team
 
-<div align="center">
-
-| ![박철안](https://github.com/The-Shinee.png) | ![김래현](https://github.com/raehyeonn.png) | ![김재희](https://github.com/2019112479kjh.png) |
+| [![박철안](https://github.com/The-Shinee.png)](https://github.com/The-Shinee) | [![김래현](https://github.com/raehyeonn.png)](https://github.com/raehyeonn) | [![김재희](https://github.com/2019112479kjh.png)](https://github.com/2019112479kjh) |
 |:---:|:---:|:---:|
-| **박철안** | **김래현** | **김재희** |
+| **[박철안](https://github.com/The-Shinee)** | **[김래현](https://github.com/raehyeonn)** | **[김재희](https://github.com/2019112479kjh)** |
 | 👑 팀장 | 💻 Backend | 💻 Backend |
 
-| ![방준현](https://github.com/bindingflare.png) | ![신재민](https://github.com/Freddieshin.png) | ![이승희](https://github.com/LLSNsssz.png) |
+| [![방준현](https://github.com/bindingflare.png)](https://github.com/bindingflare) | [![신재민](https://github.com/Freddieshin.png)](https://github.com/Freddieshin) | [![이승희](https://github.com/LLSNsssz.png)](https://github.com/LLSNsssz) |
 |:---:|:---:|:---:|
-| **방준현** | **신재민** | **이승희** |
+| **[방준현](https://github.com/bindingflare)** | **[신재민](https://github.com/Freddieshin)** | **[이승희](https://github.com/LLSNsssz)** |
 | 🎨 Frontend | 💻 Backend | 💻 Backend |
-
-</div>
-
----
-
 
 ## ✨ 핵심 기능
 
