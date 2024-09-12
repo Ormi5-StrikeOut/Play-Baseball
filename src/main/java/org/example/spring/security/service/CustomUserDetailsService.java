@@ -3,7 +3,7 @@ package org.example.spring.security.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.RequiredArgsConstructor;
+
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
 import org.example.spring.repository.MemberRepository;
@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * 사용자 정의 UserDetailsService 구현체입니다.
