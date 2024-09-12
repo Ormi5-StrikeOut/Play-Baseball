@@ -198,7 +198,7 @@ public class MemberStatusCheckFilter extends OncePerRequestFilter {
 			|| (path.startsWith("/api/exchanges") && "GET".equalsIgnoreCase(method))
 			|| (path.startsWith("/api/reviews") && "GET".equalsIgnoreCase(method))
 			|| path.startsWith("/stomp/content")
-      		|| path.startsWith("/ws");
+			|| path.startsWith("/ws");
 	}
 
 	/**
