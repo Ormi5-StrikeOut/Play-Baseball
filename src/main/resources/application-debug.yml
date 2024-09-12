@@ -25,8 +25,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: false
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
@@ -54,12 +54,22 @@ redis:
 
 logging:
   level:
-    root: WARN
-    org.springframework.web: WARN
-    org.hibernate.SQL: WARN
-    org.example.spring: INFO
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.example.spring: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 3GB
 
 jwt:
   secret: ${JWT_SECRET}
@@ -91,3 +101,8 @@ alan:
   key: ${ALAN_KEY}
   host: ${ALAN_HOST}
 
+#server:
+#  forward-headers-strategy: native
+#  tomcat:
+#    remote-ip-header: X-Forwarded-For
+#    protocol-header: X-Forwarded-Proto

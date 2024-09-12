@@ -29,23 +29,20 @@ public class LikeOverviewService {
     private final LikeOverviewRepository likeOverviewRepository;
 
     /**
-     * 매일 자정(00:00:00)에 실행되어 지난 24시간 동안의 좋아요 정보를 기반으로
-     * 중고 거래 게시글별 좋아요 개요(LikeOverview)를 업데이트합니다.
+     * 매 분마다 실행되어 지난 1분 동안의 좋아요 정보를 기반으로
+     * 중고 거래 게시글별 좋아요 개요(LikeOverview)를 업데이트합니다
      */
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 * * * * ?")
     @Transactional
     public void updateLikeOverviews() {
-        LocalDate today = LocalDate.now();
-        LocalDate yesterday = today.minusDays(1);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneMinuteAgo = now.minusMinutes(1);
 
-        LocalDateTime startOfYesterday = yesterday.atStartOfDay();
-        LocalDateTime endOfYesterday = today.atStartOfDay().minusNanos(1);
+        Timestamp startOfInterval = Timestamp.valueOf(oneMinuteAgo);
+        Timestamp endOfInterval = Timestamp.valueOf(now);
 
-        Timestamp startOfYesterdayTimestamp = Timestamp.valueOf(startOfYesterday);
-        Timestamp endOfYesterdayTimestamp = Timestamp.valueOf(endOfYesterday);
-
-        List<ExchangeLike> allLikes = exchangeLikeRepository.findByCreatedAtBetween(startOfYesterdayTimestamp, endOfYesterdayTimestamp);
-        List<ExchangeLike> canceledLikes = exchangeLikeRepository.findByCanceledAtBetween(startOfYesterdayTimestamp, endOfYesterdayTimestamp);
+        List<ExchangeLike> allLikes = exchangeLikeRepository.findByCreatedAtBetween(startOfInterval, endOfInterval);
+        List<ExchangeLike> canceledLikes = exchangeLikeRepository.findByCanceledAtBetween(startOfInterval, endOfInterval);
 
         Map<Long, List<ExchangeLike>> likesForExchange = allLikes.stream().collect(Collectors.groupingBy(exchangeLike -> exchangeLike.getExchange().getId()));
         Map<Long, List<ExchangeLike>> canceledLikesForExchange = canceledLikes.stream().collect(Collectors.groupingBy(exchangeLike -> exchangeLike.getExchange().getId()));
