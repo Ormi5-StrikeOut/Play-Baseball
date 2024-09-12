@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { Box, Button, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
 import Image from "next/image";
 import Wrapper from "../../../components/Wrapper";
 import { EXCHANGE_ADD } from "@/constants/endpoints";
@@ -11,6 +17,7 @@ const PostCreationForm = () => {
   const [price, setPrice] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,6 +54,8 @@ const PostCreationForm = () => {
   };
 
   const handleSubmit = async () => {
+    if (isLoading) return;
+
     // 입력값 검사
     if (!title || title.trim() === "") {
       alert("제목을 입력해주세요.");
@@ -67,6 +76,9 @@ const PostCreationForm = () => {
       router.push("/auth/login");
       return;
     }
+
+    // 로딩 상태로 전환
+    setIsLoading(true);
 
     const formData = new FormData();
     const jsonData = {
@@ -108,6 +120,9 @@ const PostCreationForm = () => {
           buttonAction: "/",
         },
       });
+    } finally {
+      // 로딩 상태 해제
+      setIsLoading(false);
     }
   };
 
@@ -174,8 +189,17 @@ const PostCreationForm = () => {
             ))}
           </Box>
 
-          <Button variant="contained" color="primary" onClick={handleSubmit}>
-            작성
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={isLoading} // 로딩 중일 때 버튼 비활성화
+          >
+            {isLoading ? (
+              <CircularProgress size={24} /> // 로딩 애니메이션
+            ) : (
+              "작성"
+            )}
           </Button>
         </Box>
       </Box>
