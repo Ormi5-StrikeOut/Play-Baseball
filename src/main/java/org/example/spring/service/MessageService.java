@@ -182,7 +182,7 @@ public class MessageService {
 
         MessageRoomResponseDto messageRoomResponseDto = MessageRoomResponseDto.builder()
                 .messageRoomId(findMessageRoom.getId())
-                .createAt(findMessageRoom.getCreatedAt())
+                .createdAt(findMessageRoom.getCreatedAt())
                 .lastMessageAt(findMessageRoom.getLastMessageAt())
                 .messages(messages.stream()
                         .map(MessageResponseDto::of)

@@ -17,7 +17,7 @@ public class MessageRoomResponseDto {
 
     private Long messageRoomId;
 
-    private Timestamp createAt;
+    private Timestamp createdAt;
 
     private Timestamp lastMessageAt;
 
@@ -26,7 +26,7 @@ public class MessageRoomResponseDto {
     public static MessageRoomResponseDto of(MessageRoom messageRoom) {
         return MessageRoomResponseDto.builder()
                 .messageRoomId(messageRoom.getId())
-                .createAt(messageRoom.getCreatedAt())
+                .createdAt(messageRoom.getCreatedAt())
                 .lastMessageAt(messageRoom.getLastMessageAt())
                 .messages(messageRoom.getMessages() != null ?
                         messageRoom.getMessages().stream()
