@@ -23,7 +23,12 @@ import {
 import Image from "next/image";
 import Wrapper from "../../components/Wrapper";
 import { useRouter } from "next/router";
-import { DEFAULT_IMAGE, EXCHANGE, EXCHANGE_LIKE } from "@/constants/endpoints";
+import {
+  DEFAULT_IMAGE,
+  EXCHANGE,
+  EXCHANGE_LIKE,
+  SERVER_URL,
+} from "@/constants/endpoints";
 
 interface ImageType {
   url: string;
@@ -70,6 +75,7 @@ const ItemDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isLike, setIsLike] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const router = useRouter();
   const { id } = router.query;
   const token =
@@ -79,6 +85,7 @@ const ItemDetail: React.FC = () => {
 
   // 데이터 가져오는 함수
   useEffect(() => {
+    setLoggedIn(!!token);
     const fetchExchangeData = async () => {
       if (!id) return; // id가 없는 경우 바로 반환
       try {
@@ -356,7 +363,13 @@ const ItemDetail: React.FC = () => {
                 <Button
                   variant="contained"
                   fullWidth
-                  onClick={() => createMessageRoom(exchangeData?.writer)}
+                  onClick={() => {
+                    if (loggedIn) {
+                      createMessageRoom(exchangeData?.writer);
+                    } else {
+                      window.location.href = `${SERVER_URL}/login`;
+                    }
+                  }}
                 >
                   채팅하기
                 </Button>
