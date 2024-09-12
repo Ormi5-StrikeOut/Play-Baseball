@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.spring.domain.member.Member;
+import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.domain.message.messageDto.*;
 import org.example.spring.service.MessageService;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Tag(name = "Messages", description = "Messages 관리")
 @Slf4j
 @RestController
@@ -31,6 +36,22 @@ import org.springframework.web.bind.annotation.*;
 public class MessageController {
 
     private final MessageService messageService;
+
+    @Operation(
+            summary = "메시지 방의 참여 회원 목록 조회",
+            description = "특정 메시지 방에서 참여 중인 모든 회원을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "회원 목록 조회 성공", content = @Content(schema = @Schema(implementation = ResponseDto.class))),
+                    @ApiResponse(responseCode = "404", description = "메시지 방이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            }
+    )
+    @GetMapping("/room/{messageRoomId}/members")
+    public ResponseEntity<List<MemberResponseDto>> getMembersInRoom(
+            @PathVariable("messageRoomId") @Positive Long messageRoomId
+    ) {
+        List<MemberResponseDto> memberDtos = messageService.getMembersByMessageRoom(messageRoomId);
+        return new ResponseEntity<>(memberDtos, HttpStatus.OK);
+    }
 
     @Operation(
             summary = "새로운 메시지 생성",
@@ -73,9 +94,9 @@ public class MessageController {
                     @ApiResponse(responseCode = "404", description = "회원이 존재하지 않음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    @PostMapping("/room")
-    public ResponseEntity<ResponseDto> createMessageRoom() {
-        MessageRoomResponseDto messageRoomResponseDto = messageService.createMessageRoom();
+    @PostMapping("/room/{targetNickname}")
+    public ResponseEntity<ResponseDto> createMessageRoom(@PathVariable String targetNickname) {
+        MessageRoomResponseDto messageRoomResponseDto = messageService.createMessageRoom(targetNickname);
         return new ResponseEntity<>(
                 ResponseDto.of(messageRoomResponseDto),
                 HttpStatus.CREATED

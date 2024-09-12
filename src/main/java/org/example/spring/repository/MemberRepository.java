@@ -19,6 +19,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByPhoneNumber(String phoneNumber);
 
     Optional<Member> findByEmail(String email);
+    Optional<Member> findByNickname(String nickname);
 
     List<Member> findByDeletedAtBeforeAndDeletedAtIsNotNull(Timestamp deletedAt);
 }

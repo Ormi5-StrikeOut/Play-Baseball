@@ -1,5 +1,6 @@
 package org.example.spring.repository.message;
 
+import org.example.spring.domain.member.Member;
 import org.example.spring.domain.message.MessageMember;
 import org.example.spring.repository.message.custom.CustomMessageRoomRepository;
 import org.springframework.data.domain.Page;
@@ -19,4 +20,6 @@ public interface MessageMemberRepository extends JpaRepository<MessageMember, Lo
 
     List<MessageMember> findByMessageRoomId(Long messageRoomId);
 
+    @Query("SELECT mm.member FROM MessageMember mm WHERE mm.messageRoom.id = :messageRoomId")
+    List<Member> findMembersByMessageRoomId(@Param("messageRoomId") Long messageRoomId);
 }

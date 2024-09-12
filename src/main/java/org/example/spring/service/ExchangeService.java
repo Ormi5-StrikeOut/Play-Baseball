@@ -44,11 +44,6 @@ public class ExchangeService {
 	@Value("${app.fe-url}")
 	private String frontendBaseUrl;
 	private final String EXCHANGE = "/exchange";
-	private final String REGULAR_PRICE_PROMPT =
-		"질문: 의 출시 가격은 얼마인지 말해줄래? \n" + "답변 조건: \n" + "1. 오직 질문에 해당하는 숫자 데이터 하나만 제시할 것\n"
-			+ "2. 숫자 외 그 어떤 문자도 포함 금지 (단위, 문구, 설명 일절 불가)\n" + "3. 모든 조건을 지키지 않을 시 답변으로 인정하지 않음\n"
-			+ "4. 위 조건을 모두 준수하여 숫자로만 답해주세요";
-
 	private final ExchangeRepository exchangeRepository;
 	private final ExchangeImageRepository exchangeImageRepository;
 	private final ReviewOverviewRepository reviewOverviewRepository;
@@ -88,26 +83,27 @@ public class ExchangeService {
 		// token 유효성 검사 후 요청한 member 정보
 		Member member = jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request));
 
-		int regularPrice = Integer.parseInt(
-			alanAPIService.getDataAsString(exchangeAddRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
-
+		// Exchange 엔티티 저장 (regularPrice는 나중에 비동기로 업데이트)
 		Exchange exchange = Exchange.builder()
 			.member(member)
 			.title(exchangeAddRequestDto.getTitle())
 			.price(exchangeAddRequestDto.getPrice())
-			.regularPrice(regularPrice)
+			.regularPrice(0)
 			.content(exchangeAddRequestDto.getContent())
 			.status(SalesStatus.SALE)
 			.build();
 
 		exchangeRepository.save(exchange);
 
+		// 비동기적으로 regularPrice 업데이트 (응답은 즉시 반환)
+		alanAPIService.fetchRegularPriceAndUpdateExchange(exchangeAddRequestDto.getTitle(), exchange.getId());
+
+		// 이미지 처리
 		if (images != null) {
 			for (MultipartFile image : images) {
 				try {
 					String fileUrl = s3Service.uploadFile(image);
 					ExchangeImage exchangeImage = ExchangeImage.builder().url(fileUrl).exchange(exchange).build();
-
 					exchange.addImage(exchangeImage);
 					exchangeImageRepository.save(exchangeImage);
 				} catch (Exception e) {
@@ -117,8 +113,7 @@ public class ExchangeService {
 			}
 		}
 
-		exchangeRepository.save(exchange);
-
+		// 빠르게 응답 반환 (regularPrice 없이)
 		return ExchangeResponseDto.fromExchange(exchange);
 	}
 
@@ -291,16 +286,16 @@ public class ExchangeService {
 				exchange.removeImage(image);
 			}
 
-			int regularPrice = exchange.getRegularPrice();
+			// 만일 제목이 달라진 경우라도 응답 반환을 우선으로 하고 정가 업데이트는 비동기로 처리
 			if (!exchangeModifyRequestDto.getTitle().equals(exchange.getTitle())) {
-				regularPrice = Integer.parseInt(
-					alanAPIService.getDataAsString(exchangeModifyRequestDto.getTitle() + REGULAR_PRICE_PROMPT));
+				alanAPIService.fetchRegularPriceAndUpdateExchange(exchangeModifyRequestDto.getTitle(),
+					exchange.getId());
 			}
 
 			Exchange updateExchange = exchange.toBuilder()
 				.title(exchangeModifyRequestDto.getTitle())
 				.price(exchangeModifyRequestDto.getPrice())
-				.regularPrice(regularPrice)
+				.regularPrice(exchange.getRegularPrice())
 				.content(exchangeModifyRequestDto.getContent())
 				.updatedAt(new Timestamp(System.currentTimeMillis()))
 				.status(exchangeModifyRequestDto.getStatus())
