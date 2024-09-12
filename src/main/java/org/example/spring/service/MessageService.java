@@ -60,7 +60,7 @@ public class MessageService {
     /* 새로운 메시지 생성, Redis 채널 발행 */
     public MessageResponseDto createMessage(MessageRequestDto mrd) {
         MessageRoom messageRoom = verifiedMessageRoom(mrd.getMessageRoomId());
-
+        log.info("메세지 ssssss");
         Member member = validateUserRole(mrd.getMemberId());
 
         Message message = saveMessage(mrd, messageRoom, member);

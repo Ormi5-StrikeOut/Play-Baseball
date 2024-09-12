@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +57,9 @@ public class MessageController {
             }
     )
     @MessageMapping("/chats/{roomId}")
+//    @SendTo("/sub/room/{roomId}")
     public ResponseEntity sendMessage(@DestinationVariable Long roomId, @RequestBody @Validated MessageRequestDto messageRequestDto) {
+        log.info("메세지 52555555555");
         ResponseDto response =
                 ResponseDto.of(messageService.createMessage(messageRequestDto));
         return new ResponseEntity<>(response ,HttpStatus.CREATED);
@@ -115,22 +118,22 @@ public class MessageController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(
-            summary = "메시지 전송",
-            description = "특정 메시지 방에 메시지를 전송합니다.",
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "메시지 전송 성공"),
-                    @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-            }
-    )
-    @PostMapping("/send")
-    public ResponseEntity<Void> sendMessage(
-            @RequestParam("messageRoomId") Long messageRoomId,
-            @RequestParam("messageContent") String messageContent
-    ) {
-        messageService.sendRequestMessage(messageRoomId, messageContent);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
+//    @Operation(
+//            summary = "메시지 전송",
+//            description = "특정 메시지 방에 메시지를 전송합니다.",
+//            responses = {
+//                    @ApiResponse(responseCode = "201", description = "메시지 전송 성공"),
+//                    @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+//            }
+//    )
+//    @PostMapping("/send")
+//    public ResponseEntity<Void> sendMessage(
+//            @RequestParam("messageRoomId") Long messageRoomId,
+//            @RequestParam("messageContent") String messageContent
+//    ) {
+//        messageService.sendRequestMessage(messageRoomId, messageContent);
+//        return new ResponseEntity<>(HttpStatus.CREATED);
+//    }
 
     @Operation(
             summary = "메시지 방 삭제",
