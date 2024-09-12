@@ -198,7 +198,7 @@ const ItemDetail: React.FC = () => {
 
     axios.interceptors.request.use(
       (config) => {
-        config.headers.Authorization = localStorage.getItem('Authorization');
+        config.headers.Authorization = localStorage.getItem("Authorization");
         return config;
       },
       (err) => {
@@ -206,16 +206,16 @@ const ItemDetail: React.FC = () => {
         return Promise.reject(err);
       }
     );
-    
-    try {
-        const response = await axios.post(`/messages/room/${targetNickname}`);
-        console.log('메시지 방 생성 성공:', response.data);
 
-        router.push('/chat');
+    try {
+      const response = await axios.post(`/messages/room/${targetNickname}`);
+      console.log("메시지 방 생성 성공:", response.data);
+
+      router.push("/chat");
     } catch (err) {
-        console.error('메시지 방 생성 실패:', err);
+      console.error("메시지 방 생성 실패:", err);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -353,10 +353,19 @@ const ItemDetail: React.FC = () => {
                     : `앨런이 찾은 이 상품의 새 제품 가격은 ${exchangeData?.regularPrice?.toLocaleString()}원입니다.`}
                 </Typography>
                 <Divider sx={{ margin: "20px 0" }} />
-                <Button variant="contained" fullWidth onClick={() => createMessageRoom(exchangeData?.writer)} >
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={() => createMessageRoom(exchangeData?.writer)}
+                >
                   채팅하기
                 </Button>
-                <Button variant="contained" fullWidth sx={{ mt: 2 }}>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  onClick={() => alert("결제 기능은 아직 구현되지 않았습니다.")}
+                >
                   결제하기
                 </Button>
                 {exchangeData?.isWriter === "TRUE" && (
