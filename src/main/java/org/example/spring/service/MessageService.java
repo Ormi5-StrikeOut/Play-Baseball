@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.spring.constant.ErrorCode;
 import org.example.spring.domain.member.Member;
 import org.example.spring.domain.member.MemberRole;
+import org.example.spring.domain.member.dto.MemberResponseDto;
 import org.example.spring.domain.message.Message;
 import org.example.spring.domain.message.MessageMember;
 import org.example.spring.domain.message.MessageRoom;
@@ -57,6 +58,18 @@ public class MessageService {
 
     private final HttpServletRequest request;
 
+    public List<MemberResponseDto> getMembersByMessageRoom(Long messageRoomId) {
+        List<Member> members = messageMemberRepository.findMembersByMessageRoomId(messageRoomId);
+
+        log.info("sss23: " + members.stream()
+                .map(member -> "ID: " + member.getId() + ", Nickname: " + member.getNickname())
+                .collect(Collectors.joining(", ")));
+
+        return members.stream()
+                .map(MemberResponseDto::toDto)
+                .collect(Collectors.toList());
+    }
+
     /* 새로운 메시지 생성, Redis 채널 발행 */
     public MessageResponseDto createMessage(MessageRequestDto mrd) {
         MessageRoom messageRoom = verifiedMessageRoom(mrd.getMessageRoomId());
@@ -79,14 +92,19 @@ public class MessageService {
     }
 
     /* 특정 멤버 새로운 메시지 방 생성 */
-    public MessageRoomResponseDto createMessageRoom() {
+    public MessageRoomResponseDto createMessageRoom(String targetNickname) {
         Long memberId = extractMemberIdFromJwt();
+
+        Optional<Member> optionalMember = memberRepository.findByNickname(targetNickname);
+
+        Member targetMember = optionalMember.orElseThrow(() -> new MessageException(ErrorCode.MEMBER_NOT_FOUND));
 
         Member member = validateUserRole(memberId);
 
         try {
             MessageRoom messageRoom = saveMessageRoom();
             addMemberToMessageRoom(messageRoom, member);
+            addMemberToMessageRoom(messageRoom, targetMember);
             sendTopic(messageRoom.getId());
 
             return MessageRoomResponseDto.of(messageRoom);
