@@ -23,7 +23,12 @@ import {
 import Image from "next/image";
 import Wrapper from "../../components/Wrapper";
 import { useRouter } from "next/router";
-import { DEFAULT_IMAGE, EXCHANGE, EXCHANGE_LIKE } from "@/constants/endpoints";
+import {
+  DEFAULT_IMAGE,
+  EXCHANGE,
+  EXCHANGE_LIKE,
+  SERVER_URL,
+} from "@/constants/endpoints";
 
 interface ImageType {
   url: string;
@@ -70,6 +75,7 @@ const ItemDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isLike, setIsLike] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const router = useRouter();
   const { id } = router.query;
   const token =
@@ -79,6 +85,7 @@ const ItemDetail: React.FC = () => {
 
   // 데이터 가져오는 함수
   useEffect(() => {
+    setLoggedIn(!!token);
     const fetchExchangeData = async () => {
       if (!id) return; // id가 없는 경우 바로 반환
       try {
@@ -198,7 +205,7 @@ const ItemDetail: React.FC = () => {
 
     axios.interceptors.request.use(
       (config) => {
-        config.headers.Authorization = localStorage.getItem('Authorization');
+        config.headers.Authorization = localStorage.getItem("Authorization");
         return config;
       },
       (err) => {
@@ -206,16 +213,16 @@ const ItemDetail: React.FC = () => {
         return Promise.reject(err);
       }
     );
-    
-    try {
-        const response = await axios.post(`/messages/room/${targetNickname}`);
-        console.log('메시지 방 생성 성공:', response.data);
 
-        router.push('/chat');
+    try {
+      const response = await axios.post(`/messages/room/${targetNickname}`);
+      console.log("메시지 방 생성 성공:", response.data);
+
+      router.push("/chat");
     } catch (err) {
-        console.error('메시지 방 생성 실패:', err);
+      console.error("메시지 방 생성 실패:", err);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -353,10 +360,25 @@ const ItemDetail: React.FC = () => {
                     : `앨런이 찾은 이 상품의 새 제품 가격은 ${exchangeData?.regularPrice?.toLocaleString()}원입니다.`}
                 </Typography>
                 <Divider sx={{ margin: "20px 0" }} />
-                <Button variant="contained" fullWidth onClick={() => createMessageRoom(exchangeData?.writer)} >
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={() => {
+                    if (loggedIn) {
+                      createMessageRoom(exchangeData?.writer);
+                    } else {
+                      window.location.href = `${SERVER_URL}/login`;
+                    }
+                  }}
+                >
                   채팅하기
                 </Button>
-                <Button variant="contained" fullWidth sx={{ mt: 2 }}>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  onClick={() => alert("결제 기능은 아직 구현되지 않았습니다.")}
+                >
                   결제하기
                 </Button>
                 {exchangeData?.isWriter === "TRUE" && (
@@ -473,6 +495,11 @@ const ItemDetail: React.FC = () => {
                           variant="caption"
                           display="block"
                           align="center"
+                          sx={{
+                            whiteSpace: "nowrap", // 한 줄로 표시
+                            overflow: "hidden", // 넘치는 텍스트 숨기기
+                            textOverflow: "ellipsis", // 넘치는 텍스트를 ...으로 표시
+                          }}
                         >
                           {item.title}
                         </Typography>

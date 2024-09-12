@@ -9,6 +9,7 @@ import {
   Select,
   SelectChangeEvent,
   Container,
+  CircularProgress,
 } from "@mui/material";
 import Image from "next/image";
 import axios from "axios";
@@ -33,6 +34,7 @@ const EditPostForm = () => {
   const [content, setContent] = useState<string>("");
   const [status, setStatus] = useState<ExchangeStatus>(ExchangeStatus.SALE);
   const [images, setImages] = useState<(File | ImageData)[]>([]); // 기존 URL 이미지와 파일을 함께 저장
+  const [isLoading, setIsLoading] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const { id } = router.query;
@@ -102,6 +104,8 @@ const EditPostForm = () => {
 
   // 서버로 폼 데이터를 전송하는 함수
   const handleSubmit = async () => {
+    if (isLoading) return;
+
     // 입력값 검사
     if (!title || title.trim() === "") {
       alert("제목을 입력해주세요.");
@@ -116,6 +120,9 @@ const EditPostForm = () => {
       alert("가격에 올바른 숫자를 입력해주세요.");
       return; // 제출 중단
     }
+
+    // 로딩 상태로 전환
+    setIsLoading(true);
 
     const formData = new FormData();
     const jsonData = {
@@ -166,6 +173,9 @@ const EditPostForm = () => {
           buttonAction: `/exchange/write/${id}`,
         },
       });
+    } finally {
+      // 로딩 상태 해제
+      setIsLoading(false);
     }
   };
 
@@ -257,8 +267,17 @@ const EditPostForm = () => {
         </Box>
       </Box>
 
-      <Button variant="contained" color="primary" onClick={handleSubmit}>
-        수정 완료
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSubmit}
+        disabled={isLoading} // 로딩 중일 때 버튼 비활성화
+      >
+        {isLoading ? (
+          <CircularProgress size={24} /> // 로딩 애니메이션
+        ) : (
+          "수정 완료"
+        )}
       </Button>
     </Box>
   );

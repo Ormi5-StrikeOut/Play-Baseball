@@ -128,17 +128,19 @@ const Header: React.FC = () => {
                 </Button>
               </Link>
             )}
-            <Link href="/exchange/write" passHref>
+            <Link href={loggedIn ? "/exchange/write" : "/login"} passHref>
               <Button sx={{ color: "#000", fontFamily: "Pretendard" }}>
                 판매하기
               </Button>
             </Link>
-            <Link href="/chat" passHref>
+
+            {/* 로그인 상태에 따라 경로 설정 */}
+            <Link href={loggedIn ? "/chat" : "/login"} passHref>
               <Button sx={{ color: "#000", fontFamily: "Pretendard" }}>
                 채팅하기
               </Button>
             </Link>
-            <Link href="/my" passHref>
+            <Link href={loggedIn ? "/my" : "/login"} passHref>
               <Button sx={{ color: "#000", fontFamily: "Pretendard" }}>
                 마이페이지
               </Button>

@@ -20,7 +20,7 @@ public class MessageResponseDto {
 
     private String messageContent;
 
-    private Timestamp createAt;
+    private Timestamp createdAt;
 
     /**
      *  Message 엔티티를 DTO로 변환하는 메서드
@@ -31,7 +31,7 @@ public class MessageResponseDto {
                 .messageId(message.getId())
                 .messageContent(message.getMessageContent())
                 .member(message.getMember())
-                .createAt(message.getCreatedAt())
+                .createdAt(message.getCreatedAt())
                 .build();
     }
 
