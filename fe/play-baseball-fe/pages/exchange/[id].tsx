@@ -495,6 +495,11 @@ const ItemDetail: React.FC = () => {
                           variant="caption"
                           display="block"
                           align="center"
+                          sx={{
+                            whiteSpace: "nowrap", // 한 줄로 표시
+                            overflow: "hidden", // 넘치는 텍스트 숨기기
+                            textOverflow: "ellipsis", // 넘치는 텍스트를 ...으로 표시
+                          }}
                         >
                           {item.title}
                         </Typography>
