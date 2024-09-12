@@ -25,8 +25,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -54,20 +54,18 @@ redis:
 
 logging:
   level:
-    root: INFO
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: INFO
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.security: DEBUG
-    org.springframework.security.web: DEBUG
-    org.springframework.security.authentication: DEBUG
-    org.example.spring: DEBUG
+    root: WARN
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.example.spring: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}  # 24시간
+  expiration: ${JWT_EXPIRATION}
   refresh-token:
-    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}  # 7일
+    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
   email-verification:
     expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
 
@@ -93,8 +91,3 @@ alan:
   key: ${ALAN_KEY}
   host: ${ALAN_HOST}
 
-#server:
-#  forward-headers-strategy: native
-#  tomcat:
-#    remote-ip-header: X-Forwarded-For
-#    protocol-header: X-Forwarded-Proto
