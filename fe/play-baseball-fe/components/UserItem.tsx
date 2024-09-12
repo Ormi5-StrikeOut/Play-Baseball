@@ -10,7 +10,7 @@ const UserListItem: React.FC<UserListItemProps> = ({ user }) => {
     return (
         <ListItem alignItems="flex-start">
             <ListItemAvatar>
-                <Avatar src={"../../assets/profile_placeholder.jpg"} alt={`${user.nickname}'s avatar`} />
+                <Avatar src={"@/assets/profile_placeholder.jpg"} alt={`${user.nickname}'s avatar`} />
             </ListItemAvatar>
             <ListItemText
                 primary={user.nickname}

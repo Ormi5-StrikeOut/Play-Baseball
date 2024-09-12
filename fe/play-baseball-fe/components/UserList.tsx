@@ -5,20 +5,11 @@ import { User } from '@/constants/types';
 
 const users: User[] = [
     {
-        id: 1,
-        nickname: 'John Doe',
+        id: 3,
+        nickname: 'Alice Johnson',
         email: '',
-        role: '',
-        createdAt: '',
-        updatedAt: '',
-        lastLoginDate: '',
-        deletedAt: '',
-        emailVerified: false
-    },
-    {
-        id: 2,
-        nickname: 'Jane Smith',
-        email: '',
+        phoneNumber: '',
+        gender:'',
         role: '',
         createdAt: '',
         updatedAt: '',
@@ -30,6 +21,21 @@ const users: User[] = [
         id: 3,
         nickname: 'Alice Johnson',
         email: '',
+        phoneNumber: '',
+        gender:'',
+        role: '',
+        createdAt: '',
+        updatedAt: '',
+        lastLoginDate: '',
+        deletedAt: '',
+        emailVerified: false
+    },
+    {
+        id: 3,
+        nickname: 'Alice Johnson',
+        email: '',
+        phoneNumber: '',
+        gender:'',
         role: '',
         createdAt: '',
         updatedAt: '',

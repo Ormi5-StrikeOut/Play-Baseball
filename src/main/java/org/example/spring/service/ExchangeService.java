@@ -243,10 +243,18 @@ public class ExchangeService {
 
 		exchangeRepository.incrementViewCount(id);
 
-		ExchangeLike exchangeLike = exchangeLikeRepository.findByExchangeAndMember(exchange,
-				jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request)))
-			.orElse(ExchangeLike.builder()
-				.build());
+		ExchangeLike exchangeLike;
+		try {
+			Member member = jwtTokenValidator.validateTokenAndGetMember(
+				jwtTokenValidator.extractTokenFromHeader(request));
+			exchangeLike = exchangeLikeRepository.findByExchangeAndMember(exchange, member
+				)
+				.orElse(ExchangeLike.builder()
+					.build());
+		} catch (NullPointerException e) {
+			exchangeLike = ExchangeLike.builder()
+				.build();
+		}
 
 		boolean isLike = exchangeLike.getCanceledAt() != null;
 
@@ -361,11 +369,15 @@ public class ExchangeService {
 	 * @return 본인이 작성한 글로 판단될 경우 true를 반환합니다.
 	 */
 	private boolean isWriter(HttpServletRequest request, Long id) {
-		Member member = jwtTokenValidator.validateTokenAndGetMember(jwtTokenValidator.extractTokenFromHeader(request));
+		try {
+			Member member = jwtTokenValidator.validateTokenAndGetMember(
+				jwtTokenValidator.extractTokenFromHeader(request));
 
-		Exchange exchange = exchangeRepository.findByIdAndDeletedAtIsNull(id)
-			.orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
-
-		return member.equals(exchange.getMember());
+			Exchange exchange = exchangeRepository.findByIdAndDeletedAtIsNull(id)
+				.orElseThrow(() -> new RuntimeException("게시글을 찾을수 없습니다."));
+			return member.equals(exchange.getMember());
+		} catch (NullPointerException e) {
+			return false;
+		}
 	}
 }

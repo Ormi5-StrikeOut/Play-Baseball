@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Profile("dev")
 @Slf4j
 public class SecurityDevConfig {
-
     private final JwtValidatorFilter jwtValidatorFilter;
     private final RateLimitFilter rateLimitFilter;
     private final MemberStatusCheckFilter memberStatusCheckFilter;

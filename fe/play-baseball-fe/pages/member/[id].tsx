@@ -4,7 +4,7 @@ import MyProfile from '@/components/MyProfile';
 import Wrapper from '@/components/Wrapper'
 import api from '@/constants/axios';
 import { User } from '@/constants/types'
-import { MEMBER_GET, MEMBER_MODIFY, MEMBER_RESIGN } from '@/constants/endpoints'
+import { MEMBER_GET, MEMBER_MODIFY, MEMBER_MY } from '@/constants/endpoints'
 import UserProfile from '@/components/UserProfile';
 
 const My: React.FC = () => {
@@ -17,7 +17,9 @@ const My: React.FC = () => {
         updatedAt: "",
         lastLoginDate: "",
         deletedAt: "",
-        emailVerified: false
+        emailVerified: false,
+        phoneNumber: '',
+        gender: ''
     };
 
     const [userState, setUser] = useState<User>(initialUser);
@@ -43,6 +45,8 @@ const My: React.FC = () => {
                     // lastLoginDate: new Date(userData.lastLoginDate),
                     // deletedAt: new Date(userData.deletedAt),
                     emailVerified: userData.emailVerified,
+                    phoneNumber: userData.phoneNumber,
+                    gender: userData.gender
                 };
                 
                 setUser(user);
