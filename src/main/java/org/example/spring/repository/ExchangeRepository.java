@@ -53,4 +53,10 @@ public interface ExchangeRepository extends JpaRepository<Exchange, Long> {
 	@Modifying
 	@Query("UPDATE Exchange e SET e.viewCount = e.viewCount + 1 WHERE e.id = :id")
 	void incrementViewCount(@Param("id") Long id);
+
+	// updated_at field에 반영되지 않도록 regularPrice 세팅 처리
+	// Alan을 사용한 정가를 게시물 발행 이후 업데이트 합니다.
+	@Modifying
+	@Query("UPDATE Exchange e SET e.regularPrice = :regularPrice WHERE e.id = :id")
+	void updateRegularPrice(@Param("id") Long id, @Param("regularPrice") int regularPrice);
 }
