@@ -13,12 +13,14 @@
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.0.0",
     "@mui/material": "^6.0.0",
+    "@stomp/stompjs": "^7.0.0",
     "axios": "^1.7.7",
     "lodash": "^4.17.21",
     "next": "14.2.6",
     "qs": "^6.13.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.7",
@@ -26,6 +28,7 @@
     "@types/qs": "^6.9.15",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/sockjs-client": "^1.5.4",
     "eslint": "^8",
     "eslint-config-next": "14.2.6",
     "postcss": "^8",

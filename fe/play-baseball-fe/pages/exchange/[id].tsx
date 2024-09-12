@@ -192,6 +192,33 @@ const ItemDetail: React.FC = () => {
     }
   };
 
+  const createMessageRoom = async (targetNickname: string) => {
+    setLoading(true);
+    axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL;
+
+    axios.interceptors.request.use(
+      (config) => {
+        config.headers.Authorization = localStorage.getItem('Authorization');
+        return config;
+      },
+      (err) => {
+        console.log(err);
+        return Promise.reject(err);
+      }
+    );
+    
+    try {
+        const response = await axios.post(`/messages/room/${targetNickname}`);
+        console.log('메시지 방 생성 성공:', response.data);
+
+        router.push('/chat');
+    } catch (err) {
+        console.error('메시지 방 생성 실패:', err);
+    } finally {
+        setLoading(false);
+    }
+  };
+
   if (loading || !exchangeData) {
     return (
       <Wrapper>
@@ -326,7 +353,7 @@ const ItemDetail: React.FC = () => {
                     : `앨런이 찾은 이 상품의 새 제품 가격은 ${exchangeData?.regularPrice?.toLocaleString()}원입니다.`}
                 </Typography>
                 <Divider sx={{ margin: "20px 0" }} />
-                <Button variant="contained" fullWidth>
+                <Button variant="contained" fullWidth onClick={() => createMessageRoom(exchangeData?.writer)} >
                   채팅하기
                 </Button>
                 <Button variant="contained" fullWidth sx={{ mt: 2 }}>
