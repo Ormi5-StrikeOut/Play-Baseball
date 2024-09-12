@@ -348,8 +348,9 @@ const ItemDetail: React.FC = () => {
                 </Typography>
                 <Divider sx={{ margin: "20px 0" }} />
                 <Typography variant="body1">
-                  이 상품의 정가는{" "}
-                  {exchangeData?.regularPrice?.toLocaleString() || "0"}원입니다.
+                  {exchangeData?.regularPrice === 0
+                    ? "현재 앨런이 상품 가격을 탐색 중입니다."
+                    : `앨런이 찾은 이 상품의 새 제품 가격은 ${exchangeData?.regularPrice?.toLocaleString()}원입니다.`}
                 </Typography>
                 <Divider sx={{ margin: "20px 0" }} />
                 <Button variant="contained" fullWidth onClick={() => createMessageRoom(exchangeData?.writer)} >
