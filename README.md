@@ -1,8 +1,8 @@
-<div align="center">
-
 # 🌟 SecondInning: AI 중고거래 플랫폼
 
-<img src="https://via.placeholder.com/500x300.png?text=SecondInning" alt="SecondInning Logo" width="500px" style="border-radius: 30px; box-shadow: 0 4px 20px 0 rgba(0,0,0,0.2);">
+<div align="center">
+
+![로고](https://github.com/user-attachments/assets/a4cacec8-83fb-47fa-ad91-d12047906c67)
 
 ### 🔄 당신의 중고 물품, 새로운 가치의 시작점
 
@@ -10,7 +10,14 @@
 [![Spring](https://img.shields.io/badge/Backend-Spring-%236DB33F?style=for-the-badge&logo=spring&logoColor=white&labelColor=6DB33F)](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CD.yml)
 [![CI Status](https://img.shields.io/badge/CI-✅%20Passing-success?style=for-the-badge&logo=github-actions&logoColor=white&labelColor=2088FF)](https://github.com/Ormi5-StrikeOut/Play-Baseball/actions/workflows/Spring%20CI.yml)
 
-[🌐 서비스 체험하기](https://ioshane.com/) | [📘 API 둘러보기](https://api.ioshane.com/swagger-ui/index.html#/) | [🐞 버그 신고](https://github.com/Ormi5-StrikeOut/Play-Baseball/issues) | [💡 새 기능 제안](https://github.com/Ormi5-StrikeOut/Play-Baseball/issues)
+<br>
+
+<a href="https://ioshane.com/" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; font-size: 18px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">🌐 서비스 체험하기</a>
+<a href="https://api.ioshane.com/swagger-ui/index.html#/" style="display: inline-block; background-color: #008CBA; color: white; padding: 10px 20px; text-align: center; text-decoration: none; font-size: 18px; margin: 4px 2px; cursor: pointer; border-radius: 4px;">📘 API 둘러보기</a>
+
+<br>
+
+[🐞 버그 신고](https://github.com/Ormi5-StrikeOut/Play-Baseball/issues) | [💡 새 기능 제안](https://github.com/Ormi5-StrikeOut/Play-Baseball/issues)
 
 </div>
 
@@ -18,122 +25,90 @@
 
 ## 🎯 프로젝트 소개
 
-<div align="center">
-
 > ### *"어제의 물건이 내일의 보물로"*
 
 **SecondInning**은 AI 기술을 활용한 혁신적인 중고거래 플랫폼입니다.  
 우리는 버려질 뻔한 물건들에 새 생명을 불어넣어, 지속 가능한 소비 문화를 만들어갑니다.
 
-</div>
-
 ### 💡 우리의 목표
 
-<div style="display: flex; justify-content: space-around; margin-top: 20px;">
-  <div style="text-align: center; width: 22%; background-color: #f0f8ff; padding: 15px; border-radius: 10px;">
-    <h3 style="color: #333;">🌱 지속 가능성</h3>
-    <p style="color: #555;">환경을 생각하는 소비 문화 조성</p>
-  </div>
-  <div style="text-align: center; width: 22%; background-color: #fff0f5; padding: 15px; border-radius: 10px;">
-    <h3 style="color: #333;">🤝 신뢰</h3>
-    <p style="color: #555;">안전하고 믿을 수 있는 거래 환경 구축</p>
-  </div>
-  <div style="text-align: center; width: 22%; background-color: #f0fff0; padding: 15px; border-radius: 10px;">
-    <h3 style="color: #333;">🔍 혁신</h3>
-    <p style="color: #555;">AI 기술을 활용한 정확한 상품 가치 평가</p>
-  </div>
-  <div style="text-align: center; width: 22%; background-color: #fff5e6; padding: 15px; border-radius: 10px;">
-    <h3 style="color: #333;">💰 경제성</h3>
-    <p style="color: #555;">합리적인 가격으로 모두에게 이익이 되는 거래</p>
-  </div>
+- 🌱 **지속 가능성**: 환경을 생각하는 소비 문화 조성
+- 🤝 **신뢰**: 안전하고 믿을 수 있는 거래 환경 구축
+- 🔍 **혁신**: AI 기술을 활용한 정확한 상품 가치 평가
+- 💰 **경제성**: 합리적인 가격으로 모두에게 이익이 되는 거래
+
+---
+## 👥 Strike-Out Team
+
+<div align="center">
+
+| ![박철안](https://github.com/The-Shinee.png) | ![김래현](https://github.com/raehyeonn.png) | ![김재희](https://github.com/2019112479kjh.png) |
+|:---:|:---:|:---:|
+| **박철안** | **김래현** | **김재희** |
+| 👑 팀장 | 💻 Backend | 💻 Backend |
+
+| ![방준현](https://github.com/bindingflare.png) | ![신재민](https://github.com/Freddieshin.png) | ![이승희](https://github.com/LLSNsssz.png) |
+|:---:|:---:|:---:|
+| **방준현** | **신재민** | **이승희** |
+| 🎨 Frontend | 💻 Backend | 💻 Backend |
+
 </div>
 
 ---
+
 
 ## ✨ 핵심 기능
 
-<table style="width:100%; border-collapse: separate; border-spacing: 0 15px;">
-  <tr>
-    <td style="width:20%; text-align:center; background-color: #e6f7ff; padding: 20px; border-radius: 10px;">
-      <h3 style="color: #333;">🤖 AI 기반 가격 책정</h3>
-    </td>
-    <td style="padding: 20px; background-color: #f8f8f8; border-radius: 10px;">  
-      <p style="color: #555;"><strong>빅데이터와 AI를 활용한 정확한 상품 가치 평가</strong></p>
-      <p style="color: #555;">📊 공정한 거래, 사용자 만족도 향상</p>
-    </td>
-  </tr>
-  <tr>
-    <td style="width:20%; text-align:center; background-color: #fff0f5; padding: 20px; border-radius: 10px;">
-      <h3 style="color: #333;">💬 실시간 채팅</h3>
-    </td>
-    <td style="padding: 20px; background-color: #f8f8f8; border-radius: 10px;">
-      <p style="color: #555;"><strong>판매자와 구매자 간 즉각적인 소통 채널</strong></p>
-      <p style="color: #555;">🚀 거래 성사율 증가, 사용자 경험 개선</p>
-    </td>
-  </tr>
-  <tr>
-    <td style="width:20%; text-align:center; background-color: #f0fff0; padding: 20px; border-radius: 10px;">
-      <h3 style="color: #333;">📊 시장 동향 분석</h3>
-    </td>
-    <td style="padding: 20px; background-color: #f8f8f8; border-radius: 10px;">
-      <p style="color: #555;"><strong>실시간 시장 가격 동향 제공</strong></p> 
-      <p style="color: #555;">💡 현명한 구매 결정 지원</p>
-    </td>
-  </tr>
-  <tr>
-    <td style="width:20%; text-align:center; background-color: #fff5e6; padding: 20px; border-radius: 10px;">
-      <h3 style="color: #333;">🔒 안전 거래 시스템</h3>
-    </td>
-    <td style="padding: 20px; background-color: #f8f8f8; border-radius: 10px;">
-      <p style="color: #555;"><strong>에스크로 서비스를 통한 안전한 거래 보장</strong></p>
-      <p style="color: #555;">🛡️ 사기 예방, 플랫폼 신뢰도 향상</p>
-    </td>
-  </tr>
-  <tr>
-    <td style="width:20%; text-align:center; background-color: #e6e6ff; padding: 20px; border-radius: 10px;">
-      <h3 style="color: #333;">📸 AI 이미지 인식</h3>
-    </td>
-    <td style="padding: 20px; background-color: #f8f8f8; border-radius: 10px;">
-      <p style="color: #555;"><strong>상품 이미지 자동 분류 및 태그 생성</strong></p>
-      <p style="color: #555;">🔍 검색 정확도 향상, 판매자 편의성 증대</p>
-    </td>
-  </tr>  
-</table>
+1. 🤖 **AI 기반 가격 책정**
+   - 빅데이터와 AI를 활용한 정확한 상품 가치 평가
+   - 📊 공정한 거래, 사용자 만족도 향상
+
+2. 💬 **실시간 채팅**
+   - 판매자와 구매자 간 즉각적인 소통 채널
+   - 🚀 거래 성사율 증가, 사용자 경험 개선
+
+3. 📊 **시장 동향 분석**
+   - 실시간 시장 가격 동향 제공
+   - 💡 현명한 구매 결정 지원
+
+4. 🔒 **안전 거래 시스템**
+   - 에스크로 서비스를 통한 안전한 거래 보장
+   - 🛡️ 사기 예방, 플랫폼 신뢰도 향상
 
 ---
-
 ## 🖼️ 서비스 미리보기
 
-<div align="center" style="display: flex; justify-content: space-around; margin-top: 20px;">
-  <div style="text-align: center; width: 30%;">
-    <img src="https://via.placeholder.com/300x600.png?text=Home" alt="홈 화면" width="100%" style="border-radius: 20px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
-    <p style="margin-top: 10px; color: #333;"><strong>홈 화면</strong></p>
-  </div>
-  <div style="text-align: center; width: 30%;">
-    <img src="https://via.placeholder.com/300x600.png?text=Chat" alt="채팅 화면" width="100%" style="border-radius: 20px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
-    <p style="margin-top: 10px; color: #333;"><strong>채팅 화면</strong></p>
-  </div>
-  <div style="text-align: center; width: 30%;">
-    <img src="https://via.placeholder.com/300x600.png?text=Profile" alt="프로필 화면" width="100%" style="border-radius: 20px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
-    <p style="margin-top: 10px; color: #333;"><strong>프로필 화면</strong></p>
-  </div>
+<div align="center">
+
+| 메인 화면 | 채팅 화면 | 마이페이지 화면 |
+|:---:|:---:|:---:|
+| ![메인 화면](https://github.com/user-attachments/assets/71800866-48db-4a4e-bafc-bd43050d23ff) | ![채팅 화면](https://github.com/user-attachments/assets/0c8bcf70-9be2-4fe5-bde0-68b1e38d794c) | ![마이페이지 화면](https://github.com/user-attachments/assets/e2e63272-eece-4a29-a522-2e2ffac0a6ed) |
+
+| 판매중 검색 화면 | 판매완료 검색 화면 | 상품 등록 화면 |
+|:---:|:---:|:---:|
+| ![판매중 검색](https://github.com/user-attachments/assets/27fe949e-449e-46de-9104-9b9677f69740) | ![판매완료 검색](https://github.com/user-attachments/assets/77e8d8ff-958a-4f9e-af39-0c414a24df16) | ![상품 등록 화면](https://github.com/user-attachments/assets/d0b470c3-e42d-4c64-a575-da77130c005f) |
+
+| 인증 메일 재발송 화면 | 로그인 화면 | 상품 상세 화면 |
+|:---:|:---:|:---:|
+| ![인증 메일 재발송 화면](https://github.com/user-attachments/assets/b54ce14a-d609-4315-9d76-102b20b6df00) | ![로그인 화면](https://github.com/user-attachments/assets/0ba2050b-f879-4793-bce8-5ffbf6c58a4d) | ![상품 상세 화면](https://github.com/user-attachments/assets/c7646642-2fd4-4e9c-beea-33d6d5b58517) |
+
+| 판매중 목록 화면 | 판매완료 목록 화면 | 비밀번호 재설정 화면 |
+|:---:|:---:|:---:|
+| ![판매중 목록](https://github.com/user-attachments/assets/32d4cbc0-7952-4ace-bdd7-f749aacbc232) | ![판매완료 목록](https://github.com/user-attachments/assets/751ad640-a923-4ea4-8d9f-9db1c4738927) | ![비밀번호 재설정](https://github.com/user-attachments/assets/c93683bc-ab3b-4027-bcf4-4b70f2cea83a) |
+
 </div>
 
 ---
 
 ## 🛠️ 기술 스택
 
-<div align="center" style="background-color: #f8f8f8; padding: 20px; border-radius: 10px;">
-
-<h3>Frontend</h3>
-
+### Frontend
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)  
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![MUI](https://img.shields.io/badge/MUI-%230081CB.svg?style=for-the-badge&logo=mui&logoColor=white)
 
-<h3>Backend</h3>
-
+### Backend
 ![Gradle](https://img.shields.io/badge/Gradle-02303A.svg?style=for-the-badge&logo=Gradle&logoColor=white)
 ![Spring](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=Spring&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
@@ -145,8 +120,7 @@
 ![Bucket4j](https://img.shields.io/badge/Bucket4j-232F3E?style=for-the-badge&logo=Bucket4js&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-85EA2D?style=for-the-badge&logo=JWT&logoColor=white)
 
-<h3>DevOps & Tools</h3>
-
+### DevOps & Tools
 ![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![AWS RDS](https://img.shields.io/badge/AWS_RDS-527FFF?style=for-the-badge&logo=AmazonRDS&logoColor=white)
 ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=AmazonEC2&logoColor=white)
@@ -154,13 +128,9 @@
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
 
-</div>
-
 ---
 
 ## 🚀 시작하기
-
-<div style="background-color: #f0f8ff; padding: 20px; border-radius: 10px;">
 
 ### 1️⃣ 저장소 복제
 터미널 또는 IntelliJ 터미널에서:
@@ -198,44 +168,18 @@ npm run dev
 
 🎉 https://ioshane.com 에서 SecondInning을 만나보세요!
 
-</div>
+---
+
+## 시스템 아키텍처
+![Web App Reference Architecture](https://github.com/user-attachments/assets/dfb459ea-8f19-4d28-9aec-d7a5a8779daa)
+
 
 ---
 
-## 👥 Dream Team
+## ERD
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px;">
-  <div style="text-align: center; width: 150px;">
-    <img src="https://github.com/The-Shinee.png" width="100px" style="border-radius: 50%; border: 3px solid #6c5ce7;"/>
-    <h3>박철안</h3>
-    <p>👑 팀장</p>
-  </div>
-  <div style="text-align: center; width: 150px;">
-    <img src="https://github.com/raehyeonn.png" width="100px" style="border-radius: 50%; border: 3px solid #00b894;"/>
-    <h3>김래현</h3>
-    <p>💻 Backend</p>
-  </div>
-  <div style="text-align: center; width: 150px;">
-    <img src="https://github.com/2019112479kjh.png" width="100px" style="border-radius: 50%; border: 3px solid #00b894;"/>
-    <h3>김재희</h3>
-    <p>💻 Backend</p>
-  </div>
-  <div style="text-align: center; width: 150px;">
-    <img src="https://github.com/bindingflare.png" width="100px" style="border-radius: 50%; border: 3px solid #0984e3;"/>
-    <h3>방준현</h3>
-    <p>🎨 Frontend</p>
-  </div>
-  <div style="text-align: center; width: 150px;">
-    <img src="https://github.com/Freddieshin.png" width="100px" style="border-radius: 50%; border: 3px solid #00b894;"/>
-    <h3>신재민</h3>
-    <p>💻 Backend</p>
-  </div>
-  <div style="text-align: center; width: 150px;">
-    <img src="https://github.com/LLSNsssz.png" width="100px" style="border-radius: 50%; border: 3px solid #00b894;"/>
-    <h3>이승희</h3>
-    <p>💻 Backend</p>
-  </div>
-</div>
+![ERD](https://github.com/user-attachments/assets/8fa23b9d-e9b3-4874-b90b-7c70dab0b208)
+
 
 ---
 
@@ -259,5 +203,3 @@ SecondInning의 성장에 함께해주세요! 다음과 같은 방법으로 참�
 [![Follow us on Twitter](https://img.shields.io/twitter/follow/SecondInning?style=social)](https://twitter.com/SecondInning)
 
 </div>
-
-
