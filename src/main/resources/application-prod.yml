@@ -58,6 +58,8 @@ logging:
     org.springframework.web: WARN
     org.hibernate.SQL: WARN
     org.example.spring: INFO
+    org.springframework.web.socket: ERROR
+    org.springframework.messaging: ERROR
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
 
