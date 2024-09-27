@@ -32,11 +32,6 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
-  security:
-    user:
-      name: ${SECURITY_USER_NAME}
-      password: ${SECURITY_USER_PASSWORD}
-
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT}
@@ -83,9 +78,9 @@ file:
   upload-dir: src/main/resources/static/uploads
 
 app:
-  base-url: https://api.ioshane.com
+  base-url: https://ec2-3-38-149-152.ap-northeast-2.compute.amazonaws.com
   fe-url: https://ioshane.com
-  resource-url: https://resource.ioshane.com
+  resource-url: https://second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com
 
 cloud:
   aws:
