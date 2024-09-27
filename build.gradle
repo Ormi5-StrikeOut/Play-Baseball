@@ -85,6 +85,8 @@ jar {
     archiveBaseName.set('playBaseballServer')
 }
 
+def activeProfile = project.hasProperty('spring.profiles.active') ? project.property('spring.profiles.active') : 'prod'
+
 jib {
     from {
         image = 'eclipse-temurin:21-jre'
@@ -95,6 +97,18 @@ jib {
     container {
         ports = ['8080']
         creationTime = 'USE_CURRENT_TIMESTAMP'
+        jvmFlags = ["-Dspring.profiles.active=${activeProfile}"]
     }
     containerizingMode = 'packaged'
 }
+
+// 추가: 빌드 시 사용된 프로필 출력
+tasks.register('printActiveProfile') {
+    doLast {
+        println "Active profile: ${activeProfile}"
+    }
+}
+
+// Jib 태스크 실행 전에 프로필 출력 태스크 실행
+tasks.jib.dependsOn tasks.printActiveProfile
+tasks.jibDockerBuild.dependsOn tasks.printActiveProfile
