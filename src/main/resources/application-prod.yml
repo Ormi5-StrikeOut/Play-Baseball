@@ -64,6 +64,9 @@ jwt:
   email-verification:
     expiration: ${JWT_EMAIL_VERIFICATION_EXPIRATION}
 
+file:
+  upload-dir: src/main/resources/static/uploads
+
 app:
   base-url: https://ec2-3-38-149-152.ap-northeast-2.compute.amazonaws.com
   fe-url: https://ioshane.com
