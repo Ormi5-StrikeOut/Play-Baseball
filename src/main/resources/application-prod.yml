@@ -32,11 +32,6 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
-  security:
-    user:
-      name: ${SECURITY_USER_NAME}
-      password: ${SECURITY_USER_PASSWORD}
-
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT}
