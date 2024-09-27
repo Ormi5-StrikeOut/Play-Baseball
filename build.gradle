@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.2'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.google.cloud.tools.jib' version '3.3.2'
 }
 
 group = 'org.example'
@@ -82,4 +83,18 @@ bootJar {
 
 jar {
     archiveBaseName.set('playBaseballServer')
+}
+
+jib {
+    from {
+        image = 'eclipse-temurin:21-jre'
+    }
+    to {
+        image = 'seung093/playbaseball:v2'
+    }
+    container {
+        ports = ['8080']
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+    }
+    containerizingMode = 'packaged'
 }
