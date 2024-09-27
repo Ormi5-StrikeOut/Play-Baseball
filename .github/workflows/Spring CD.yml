@@ -50,6 +50,9 @@ jobs:
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           
+          # Get EC2 private IP
+          EC2_PRIVATE_IP=$(ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST 'curl -s http://169.254.169.254/latest/meta-data/local-ipv4')
+          
           # Create .env file on EC2
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
             cat << EOT > .env
@@ -74,6 +77,7 @@ jobs:
             ALAN_HOST=${{ secrets.ALAN_HOST }}
             REDIS_HOST=${{ secrets.REDIS_HOST }}
             REDIS_PORT=${{ secrets.REDIS_PORT }}
+            EC2_PRIVATE_IP=$EC2_PRIVATE_IP
           EOT
           EOF
 
@@ -83,9 +87,20 @@ jobs:
             docker stop play-baseball-server || true
             docker rm play-baseball-server || true
             docker run -d --name play-baseball-server \
+              --network host \
               --env-file .env \
-              -p 8080:8080 \
               ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           EOF
 
+      - name: Check container logs
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            docker logs play-baseball-server
+          EOF
           rm -f private_key.pem
