@@ -44,18 +44,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(webSocketHandler);
     }
-
-//    @Bean
-//    public WebMvcConfigurer corsConfigurer() {
-//        return new WebMvcConfigurer() {
-//            @Override
-//            public void addCorsMappings(CorsRegistry registry) {
-//                registry.addMapping("/**")
-//                        .allowedOrigins("http://localhost:3000/") // 클라이언트에서 접근할 도메인
-//                        .allowCredentials(true) // 자격 증명 허용
-//                        .allowedMethods("*")
-//                        .allowedHeaders("*");
-//            }
-//        };
-//    }
 }
