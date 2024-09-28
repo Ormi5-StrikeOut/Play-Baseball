@@ -2,7 +2,7 @@
 const nextConfig = {
   output: "standalone",
   images:{
-    domains:['resource.ioshane.com'],
+    domains:['second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com'],
   },
 };
 
