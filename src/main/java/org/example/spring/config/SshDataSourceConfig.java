@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Profile("dev")
+@Profile({"dev", "docker"})
 @Configuration
 @RequiredArgsConstructor
 public class SshDataSourceConfig {

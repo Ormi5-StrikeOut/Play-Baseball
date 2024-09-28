@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @Validated
-@Profile("dev")
+@Profile({"dev", "docker"})
 @Setter
 public class SshTunnelingInitializer {
 
