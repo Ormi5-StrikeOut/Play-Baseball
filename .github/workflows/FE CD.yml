@@ -43,9 +43,21 @@ jobs:
             docker load < image.tar
             docker stop fe-container || true
             docker rm fe-container || true
-            docker run -d --name fe-container -p 8080:3000 \
+            docker run -d --name fe-container --network host \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-              -e NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
+              -e NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
               play-baseball-fe:latest
+            rm image.tar
+          '
+
+      - name: Verify deployment
+        env:
+          PRIVATE_KEY: ${{ secrets.FE_KEY }}
+          HOST: ${{ secrets.FE_HOST }}
+          USER: ubuntu
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
+            docker ps | grep fe-container
+            curl -I http://localhost:3000
           '
