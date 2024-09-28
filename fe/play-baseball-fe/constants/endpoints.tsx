@@ -1,6 +1,6 @@
 export const SERVER_URL = process.env.NEXT_PUBLIC_NEC; // FE 서버 주소
-const REQUEST_URL = process.env.NEXT_PUBLIC_API_URL; // BE 서버 주소
-const RESOURCE_URL = "https://resource.ioshane.com";
+const REQUEST_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`; // BE 서버 주소
+const RESOURCE_URL = "https://second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com";
 
 // Resources
 export const DEFAULT_IMAGE = `${RESOURCE_URL}/default.jpg`;
