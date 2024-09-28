@@ -7,7 +7,7 @@ build/
 !**/application-prod.yml
 !**/application-debug.yml
 **/application-dev.yml
-caddy-publicky.txt
+secrets/caddy-publicky.txt
 **.pem
 **.csv
 
