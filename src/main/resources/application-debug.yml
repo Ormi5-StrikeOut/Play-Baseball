@@ -79,7 +79,7 @@ file:
 
 app:
   base-url: https://ec2-3-38-149-152.ap-northeast-2.compute.amazonaws.com
-  fe-url: https://ioshane.com
+  fe-url: https://54.180.243.156
   resource-url: https://second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com
 
 cloud:
