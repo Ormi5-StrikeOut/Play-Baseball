@@ -8,11 +8,6 @@ on:
       - "fe/play-baseball-fe/**"
       - ".github/workflows/FE CD.yml"
 
-env:
-  APP_DOMAIN: ${{ secrets.FE_APP_DOMAIN }}
-  NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-  NEXT_PUBLIC_NEC: ${{ secrets.NEXT_PUBLIC_NEC }}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -31,8 +26,8 @@ jobs:
           load: true
           tags: play-baseball-fe:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_NEC=${{ env.NEXT_PUBLIC_NEC }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }}
 
       - name: Verify Docker image
         run: |
@@ -65,8 +60,8 @@ jobs:
               -p 3000:3000  \
               --restart=unless-stopped \
               -e NODE_ENV=production \
-              -e NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }} \
-              -e NEXT_PUBLIC_NEC=${{ env.NEXT_PUBLIC_NEC }} \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+              -e NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
               play-baseball-fe:latest
           
             echo "Checking container status..."
@@ -76,7 +71,7 @@ jobs:
             docker logs play-baseball-fe
           
             echo "Updating Caddyfile..."
-            echo "${{ env.APP_DOMAIN }} {
+            echo "${{ secrets.NEXT_PUBLIC_NEC }} {
               reverse_proxy localhost:3000
             }" | sudo tee /etc/caddy/Caddyfile
           
