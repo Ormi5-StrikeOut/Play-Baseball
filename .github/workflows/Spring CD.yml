@@ -100,7 +100,7 @@ jobs:
           EOF
           
           # Update Caddyfile
-          ssh -i private_key.pem -o StrictNextSectionHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
             echo "${{ env.APP_DOMAIN }} {
               reverse_proxy localhost:8080
             }" | sudo tee /etc/caddy/Caddyfile
