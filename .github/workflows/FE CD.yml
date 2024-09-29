@@ -44,33 +44,15 @@ jobs:
             docker stop fe-container || true
             docker rm fe-container || true
 
-            # Create .env file
-            cat << EOT > .env
-            NODE_ENV=production
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }}
-            EOT
-
             docker run -d --name fe-container \
-              --network host \
+              -p 3000:3000 \
               --restart=unless-stopped \
-              --env-file .env \
+              -e NODE_ENV=production \
+              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+              -e NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
               play-baseball-fe:latest
 
             rm image.tar
-
-            # Update Caddy configuration
-            sudo tee /etc/caddy/Caddyfile > /dev/null << EOT
-            {
-              email your-email@example.com  # Replace with your email
-            }
-
-            your-domain.com {  # Replace with your actual domain
-              reverse_proxy localhost:3000  # Assuming your Next.js app runs on port 3000
-            }
-            EOT
-
-            sudo systemctl restart caddy
           EOF
           rm -f private_key
 
@@ -83,8 +65,6 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             docker ps | grep fe-container
-            sudo systemctl status caddy
             docker logs fe-container --tail 50
           EOF
           rm -f private_key
-          #
