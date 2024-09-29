@@ -9,7 +9,7 @@ on:
 
 env:
   DOCKER_IMAGE: seung093/playbaseball
-  APP_DOMAIN: ec2-3-38-149-152.ap-northeast-2.compute.amazonaws.com
+  APP_DOMAIN: 3.38.149.152.nip.io
 
 jobs:
   build-and-deploy:
@@ -101,12 +101,8 @@ jobs:
           
           # Update Caddyfile
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-            echo "{
-              admin 0.0.0.0:2020
-            }
-          
-            ${{ env.APP_DOMAIN }} {
-            reverse_proxy localhost:8080
+            echo "${{ env.APP_DOMAIN }} {
+              reverse_proxy localhost:8080
             }" | sudo tee /etc/caddy/Caddyfile
           
             # Restart Caddy
