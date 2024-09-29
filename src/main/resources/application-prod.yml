@@ -68,8 +68,8 @@ file:
   upload-dir: src/main/resources/static/uploads
 
 app:
-  base-url: https://ec2-3-38-149-152.ap-northeast-2.compute.amazonaws.com
-  fe-url: https://54.180.243.156
+  base-url: https://3.38.149.152.nip.io
+  fe-url: https://54.180.243.156.nip.io
   resource-url: https://second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com
 
 cloud:
@@ -85,4 +85,3 @@ cloud:
 alan:
   key: ${ALAN_KEY}
   host: ${ALAN_HOST}
-
