@@ -45,7 +45,7 @@ jobs:
             docker rm fe-container || true
 
             docker run -d --name fe-container \
-              -p 3000:3000 \
+              -p 80:3000 \
               --restart=unless-stopped \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
