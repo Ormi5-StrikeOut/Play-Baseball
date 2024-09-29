@@ -47,12 +47,6 @@ redis:
   host: ${REDIS_HOST}
   port: ${REDIS_PORT}
 
-logging:
-  level:
-    root: WARN
-    org.springframework.web: WARN
-    org.hibernate.SQL: WARN
-    org.example.spring: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
 
