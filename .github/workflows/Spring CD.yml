@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Cache Gradle packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
@@ -79,6 +79,7 @@ jobs:
             REDIS_PORT=${{ secrets.REDIS_PORT }}
             EC2_PRIVATE_IP=$EC2_PRIVATE_IP
           EOT
+          chmod 600 .env
           EOF
 
           # Deploy new Docker image
@@ -88,9 +89,39 @@ jobs:
             docker rm play-baseball-server || true
             docker run -d --name play-baseball-server \
               --network host \
+              --restart=unless-stopped \
               --env-file .env \
               ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           EOF
+
+          # Set up Caddy
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            # Install Caddy if not already installed
+            if ! command -v caddy &> /dev/null; then
+              sudo apt update
+              sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+              sudo apt update
+              sudo apt install caddy
+            fi
+
+            # Create Caddyfile
+            sudo tee /etc/caddy/Caddyfile > /dev/null << EOT
+            {
+              email your-email@example.com  # Replace with your email
+            }
+
+            your-domain.com {  # Replace with your actual domain
+              reverse_proxy localhost:8080  # Assuming your Spring Boot app runs on port 8080
+            }
+            EOT
+
+            # Restart Caddy
+            sudo systemctl restart caddy
+          EOF
+          
+          rm -f private_key.pem
 
       - name: Check container logs
         env:
@@ -101,6 +132,6 @@ jobs:
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-            docker logs play-baseball-server
+            timeout 30s docker logs -f play-baseball-server || true
           EOF
           rm -f private_key.pem

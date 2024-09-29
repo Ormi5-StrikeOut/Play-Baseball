@@ -11,13 +11,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./fe/play-baseball-fe
           file: ./fe/play-baseball-fe/Dockerfile
@@ -31,7 +31,7 @@ jobs:
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar
 
-      - name: Copy Docker image to LightSail
+      - name: Deploy to LightSail
         env:
           PRIVATE_KEY: ${{ secrets.FE_KEY }}
           HOST: ${{ secrets.FE_HOST }}
@@ -39,17 +39,40 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           scp -o StrictHostKeyChecking=no -i private_key image.tar ${USER}@${HOST}:~/image.tar
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             docker load < image.tar
             docker stop fe-container || true
             docker rm fe-container || true
-            docker run -d --name fe-container --network host \
-              -e NODE_ENV=production \
-              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-              -e NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
+
+            # Create .env file
+            cat << EOT > .env
+            NODE_ENV=production
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }}
+            EOT
+
+            docker run -d --name fe-container \
+              --network host \
+              --restart=unless-stopped \
+              --env-file .env \
               play-baseball-fe:latest
+
             rm image.tar
-          '
+
+            # Update Caddy configuration
+            sudo tee /etc/caddy/Caddyfile > /dev/null << EOT
+            {
+              email your-email@example.com  # Replace with your email
+            }
+
+            your-domain.com {  # Replace with your actual domain
+              reverse_proxy localhost:3000  # Assuming your Next.js app runs on port 3000
+            }
+            EOT
+
+            sudo systemctl restart caddy
+          EOF
+          rm -f private_key
 
       - name: Verify deployment
         env:
@@ -57,7 +80,10 @@ jobs:
           HOST: ${{ secrets.FE_HOST }}
           USER: ubuntu
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             docker ps | grep fe-container
-            curl -I http://localhost:3000
-          '
+            sudo systemctl status caddy
+            docker logs fe-container --tail 50
+          EOF
+          rm -f private_key
