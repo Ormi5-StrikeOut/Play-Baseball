@@ -1,5 +1,5 @@
-export const SERVER_URL = process.env.NEXT_PUBLIC_NEC; // FE 서버 주소
-const REQUEST_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`; // BE 서버 주소
+export const SERVER_URL = `${process.env.NEXT_PUBLIC_NEC}.nip.io`; // FE 서버 주소 (nip.io 사용)
+const REQUEST_URL = `${process.env.NEXT_PUBLIC_API_URL}.nip.io/api`; // BE 서버 주소 (nip.io 사용)
 const RESOURCE_URL = "https://second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com";
 
 // Resources
