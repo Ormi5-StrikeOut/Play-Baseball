@@ -14,30 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
       - name: Build Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: ./fe/play-baseball-fe
-          file: ./fe/play-baseball-fe/Dockerfile
-          push: false
-          load: true
-          tags: play-baseball-fe:latest
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }}
-
-      - name: Verify Docker image
         run: |
-          docker images
-          docker inspect play-baseball-fe:latest || echo "Image not found"
-
-      - name: Check Docker build logs
-        if: failure()
-        run: |
-          docker buildx build --load -t play-baseball-fe:latest \
+          docker build -t play-baseball-fe:latest \
             --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
             --build-arg NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
             ./fe/play-baseball-fe
@@ -55,28 +34,9 @@ jobs:
           scp -o StrictHostKeyChecking=no -i private_key image.tar ${USER}@${HOST}:~/image.tar
           ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             docker load < image.tar
-          
-            # Stop and remove both old and new containers
-            docker stop fe-container play-baseball-fe || true
-            docker rm fe-container play-baseball-fe || true
-          
-            # Remove old images to free up space
-            docker image prune -af
-          
-            echo "Running new container..."
-            docker run -d --name play-baseball-fe \
-              -p 3000:3000  \
-              --restart=unless-stopped \
-              -e NODE_ENV=production \
-              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-              -e NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
-              play-baseball-fe:latest
-          
-            echo "Checking container status..."
-            docker ps -a | grep play-baseball-fe
-          
-            echo "Checking container logs..."
-            docker logs play-baseball-fe
+            docker stop play-baseball-fe || true
+            docker rm play-baseball-fe || true
+            docker run -d --name play-baseball-fe -p 3000:3000 play-baseball-fe:latest
           
             echo "Updating Caddyfile..."
             echo "${{ secrets.NEXT_PUBLIC_NEC }} {
@@ -87,24 +47,5 @@ jobs:
             sudo systemctl reload caddy
           
             rm image.tar
-          EOF
-          rm -f private_key
-
-      - name: Verify deployment
-        env:
-          PRIVATE_KEY: ${{ secrets.FE_KEY }}
-          HOST: ${{ secrets.FE_HOST }}
-          USER: ubuntu
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
-            echo "Container status:"
-            docker ps -a | grep play-baseball-fe
-            echo "Container logs:"
-            docker logs play-baseball-fe
-            echo "Checking port 3000:"
-            netstat -tuln | grep :3000
-            echo "Checking Caddy status:"
-            sudo systemctl status caddy
           EOF
           rm -f private_key
