@@ -1,4 +1,4 @@
-name: Deploy Next.js FE to LightSail
+name: Deploy play-baseball-fe to LightSail
 
 on:
   push:
@@ -47,11 +47,11 @@ jobs:
           scp -o StrictHostKeyChecking=no -i private_key image.tar ${USER}@${HOST}:~/image.tar
           ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             docker load < image.tar
-            docker stop fe-container || true
-            docker rm fe-container || true
+            docker stop play-baseball-fe || true
+            docker rm play-baseball-fe || true
           
             echo "Running new container..."
-            docker run -d --name fe-container \
+            docker run -d --name play-baseball-fe \
               -p 3000:3000  \
               --restart=unless-stopped \
               -e NODE_ENV=production \
@@ -60,10 +60,10 @@ jobs:
               play-baseball-fe:latest
           
             echo "Checking container status..."
-            docker ps -a | grep fe-container
+            docker ps -a | grep play-baseball-fe
           
             echo "Checking container logs..."
-            docker logs fe-container
+            docker logs play-baseball-fe
           
             echo "Updating Caddyfile..."
             echo "54.180.243.156.nip.io {
@@ -86,9 +86,9 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             echo "Container status:"
-            docker ps -a | grep fe-container
+            docker ps -a | grep play-baseball-fe
             echo "Container logs:"
-            docker logs fe-container
+            docker logs play-baseball-fe
             echo "Checking port 3000:"
             netstat -tuln | grep :3000
             echo "Checking Caddy status:"
