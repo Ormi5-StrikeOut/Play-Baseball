@@ -42,8 +42,7 @@ jobs:
           ./gradlew jib \
             --image=${{ env.DOCKER_IMAGE }}:${{ github.sha }} \
             -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} \
-            -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }} \
-            -Pspring.profiles.active=prod,debug
+            -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
 
       - name: Deploy to EC2
         env:
@@ -60,7 +59,6 @@ jobs:
           # Create .env file on EC2
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
             cat << EOT > .env
-            SPRING_PROFILES_ACTIVE=prod
             RDS_HOST=${{ secrets.RDS_HOST }}
             RDS_PORT=${{ secrets.RDS_PORT }}
             RDS_NAME=${{ secrets.RDS_NAME }}
