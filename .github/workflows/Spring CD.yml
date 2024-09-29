@@ -9,7 +9,7 @@ on:
 
 env:
   DOCKER_IMAGE: seung093/playbaseball
-  APP_DOMAIN: ec2-3-38-149-152.ap-northeast-2.compute.amazonaws.com.nip.io
+  APP_DOMAIN: ec2-3-38-149-152.ap-northeast-2.compute.amazonaws.com
 
 jobs:
   build-and-deploy:
