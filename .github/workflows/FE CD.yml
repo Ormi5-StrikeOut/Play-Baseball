@@ -52,8 +52,13 @@ jobs:
           scp -o StrictHostKeyChecking=no -i private_key image.tar ${USER}@${HOST}:~/image.tar
           ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             docker load < image.tar
-            docker stop play-baseball-fe || true
-            docker rm play-baseball-fe || true
+          
+            # Stop and remove both old and new containers
+            docker stop fe-container play-baseball-fe || true
+            docker rm fe-container play-baseball-fe || true
+          
+            # Remove old images to free up space
+            docker image prune -af
           
             echo "Running new container..."
             docker run -d --name play-baseball-fe \
