@@ -3,6 +3,7 @@ package org.example.spring.config;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring.config.handler.WebSocketHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -17,6 +18,10 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
 @RequiredArgsConstructor
 @Slf4j
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Value("${app.fe-url}")
+    private String feUrl;
+
     private final WebSocketHandler webSocketHandler;
 
     @Override
@@ -35,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/stomp/content")
-                .setAllowedOrigins("https://ioshane.com/", "http://localhost:3000")
+                .setAllowedOrigins(feUrl, "http://localhost:3000")
                 .withSockJS()
                 .setInterceptors(new HttpSessionHandshakeInterceptor());
     }
