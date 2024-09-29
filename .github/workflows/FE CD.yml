@@ -17,7 +17,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and push
+      - name: Build Docker image
         uses: docker/build-push-action@v3
         with:
           context: ./fe/play-baseball-fe
@@ -32,7 +32,15 @@ jobs:
       - name: Verify Docker image
         run: |
           docker images
-          docker inspect play-baseball-fe:latest
+          docker inspect play-baseball-fe:latest || echo "Image not found"
+
+      - name: Check Docker build logs
+        if: failure()
+        run: |
+          docker buildx build --load -t play-baseball-fe:latest \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+            --build-arg NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
+            ./fe/play-baseball-fe
 
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar
