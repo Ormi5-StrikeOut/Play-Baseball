@@ -99,24 +99,11 @@ jobs:
               ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           EOF
           
-          # Set up Caddy
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-            # Install Caddy if not already installed
-            if ! command -v caddy &> /dev/null; then
-              sudo apt update
-              sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-              sudo apt update
-              sudo apt install caddy
-            fi
-          
-            # Create Caddyfile
-            sudo tee /etc/caddy/Caddyfile > /dev/null << EOT
-            ${{ env.APP_DOMAIN }} {
+          # Update Caddyfile
+          ssh -i private_key.pem -o StrictNextSectionHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            echo "${{ env.APP_DOMAIN }} {
               reverse_proxy localhost:8080
-            }
-            EOT
+            }" | sudo tee /etc/caddy/Caddyfile
           
             # Restart Caddy
             sudo systemctl restart caddy
