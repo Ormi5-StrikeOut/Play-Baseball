@@ -101,8 +101,12 @@ jobs:
           
           # Update Caddyfile
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-            echo "${{ env.APP_DOMAIN }} {
-              reverse_proxy localhost:8080
+            echo "{
+              admin 0.0.0.0:2020
+            }
+          
+            ${{ env.APP_DOMAIN }} {
+            reverse_proxy localhost:8080
             }" | sudo tee /etc/caddy/Caddyfile
           
             # Restart Caddy
