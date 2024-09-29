@@ -3,6 +3,8 @@ name: Deploy Spring BE to EC2 with Jib and Docker
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - "fe/**"
 
 env:
   DOCKER_IMAGE: seung093/playbaseball
