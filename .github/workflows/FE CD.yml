@@ -28,6 +28,11 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }}
 
+      - name: Verify Docker image
+        run: |
+          docker images
+          docker inspect play-baseball-fe:latest
+
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar
 
@@ -44,13 +49,20 @@ jobs:
             docker stop fe-container || true
             docker rm fe-container || true
 
+            echo "Running new container..."
             docker run -d --name fe-container \
-              -p 80:3000 \
+              -p 3000:3000  \
               --restart=unless-stopped \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
               -e NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
               play-baseball-fe:latest
+
+            echo "Checking container status..."
+            docker ps -a | grep fe-container
+          
+            echo "Checking container logs..."
+            docker logs fe-container
 
             rm image.tar
           EOF
@@ -64,7 +76,13 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
-            docker ps | grep fe-container
-            docker logs fe-container --tail 50
+            echo "Container status:"
+            docker ps -a | grep fe-container
+            echo "Container logs:"
+            docker logs fe-container
+            echo "Checking port 3000:"
+            netstat -tuln | grep :3000
+            echo "Checking Caddy status:"
+            sudo systemctl status caddy
           EOF
           rm -f private_key
