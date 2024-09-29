@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths-ignore:
       - "fe/**"
+      - ".github/workflows/FE CD.yml"
 
 env:
   DOCKER_IMAGE: seung093/playbaseball
