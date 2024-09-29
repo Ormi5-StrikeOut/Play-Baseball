@@ -11,6 +11,7 @@ import org.example.spring.security.filter.MemberStatusCheckFilter;
 import org.example.spring.security.filter.RateLimitFilter;
 import org.example.spring.security.handler.CustomAccessDeniedHandler;
 import org.example.spring.security.handler.CustomAuthenticationEntryPoint;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -36,6 +37,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Profile("!dev & !docker")
 @Configuration
 public class SecurityConfig {
+
+	@Value("${app.fe-url}")
+	private String feUrl;
 
 	private final JwtValidatorFilter jwtValidatorFilter;
 	private final RateLimitFilter rateLimitFilter;
@@ -130,7 +134,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("https://ioshane.com"));
+		configuration.setAllowedOrigins(List.of(feUrl));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(
 			Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "Accept", "Origin"));
