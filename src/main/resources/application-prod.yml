@@ -5,6 +5,9 @@ spring:
   application:
     name: Play_Baseball
 
+  profiles:
+    include: '!debug'
+
   datasource:
     url: jdbc:mysql://${RDS_HOST}:${RDS_PORT}/${RDS_NAME}
     username: ${RDS_USER}
