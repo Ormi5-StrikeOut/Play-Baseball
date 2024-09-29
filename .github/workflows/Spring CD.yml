@@ -37,10 +37,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Docker image with Jib
+      - name: Build Docker images with Jib
         run: |
           ./gradlew jib \
-            --image=${{ env.DOCKER_IMAGE }}:${{ github.sha }} \
+            -Pspring.profiles.active=prod \
+            -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} \
+            -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
+          ./gradlew jib \
+            -Pspring.profiles.active=debug \
             -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} \
             -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
 
@@ -85,17 +89,21 @@ jobs:
           chmod 600 .env
           EOF
           
-          # Deploy new Docker image
+          # Pull both images
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-            docker pull ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+            docker pull ${{ env.DOCKER_IMAGE }}:prod
+            docker pull ${{ env.DOCKER_IMAGE }}:debug
+          EOF
+          
+          # Deploy prod image
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
             docker stop play-baseball-server || true
             docker rm play-baseball-server || true
             docker run -d --name play-baseball-server \
               --network host \
               --restart=unless-stopped \
               --env-file .env \
-              -e SPRING_PROFILES_ACTIVE=prod \
-              ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+              ${{ env.DOCKER_IMAGE }}:prod
           EOF
           
           # Update Caddyfile

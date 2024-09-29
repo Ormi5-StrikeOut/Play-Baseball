@@ -92,7 +92,7 @@ jib {
         image = 'eclipse-temurin:21-jre'
     }
     to {
-        image = 'seung093/playbaseball:v2'
+        image = "seung093/playbaseball:v2${activeProfile}"
     }
     container {
         ports = ['8080']
