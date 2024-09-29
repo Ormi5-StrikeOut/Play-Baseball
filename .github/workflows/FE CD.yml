@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "fe/play-baseball-fe/**"
-      - ".github/workflows/play-baseball-fe.yml"
+      - ".github/workflows/FE CD.yml"
 
 env:
   APP_DOMAIN: ${{ secrets.FE_APP_DOMAIN }}
