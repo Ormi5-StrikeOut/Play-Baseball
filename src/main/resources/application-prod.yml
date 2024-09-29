@@ -68,7 +68,7 @@ file:
   upload-dir: src/main/resources/static/uploads
 
 app:
-  base-url: https://3.38.149.152.nip.io
+  base-url: https://3.38.149.152
   fe-url: https://54.180.243.156.nip.io
   resource-url: https://second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com
 
