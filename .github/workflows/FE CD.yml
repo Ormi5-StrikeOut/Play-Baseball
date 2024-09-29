@@ -87,3 +87,4 @@ jobs:
             docker logs fe-container --tail 50
           EOF
           rm -f private_key
+          #
