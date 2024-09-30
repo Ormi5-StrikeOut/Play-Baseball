@@ -32,11 +32,6 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
-  security:
-    user:
-      name: ${SECURITY_USER_NAME}
-      password: ${SECURITY_USER_PASSWORD}
-
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT}
@@ -52,12 +47,6 @@ redis:
   host: ${REDIS_HOST}
   port: ${REDIS_PORT}
 
-logging:
-  level:
-    root: WARN
-    org.springframework.web: WARN
-    org.hibernate.SQL: WARN
-    org.example.spring: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
 
@@ -73,9 +62,9 @@ file:
   upload-dir: src/main/resources/static/uploads
 
 app:
-  base-url: https://api.ioshane.com
-  fe-url: https://ioshane.com
-  resource-url: https://resource.ioshane.com
+  base-url: https://3.38.149.152.nip.io
+  fe-url: https://54.180.243.156.nip.io
+  resource-url: https://second-inning-bucket-1.s3.ap-northeast-2.amazonaws.com
 
 cloud:
   aws:
@@ -90,4 +79,3 @@ cloud:
 alan:
   key: ${ALAN_KEY}
   host: ${ALAN_HOST}
-

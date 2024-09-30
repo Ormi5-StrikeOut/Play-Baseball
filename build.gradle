@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.2'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.google.cloud.tools.jib' version '3.3.2'
 }
 
 group = 'org.example'
@@ -33,6 +34,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-mail:3.2.5'
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+
+    implementation 'com.github.mwiede:jsch:0.2.17'
 
     // In-Memory-Cache
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
@@ -81,3 +84,40 @@ bootJar {
 jar {
     archiveBaseName.set('playBaseballServer')
 }
+
+def activeProfile = project.hasProperty('spring.profiles.active') ? project.property('spring.profiles.active') : 'prod'
+
+jib {
+    from {
+        image = 'eclipse-temurin:21-jre'
+    }
+    to {
+        image = "seung093/playbaseball:v2${activeProfile}"
+    }
+    container {
+        ports = ['8080']
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+        jvmFlags = [
+                "-Dspring.profiles.active=${activeProfile}",
+        ]
+    }
+    if (activeProfile == 'dev' || activeProfile == 'docker') {
+        extraDirectories {
+            paths = [
+                    file('secrets')
+            ]
+        }
+    }
+    containerizingMode = 'packaged'
+}
+
+// 추가: 빌드 시 사용된 프로필 출력
+tasks.register('printActiveProfile') {
+    doLast {
+        println "Active profile: ${activeProfile}"
+    }
+}
+
+// Jib 태스크 실행 전에 프로필 출력 태스크 실행
+tasks.jib.dependsOn tasks.printActiveProfile
+tasks.jibDockerBuild.dependsOn tasks.printActiveProfile
