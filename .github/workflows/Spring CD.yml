@@ -88,34 +88,40 @@ jobs:
           EOT
           chmod 600 .env
           EOF
-          
-          # Pull both images
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF  
-            docker pull ${{ env.DOCKER_IMAGE }}:v2prod
-            docker pull ${{ env.DOCKER_IMAGE }}:v2debug
-          EOF
-          
-          # Deploy prod image  
+
+          # Remove old images
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-            docker stop play-baseball-server || true 
+            docker rmi $(docker images --filter "dangling=true" -q --no-trunc) || true  
+            docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" | grep "${{ env.DOCKER_IMAGE }}") || true
+          EOF
+
+          # Pull both images
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            docker pull ${{ env.DOCKER_IMAGE }}:v2prod
+            docker pull ${{ env.DOCKER_IMAGE }}:v2debug  
+          EOF
+
+          # Deploy prod image
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            docker stop play-baseball-server || true
             docker rm play-baseball-server || true
             docker run -d --name play-baseball-server \
               --network host \
               --restart=unless-stopped \
               --env-file .env \
-              ${{ env.DOCKER_IMAGE }}:v2prod
+              ${{ env.DOCKER_IMAGE }}:v2prod  
           EOF
-          
-          # Update Caddyfile
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF        
+
+          # Update Caddyfile  
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
             echo "${{ env.APP_DOMAIN }} {
-              reverse_proxy localhost:8080  
+              reverse_proxy localhost:8080
             }" | sudo tee /etc/caddy/Caddyfile
-          
+
             # Restart Caddy
-            sudo systemctl restart caddy
+            sudo systemctl restart caddy  
           EOF
-          
+
           rm -f private_key.pem
 
       - name: Check container logs
@@ -124,7 +130,7 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
+          echo "$PRIVATE_KEY" > private_key.pem  
           chmod 600 private_key.pem
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
             timeout 30s docker logs -f play-baseball-server || true
