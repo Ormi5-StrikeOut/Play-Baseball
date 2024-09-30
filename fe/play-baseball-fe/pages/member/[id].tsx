@@ -44,7 +44,7 @@ const My: React.FC = () => {
                     // updatedAt: new Date(userData.updatedAt),
                     // lastLoginDate: new Date(userData.lastLoginDate),
                     // deletedAt: new Date(userData.deletedAt),
-                    emailVerified: userData.emailVerified,
+                    emailVerified: userData.emailVerified === 1,
                     phoneNumber: userData.phoneNumber,
                     gender: userData.gender
                 };

@@ -1,4 +1,4 @@
-name: Deploy Next.js FE to LightSail
+name: Deploy play-baseball-fe to LightSail
 
 on:
   push:
@@ -6,32 +6,25 @@ on:
       - main
     paths:
       - "fe/play-baseball-fe/**"
+      - ".github/workflows/FE CD.yml"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: ./fe/play-baseball-fe
-          file: ./fe/play-baseball-fe/Dockerfile
-          push: false
-          load: true
-          tags: play-baseball-fe:latest
-          build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }}
+      - name: Build Docker image
+        run: |
+          docker build -t play-baseball-fe:latest \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+            --build-arg NEXT_PUBLIC_NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
+            ./fe/play-baseball-fe
 
       - name: Save Docker image
         run: docker save play-baseball-fe:latest > image.tar
 
-      - name: Copy Docker image to LightSail
+      - name: Deploy to LightSail
         env:
           PRIVATE_KEY: ${{ secrets.FE_KEY }}
           HOST: ${{ secrets.FE_HOST }}
@@ -39,13 +32,20 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           scp -o StrictHostKeyChecking=no -i private_key image.tar ${USER}@${HOST}:~/image.tar
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} '
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER}@${HOST} << EOF
             docker load < image.tar
-            docker stop fe-container || true
-            docker rm fe-container || true
-            docker run -d --name fe-container -p 8080:3000 \
-              -e NODE_ENV=production \
-              -e NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-              -e NEC=${{ secrets.NEXT_PUBLIC_NEC }} \
-              play-baseball-fe:latest
-          '
+            docker stop play-baseball-fe || true
+            docker rm play-baseball-fe || true
+            docker run -d --name play-baseball-fe -p 3000:3000 play-baseball-fe:latest
+          
+            echo "Updating Caddyfile..."
+            echo "${{ secrets.NEXT_PUBLIC_NEC }} {
+              reverse_proxy localhost:3000
+            }" | sudo tee /etc/caddy/Caddyfile
+          
+            echo "Reloading Caddy config..."
+            sudo systemctl reload caddy
+          
+            rm image.tar
+          EOF
+          rm -f private_key

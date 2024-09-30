@@ -32,7 +32,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
-@Profile("dev")
+@Profile({"dev", "docker"})
 @Slf4j
 public class SecurityDevConfig {
     private final JwtValidatorFilter jwtValidatorFilter;

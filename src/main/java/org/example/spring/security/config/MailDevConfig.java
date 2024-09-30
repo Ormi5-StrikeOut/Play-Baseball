@@ -11,7 +11,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @Configuration
 @RequiredArgsConstructor
-@Profile("dev")
+@Profile({"dev", "docker"})
 public class MailDevConfig {
 
     private static final String MAIL_SMTP_AUTH = "mail.smtp.auth";

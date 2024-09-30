@@ -1,11 +1,15 @@
-name: Deploy Spring BE to EC2
+name: Deploy Spring BE to EC2 with Jib and Docker
 
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - "fe/**"
+      - ".github/workflows/FE CD.yml"
 
-permissions:
-  contents: read
+env:
+  DOCKER_IMAGE: seung093/playbaseball
+  APP_DOMAIN: 3.38.149.152.nip.io
 
 jobs:
   build-and-deploy:
@@ -21,7 +25,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Cache Gradle packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
@@ -30,36 +34,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Execute Gradle
-        run: chmod +x ./gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build -x test
-
-      - name: Create .env file
+      - name: Build Docker images with Jib
         run: |
-          echo "RDS_HOST=${{ secrets.RDS_HOST }}" >> .env
-          echo "RDS_PORT=${{ secrets.RDS_PORT }}" >> .env
-          echo "RDS_NAME=${{ secrets.RDS_NAME }}" >> .env
-          echo "RDS_USER=${{ secrets.RDS_USER }}" >> .env
-          echo "RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
-          echo "SECURITY_USER_NAME=${{ secrets.SECURITY_USER_NAME }}" >> .env
-          echo "SECURITY_USER_PASSWORD=${{ secrets.SECURITY_USER_PASSWORD }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-          echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
-          echo "JWT_REFRESH_TOKEN_EXPIRATION=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}" >> .env
-          echo "JWT_EMAIL_VERIFICATION_EXPIRATION=${{ secrets.JWT_EMAIL_VERIFICATION_EXPIRATION }}" >> .env
-          echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> .env
-          echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> .env
-          echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
-          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
-          echo "S3_NAME=${{ secrets.S3_NAME }}" >> .env
-          echo "S3_KEY=${{ secrets.S3_KEY }}" >> .env
-          echo "S3_SECRET=${{ secrets.S3_SECRET }}" >> .env  
-          echo "ALAN_KEY=${{ secrets.ALAN_KEY }}" >> .env
-          echo "ALAN_HOST=${{ secrets.ALAN_HOST }}" >> .env
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
-          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+          ./gradlew jib \
+            -Pspring.profiles.active=prod \
+            -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} \
+            -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }} 
+          ./gradlew jib \
+            -Pspring.profiles.active=debug \
+            -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} \
+            -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
 
       - name: Deploy to EC2
         env:
@@ -69,26 +56,83 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-
-          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/playBaseballServer-0.0.1-SNAPSHOT.jar ubuntu@$EC2_HOST:/home/ubuntu/playBaseballServer.jar
-          scp -i private_key.pem -o StrictHostKeyChecking=no .env ubuntu@$EC2_HOST:/home/ubuntu/.env
-          ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << EOF
-
-          # .env 파일의 내용을 .bashrc에 추가
-          cat /home/ubuntu/.env | sed 's/^/export /' >> /home/ubuntu/.bashrc
           
-          # .bashrc 파일을 다시 불러와 환경 변수 적용
-          source /home/ubuntu/.bashrc
-
-          if pgrep java; then
-            pkill java
-            sleep 5
-          fi
-
-          nohup java -Dspring.profiles.active=prod -jar /home/$EC2_USER/playBaseballServer.jar > app.log 2>&1 &
+          # Get EC2 private IP
+          EC2_PRIVATE_IP=$(ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST 'curl -s http://169.254.169.254/latest/meta-data/local-ipv4')
           
-          # 실행 확인을 위한 로그 출력
-            sleep 20
-            tail -n 50 app.log
+          # Create .env file on EC2  
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            cat << EOT > .env
+            RDS_HOST=${{ secrets.RDS_HOST }}
+            RDS_PORT=${{ secrets.RDS_PORT }}
+            RDS_NAME=${{ secrets.RDS_NAME }}
+            RDS_USER=${{ secrets.RDS_USER }}
+            RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+            JWT_REFRESH_TOKEN_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
+            JWT_EMAIL_VERIFICATION_EXPIRATION=${{ secrets.JWT_EMAIL_VERIFICATION_EXPIRATION }}
+            MAIL_HOST=${{ secrets.MAIL_HOST }}
+            MAIL_PORT=${{ secrets.MAIL_PORT }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            S3_NAME=${{ secrets.S3_NAME }}
+            S3_KEY=${{ secrets.S3_KEY }}
+            S3_SECRET=${{ secrets.S3_SECRET }}
+            ALAN_KEY=${{ secrets.ALAN_KEY }}
+            ALAN_HOST=${{ secrets.ALAN_HOST }}
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=${{ secrets.REDIS_PORT }}
+            EC2_PRIVATE_IP=$EC2_PRIVATE_IP        
+            APP_DOMAIN=${{ env.APP_DOMAIN }}
+          EOT
+          chmod 600 .env
+          EOF
+
+          # Remove old images
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            docker rmi $(docker images --filter "dangling=true" -q --no-trunc) || true  
+            docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" | grep "${{ env.DOCKER_IMAGE }}") || true
+          EOF
+
+          # Pull both images
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            docker pull ${{ env.DOCKER_IMAGE }}:v2prod
+            docker pull ${{ env.DOCKER_IMAGE }}:v2debug  
+          EOF
+
+          # Deploy prod image
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            docker stop play-baseball-server || true
+            docker rm play-baseball-server || true
+            docker run -d --name play-baseball-server \
+              --network host \
+              --restart=unless-stopped \
+              --env-file .env \
+              ${{ env.DOCKER_IMAGE }}:v2prod  
+          EOF
+
+          # Update Caddyfile  
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            echo "${{ env.APP_DOMAIN }} {
+              reverse_proxy localhost:8080
+            }" | sudo tee /etc/caddy/Caddyfile
+
+            # Restart Caddy
+            sudo systemctl restart caddy  
+          EOF
+
+          rm -f private_key.pem
+
+      - name: Check container logs
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key.pem  
+          chmod 600 private_key.pem
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+            timeout 30s docker logs -f play-baseball-server || true
           EOF
           rm -f private_key.pem

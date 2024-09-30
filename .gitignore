@@ -7,6 +7,10 @@ build/
 !**/application-prod.yml
 !**/application-debug.yml
 **/application-dev.yml
+**/application-docker.yml
+secrets/caddy-publicky.txt
+**.pem
+**.csv
 
 ### STS ###
 .apt_generated

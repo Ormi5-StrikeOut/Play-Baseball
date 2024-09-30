@@ -53,7 +53,7 @@ const ChatInterface = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [opponentNicknames, setOpponentNicknames] = useState(null);
   const client = useRef(null);
-  const URL = "https://api.ioshane.com/stomp/content";
+  const URL = `${process.env.NEXT_PUBLIC_API_URL}/stomp/content`;
 
   useEffect(() => {
     axios.get(`/messages/member?page=${page}`)

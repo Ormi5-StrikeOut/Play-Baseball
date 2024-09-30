@@ -18,22 +18,22 @@ const LoginPage: React.FC = () => {
     password: "",
   });
 
-  const [showError, setShowError] = useState(false);
+  const [error, setError] = useState("");
 
   const router = useRouter();
 
   const handleLogin = async () => {
-    setShowError(false);
+    setError("");
     try {
       const response = await axios.post(
-        MEMBER_LOGIN,
-        {
-          email: formValues.email,
-          password: formValues.password,
-        },
-        {
-          withCredentials: true,
-        }
+          MEMBER_LOGIN,
+          {
+            email: formValues.email,
+            password: formValues.password,
+          },
+          {
+            withCredentials: true,
+          }
       );
 
       if (response.status === 200) {
@@ -46,25 +46,21 @@ const LoginPage: React.FC = () => {
             window.location.href = SERVER_URL;
           }
         } else {
-          throw new Error("token 생성 오류");
+          setError("로그인 처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
         }
-      } else {
-        setShowError(true);
       }
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 401) {
+          setError("이메일 주소나 비밀번호가 올바르지 않습니다. 다시 확인해 주세요.");
+        } else {
+          setError("로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+        }
+      } else {
+        setError("알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      }
       console.error("로그인 요청 실패", error);
-      await router.push({
-        pathname: "/result",
-        query: {
-          isSuccess: "false",
-          message: `통신 오류가 발생했습니다: ${error}`,
-          buttonText: "다시 시도하기",
-          buttonAction: "/login",
-        },
-      });
     }
-
-    console.log("Form submitted", formValues);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,75 +71,77 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Wrapper>
-      <Container maxWidth="sm">
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          minHeight="100vh"
-        >
-          <Typography variant="h4" gutterBottom>
-            로그인
-          </Typography>
-
-          {showError && (
-            <Alert severity="error">
-              이메일 또는 비밀번호를 다시 입력해주세요.
-            </Alert>
-          )}
-          <FormControl fullWidth margin="normal">
-            <TextField
-              label="Email"
-              variant="outlined"
-              fullWidth
-              name="email"
-              value={formValues.email}
-              onChange={handleChange}
-            />
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <TextField
-              label="Password"
-              type="password"
-              variant="outlined"
-              fullWidth
-              name="password"
-              value={formValues.password}
-              onChange={handleChange}
-            />
-          </FormControl>
-
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleLogin}
-          >
-            로그인
-          </Button>
-
+      <Wrapper>
+        <Container maxWidth="sm">
           <Box
-            mt={2}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              minHeight="100vh"
           >
-            <Link href="/signup" variant="body2" sx={{ mx: 2 }}>
-              회원가입
-            </Link>
-            <Typography variant="body2" sx={{ mx: 1 }}>
-              |
+            <Typography variant="h4" gutterBottom>
+              로그인
             </Typography>
-            <Link href="/forgot-password" variant="body2" sx={{ mx: 2 }}>
-              비밀번호 찾기
-            </Link>
+
+            {error && (
+                <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+                  {error}
+                </Alert>
+            )}
+
+            <FormControl fullWidth margin="normal">
+              <TextField
+                  label="Email"
+                  variant="outlined"
+                  fullWidth
+                  name="email"
+                  value={formValues.email}
+                  onChange={handleChange}
+              />
+            </FormControl>
+
+            <FormControl fullWidth margin="normal">
+              <TextField
+                  label="Password"
+                  type="password"
+                  variant="outlined"
+                  fullWidth
+                  name="password"
+                  value={formValues.password}
+                  onChange={handleChange}
+              />
+            </FormControl>
+
+            <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={handleLogin}
+                sx={{ mt: 2 }}
+            >
+              로그인
+            </Button>
+
+            <Box
+                mt={2}
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+            >
+              <Link href="/signup" variant="body2" sx={{ mx: 2 }}>
+                회원가입
+              </Link>
+              <Typography variant="body2" sx={{ mx: 1 }}>
+                |
+              </Typography>
+              <Link href="/forgot-password" variant="body2" sx={{ mx: 2 }}>
+                비밀번호 찾기
+              </Link>
+            </Box>
           </Box>
-        </Box>
-      </Container>
-    </Wrapper>
+        </Container>
+      </Wrapper>
   );
 };
 
